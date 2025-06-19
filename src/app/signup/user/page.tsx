@@ -21,7 +21,7 @@ const userSignupSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
   password: z.string().min(6, { message: 'A senha deve ter pelo menos 6 caracteres.' }),
   confirmPassword: z.string().min(6, { message: 'A confirmação de senha deve ter pelo menos 6 caracteres.' }),
-  whatsapp: z.string().min(10, { message: 'WhatsApp deve ter pelo menos 10 dígitos.' }).optional(),
+  whatsapp: z.string().min(10, { message: 'WhatsApp deve ter pelo menos 10 dígitos.' }).optional().or(z.literal('')),
   address: z.string().min(5, { message: 'Endereço deve ter pelo menos 5 caracteres.' }),
   city: z.string().min(2, { message: 'Cidade deve ter pelo menos 2 caracteres.' }),
   terms: z.boolean().refine(value => value === true, { message: 'Você deve aceitar os termos e condições.' }),
@@ -66,11 +66,15 @@ export default function UserSignupPage() {
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 selection:bg-primary selection:text-primary-foreground">
-      <Card className="w-full max-w-lg shadow-xl">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center p-4 selection:bg-primary selection:text-primary-foreground"
+      style={{ backgroundImage: "url('https://placehold.co/1920x1080.png')" }}
+      data-ai-hint="abstract gradient"
+    >
+      <Card className="w-full max-w-lg shadow-xl bg-card/90 backdrop-blur-sm border border-border/30">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-headline">Criar Conta como Usuário</CardTitle>
-          <CardDescription>Junte-se ao Ofertivo e comece a economizar!</CardDescription>
+          <CardTitle className="text-2xl font-headline">Criar Conta de Usuário</CardTitle>
+          <CardDescription>Junte-se ao Ofertivo e comece a economizar agora mesmo!</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -119,7 +123,7 @@ export default function UserSignupPage() {
                         <FormControl>
                           <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pl-10 pr-10" />
                         </FormControl>
-                        <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-primary" onClick={togglePasswordVisibility}>
+                        <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-primary" onClick={togglePasswordVisibility} aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}>
                           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </Button>
                       </div>
@@ -138,7 +142,7 @@ export default function UserSignupPage() {
                         <FormControl>
                           <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pl-10 pr-10" />
                         </FormControl>
-                         <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-primary" onClick={toggleConfirmPasswordVisibility}>
+                         <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-primary" onClick={toggleConfirmPasswordVisibility} aria-label={showConfirmPassword ? 'Esconder senha' : 'Mostrar senha'}>
                           {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </Button>
                       </div>
@@ -156,7 +160,7 @@ export default function UserSignupPage() {
                     <div className="relative">
                         <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <FormControl>
-                           <Input id="whatsapp" type="tel" placeholder="(XX) XXXXX-XXXX" {...field} className="pl-10" />
+                           <Input id="whatsapp" type="tel" placeholder="(XX) XXXXX-XXXX" {...field} value={field.value ?? ''} className="pl-10" />
                         </FormControl>
                     </div>
                     <FormMessage />
@@ -199,7 +203,7 @@ export default function UserSignupPage() {
                 control={form.control}
                 name="terms"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm bg-background/70">
                     <FormControl>
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} id="terms" />
                     </FormControl>

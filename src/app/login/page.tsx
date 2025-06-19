@@ -48,7 +48,7 @@ export default function LoginPage() {
     if (activeTab === 'user') {
       router.push('/'); // Feed para usuário
     } else {
-      router.push('/dashboard/advertiser'); // Painel para anunciante (placeholder)
+      router.push('/dashboard/advertiser'); // Painel para anunciante
     }
   };
 
@@ -96,9 +96,9 @@ export default function LoginPage() {
                   size="icon"
                   className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-primary"
                   onClick={togglePasswordVisibility}
+                  aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  <span className="sr-only">{showPassword ? 'Esconder' : 'Mostrar'} senha</span>
                 </Button>
               </div>
               <FormMessage />
@@ -113,8 +113,12 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 selection:bg-primary selection:text-primary-foreground">
-      <Card className="w-full max-w-md shadow-xl">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center p-4 selection:bg-primary selection:text-primary-foreground"
+      style={{ backgroundImage: "url('https://placehold.co/1920x1080.png')" }}
+      data-ai-hint="abstract gradient"
+    >
+      <Card className="w-full max-w-md shadow-xl bg-card/90 backdrop-blur-sm border border-border/30">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline">Entrar no Ofertivo</CardTitle>
           <CardDescription>Acesse sua conta para descobrir ou criar ofertas incríveis.</CardDescription>

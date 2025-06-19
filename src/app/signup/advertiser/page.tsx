@@ -17,12 +17,12 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from "@/hooks/use-toast";
 import { categories as businessCategories } from '@/types';
-import { User, Briefcase, Building as BuildingIcon, Mail, Lock, Phone, MapPin, Link2, FileText, List, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { User, Briefcase, Building as BuildingIconLucide, Mail, Lock, Phone, MapPin, Link2, FileText, List, Eye, EyeOff, CheckCircle } from 'lucide-react';
 
 const advertiserSignupSchema = z.object({
   responsibleName: z.string().min(3, { message: 'Nome do responsável deve ter pelo menos 3 caracteres.' }),
   businessName: z.string().min(2, { message: 'Nome do negócio deve ter pelo menos 2 caracteres.' }),
-  cnpjOrCpf: z.string().min(11, { message: 'CNPJ ou CPF deve ter pelo menos 11 caracteres.' }), // Simplified validation
+  cnpjOrCpf: z.string().min(11, { message: 'CNPJ ou CPF deve ter pelo menos 11 caracteres.' }), 
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
   password: z.string().min(6, { message: 'A senha deve ter pelo menos 6 caracteres.' }),
   confirmPassword: z.string().min(6, { message: 'A confirmação de senha deve ter pelo menos 6 caracteres.' }),
@@ -40,8 +40,8 @@ const advertiserSignupSchema = z.object({
 type AdvertiserSignupFormValues = z.infer<typeof advertiserSignupSchema>;
 
 // Helper to get Lucide icon component by name
-const getIconComponent = (iconName?: string) => {
-  if (!iconName) return List; // Default icon
+const getIconComponent = (iconName?: string): React.ElementType => {
+  if (!iconName) return List; 
   const icons: { [key: string]: React.ElementType } = {
     Utensils: require('lucide-react').Utensils,
     Wrench: require('lucide-react').Wrench,
@@ -49,6 +49,7 @@ const getIconComponent = (iconName?: string) => {
     Smile: require('lucide-react').Smile,
     HeartPulse: require('lucide-react').HeartPulse,
     BookOpen: require('lucide-react').BookOpen,
+    Package: require('lucide-react').Package,
   };
   return icons[iconName] || List;
 };
@@ -84,16 +85,19 @@ export default function AdvertiserSignupPage() {
       title: "Cadastro de anunciante realizado com sucesso!",
       description: "Seu negócio agora faz parte do Ofertivo! Redirecionando para o painel...",
     });
-    // Lógica para salvar anunciante, CRM, plano inicial.
-    router.push('/dashboard/advertiser'); // Placeholder
+    router.push('/dashboard/advertiser'); 
   };
   
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 selection:bg-primary selection:text-primary-foreground">
-      <Card className="w-full max-w-2xl shadow-xl">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center p-4 selection:bg-primary selection:text-primary-foreground"
+      style={{ backgroundImage: "url('https://placehold.co/1920x1080.png')" }}
+      data-ai-hint="abstract gradient"
+    >
+      <Card className="w-full max-w-2xl shadow-xl bg-card/90 backdrop-blur-sm border border-border/30">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline">Criar Conta como Anunciante</CardTitle>
           <CardDescription>Cadastre seu negócio e comece a divulgar suas ofertas!</CardDescription>
@@ -172,7 +176,7 @@ export default function AdvertiserSignupPage() {
                        <div className="relative">
                         <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <FormControl><Input id="passwordAdv" type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pl-10 pr-10" /></FormControl>
-                        <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-primary" onClick={togglePasswordVisibility}>
+                        <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-primary" onClick={togglePasswordVisibility} aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}>
                           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </Button>
                       </div>
@@ -189,7 +193,7 @@ export default function AdvertiserSignupPage() {
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <FormControl><Input id="confirmPasswordAdv" type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pl-10 pr-10" /></FormControl>
-                        <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-primary" onClick={toggleConfirmPasswordVisibility}>
+                        <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-primary" onClick={toggleConfirmPasswordVisibility} aria-label={showConfirmPassword ? 'Esconder senha' : 'Mostrar senha'}>
                           {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </Button>
                       </div>
@@ -268,7 +272,7 @@ export default function AdvertiserSignupPage() {
                     <FormLabel htmlFor="socialLink">Link de Rede Social (Opcional)</FormLabel>
                     <div className="relative">
                         <Link2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <FormControl><Input id="socialLink" placeholder="https://instagram.com/seunegocio" {...field} className="pl-10" /></FormControl>
+                        <FormControl><Input id="socialLink" placeholder="https://instagram.com/seunegocio" {...field} value={field.value ?? ''} className="pl-10" /></FormControl>
                     </div>
                     <FormMessage />
                   </FormItem>
@@ -297,7 +301,7 @@ export default function AdvertiserSignupPage() {
                 control={form.control}
                 name="terms"
                 render={({ field }) => (
-                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
+                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm bg-background/70">
                     <FormControl>
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} id="termsAdvertiser" />
                     </FormControl>
@@ -333,4 +337,3 @@ export default function AdvertiserSignupPage() {
     </div>
   );
 }
-
