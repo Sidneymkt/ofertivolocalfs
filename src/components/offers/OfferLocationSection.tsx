@@ -41,8 +41,13 @@ const OfferLocationSection: React.FC<OfferLocationSectionProps> = ({ offer }) =>
             objectFit="cover"
             data-ai-hint="street map"
           />
-           {/* Você pode adicionar um ícone de marcador sobreposto aqui se desejar */}
-           {/* Exemplo: <MapPin className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500" size={24} /> */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <MapPin 
+              className="h-10 w-10 text-destructive drop-shadow-lg animate-bounce" 
+              fill="currentColor" 
+              style={{ animationDuration: '1.5s' }} // Adjust bounce speed if needed
+            />
+          </div>
         </div>
         <Button onClick={openGoogleMaps} className="w-full bg-secondary hover:bg-secondary/90">
           <Navigation className="mr-2" /> Ver Rotas no Google Maps
