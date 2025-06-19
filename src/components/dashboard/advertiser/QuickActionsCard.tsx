@@ -6,11 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Gift, ShoppingBag, Users, BarChartHorizontalBig } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import Link from 'next/link'; // Import Link
 
 const QuickActionsCard: React.FC = () => {
   const { toast } = useToast();
 
-  const handleActionClick = (actionName: string) => {
+  const handleGenericActionClick = (actionName: string) => {
     toast({
       title: `Ação: ${actionName}`,
       description: "Funcionalidade em breve.",
@@ -28,29 +29,31 @@ const QuickActionsCard: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-3">
         <Button 
-          className="w-full bg-primary hover:bg-primary/90" 
-          onClick={() => handleActionClick('Criar Nova Oferta')}
+          asChild // Use asChild to make Button behave like Link
+          className="w-full bg-primary hover:bg-primary/90"
         >
-          <PlusCircle className="mr-2 h-5 w-5" /> Criar Nova Oferta
+          <Link href="/dashboard/advertiser/create-offer">
+            <PlusCircle className="mr-2 h-5 w-5" /> Criar Nova Oferta
+          </Link>
         </Button>
         <Button 
           variant="secondary" 
           className="w-full" 
-          onClick={() => handleActionClick('Criar Sorteio')}
+          onClick={() => handleGenericActionClick('Criar Sorteio')}
         >
           <Gift className="mr-2 h-5 w-5" /> Criar Sorteio
         </Button>
         <Button 
           variant="outline" 
           className="w-full" 
-          onClick={() => handleActionClick('Gerenciar Ofertas')}
+          onClick={() => handleGenericActionClick('Gerenciar Ofertas')}
         >
           <ShoppingBag className="mr-2 h-5 w-5" /> Gerenciar Ofertas
         </Button>
         <Button 
           variant="outline" 
           className="w-full" 
-          onClick={() => handleActionClick('Ver CRM de Leads')}
+          onClick={() => handleGenericActionClick('Ver CRM de Leads')}
         >
           <Users className="mr-2 h-5 w-5" /> Ver CRM de Leads
         </Button>
