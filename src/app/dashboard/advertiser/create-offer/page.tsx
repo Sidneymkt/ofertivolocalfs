@@ -18,11 +18,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from "@/hooks/use-toast";
-import { categories, offerTypes, type OfferTypeId, type OfferTypeDetails } from '@/types';
+import { categories, offerTypes, type OfferTypeId, type Offer, mockAdvertiserUser } from '@/types'; // Added Offer type
 import { 
   CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIcon, 
   AlertCircle, CheckCircle, Info, QrCode as QrCodeIcon, Smartphone, UserCheck, CheckCheck as CheckCheckIcon, Package as PackageIcon, LocateFixed, Building as BuildingIcon,
-  Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon // Added AlertTriangle, Renamed Loader2 to SpinnerIcon for clarity
+  Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -37,7 +37,7 @@ const offerFormSchemaBase = z.object({
   ),
   title: z.string().min(5, "O título deve ter pelo menos 5 caracteres.").max(100, "Título muito longo."),
   description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres.").max(380, "Descrição não pode exceder 380 caracteres."),
-  images: z.custom<File[]>().array().max(6, "Máximo de 6 imagens.").optional(),
+  images: z.custom<File[]>().array().min(1, "Pelo menos uma imagem é obrigatória.").max(6, "Máximo de 6 imagens.").optional(), // Made optional for now, can be .min(1)
   category: z.string({ required_error: "Categoria é obrigatória." }),
   validityStartDate: z.date({ required_error: "Data de início é obrigatória." }),
   validityEndDate: z.date({ required_error: "Data de fim é obrigatória." }),
@@ -78,11 +78,11 @@ const offerFormSchemaBase = z.object({
     z.number().int().min(0).optional().default(0)
   ),
   isRedeemableWithPoints: z.boolean().default(false),
+  isPresentialOnly: z.boolean().default(false), 
 
-  // Specific fields (all optional in base, refined later or handled by UI)
-  timeLimit: z.string().optional(), // HH:mm for Relâmpago
-  isPresentialOnly: z.boolean().default(false), // For Exclusiva App / Cupom QR
-  isForNewUsersOnly: z.boolean().default(false), // For Primeiro Uso
+  // Specific fields
+  timeLimit: z.string().optional(), 
+  isForNewUsersOnly: z.boolean().default(false), 
   minCheckins: z.preprocess(
     (val) => (String(val).trim() === "" ? undefined : parseInt(String(val), 10)),
     z.number().int("Deve ser um número inteiro").min(1, "Mínimo de 1 check-in").optional()
@@ -164,27 +164,27 @@ export default function CreateOfferPage() {
   const form = useForm<OfferFormValues>({
     resolver: zodResolver(offerFormSchema),
     defaultValues: {
-      offerType: undefined,
+      offerType: 'padrao',
       title: '',
       description: '',
+      images: [],
+      category: undefined,
+      validityStartDate: new Date(),
+      validityEndDate: new Date(Date.now() + 7 * 86400000), // Default 7 days from now
+      terms: '',
+      visibility: "normal",
+      tags: '',
       discountType: "finalValue",
       originalPrice: undefined,
       discountPercentage: undefined,
       discountedPrice: undefined,
-      tags: '',
-      validityStartDate: undefined,
-      validityEndDate: undefined,
       quantity: undefined,
       isUnlimited: false,
-      terms: '',
-      category: undefined,
-      visibility: "normal",
-      isPresentialOnly: false,
       pointsForCheckin: 0,
       pointsForShare: 0,
       pointsForComment: 0,
       isRedeemableWithPoints: false,
-      images: [],
+      isPresentialOnly: false,
       timeLimit: '',
       isForNewUsersOnly: false,
       minCheckins: undefined,
@@ -243,6 +243,10 @@ export default function CreateOfferPage() {
   useEffect(() => {
     if (selectedOfferType === 'exclusiva_app' || selectedOfferType === 'cupom_qr') {
       setValue('isPresentialOnly', true, { shouldValidate: true });
+    } else {
+      // Reset if not one of these types, unless user explicitly set it
+      // This part can be tricky, might need more refined logic based on user interaction
+      // For now, let's keep it simple: auto-check for these types.
     }
   }, [selectedOfferType, setValue]);
 
@@ -272,24 +276,55 @@ export default function CreateOfferPage() {
   };
 
   const onSubmit: SubmitHandler<OfferFormValues> = (data) => {
-    console.log('Offer data:', data);
-    const imageHintsFromData = data.images?.map((_, index) => `${data.title.split(" ")[0]} ${data.category}`.toLowerCase()) || [];
+    const imageFileNames = selectedFiles.map(file => file.name);
+    const galleryImageHints = imageFileNames.map((_, index) => `${data.title.split(" ")[0]} ${data.category}`.toLowerCase().slice(0,20)); // Simple hint generation
 
-    const finalData = {
-        ...data,
-        galleryImageHints: imageHintsFromData,
-        merchantId: 'mockMerchant123', 
-        merchantName: 'Nome do Anunciante Mock',
-        distance: '1km', 
+    const newOffer: Offer = {
+      id: `offer-${Date.now()}-${Math.random().toString(36).substring(2,7)}`, // Mock ID
+      ...data,
+      status: 'awaiting_approval', // Default status for new offers
+      createdBy: mockAdvertiserUser.advertiserProfileId || 'unknown_advertiser',
+      merchantId: mockAdvertiserUser.advertiserProfileId || 'unknown_advertiser',
+      merchantName: mockAdvertiserUser.businessName || 'Nome do Anunciante',
+      merchantIsVerified: mockAdvertiserUser.isProfileComplete, // Example
+      imageUrl: imagePreviews[0] || 'https://placehold.co/600x300.png?text=Oferta', // Use first preview as main image
+      'data-ai-hint': `${data.title.split(" ")[0]} ${data.category}`.toLowerCase().slice(0,20),
+      galleryImages: imagePreviews,
+      galleryImageHints: galleryImageHints,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      // Ensure all required fields from Offer type are present or have defaults
+      // Some fields like 'distance', 'rating', 'reviews', 'usersUsedCount' would typically be populated later or dynamically
+      distance: 'Calculando...',
+      usersUsedCount: 0,
+      // Explicitly set optional fields that might not be in data if not touched
+      originalPrice: data.originalPrice,
+      discountPercentage: data.discountPercentage,
+      discountedPrice: data.discountedPrice || 0, // Ensure discountedPrice is a number
+      timeLimit: data.timeLimit,
+      isForNewUsersOnly: data.isForNewUsersOnly,
+      minCheckins: data.minCheckins,
+      checkinReward: data.checkinReward,
+      comboItem1: data.comboItem1,
+      comboItem2: data.comboItem2,
+      comboItem3: data.comboItem3,
+      targetNeighborhood: data.targetNeighborhood,
+      pointsAwarded: (data.pointsForCheckin || 0) + (data.pointsForShare || 0) + (data.pointsForComment || 0) || 5, // Example calculation
     };
-    console.log('Final Offer Data (Simulated Firestore):', finalData);
+
+    console.log('Simulating saving offer to Firestore:', newOffer);
+    // In a real app, you would add 'newOffer' to your mockOffers array or send to backend
+    // For example: mockOffers.unshift(newOffer); 
 
     toast({
-      title: "Oferta Publicada (Simulado)!",
-      description: `Sua oferta "${data.title}" (${data.offerType}) foi enviada.`,
+      title: "Oferta Enviada para Aprovação!",
+      description: `Sua oferta "${newOffer.title}" foi cadastrada e está aguardando moderação.`,
       variant: "default",
-      duration: 5000,
+      duration: 7000,
     });
+    // form.reset(); // Optionally reset form
+    // setImagePreviews([]);
+    // setSelectedFiles([]);
   };
 
   const handleGenerateWithAI = async () => {
@@ -331,7 +366,7 @@ export default function CreateOfferPage() {
         }
     }
     
-    const productServiceHint = currentTitle || businessCategory; // Use title as hint if available, else category
+    const productServiceHint = currentTitle || businessCategory; 
 
 
     setIsLoadingAI(true);
@@ -492,8 +527,10 @@ export default function CreateOfferPage() {
             )}
           />
         );
+      case 'padrao':
+         return <p className="text-sm text-muted-foreground">Configure os campos comuns para esta oferta padrão.</p>;
       default:
-        return <p className="text-sm text-muted-foreground">Configure os campos comuns para esta oferta.</p>;
+        return <p className="text-sm text-muted-foreground">Selecione um tipo de oferta para ver campos específicos.</p>;
     }
   };
 
@@ -609,7 +646,7 @@ export default function CreateOfferPage() {
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><ImageIcon className="text-primary" /> Imagens da Oferta</CardTitle>
-              <CardDescription>Adicione até 6 imagens para ilustrar sua oferta. A primeira será a principal.</CardDescription>
+              <CardDescription>Adicione de 1 a 6 imagens para ilustrar sua oferta. A primeira será a principal.</CardDescription>
             </CardHeader>
             <CardContent>
               <FormField
@@ -846,12 +883,12 @@ export default function CreateOfferPage() {
           {/* Campos específicos do tipo de oferta */}
           {selectedOfferType && (
             <Card className={cn("shadow-lg", currentOfferTypeDetails?.colorClass || 'border-border')}>
-              <CardHeader className={cn(currentOfferTypeDetails?.colorClass ? currentOfferTypeDetails.colorClass.replace('border-', 'bg-').replace('-500', '-500/5') : '')}>
-                  <CardTitle className="flex items-center gap-2">
+              <CardHeader className={cn(currentOfferTypeDetails?.colorClass ? currentOfferTypeDetails.colorClass.replace('border-', 'bg-').replace('-500', '-500/10') : '', "py-4 px-6")}>
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     {React.createElement(getIconForOfferType(selectedOfferType), {className: "text-primary h-5 w-5"})}
                     Configurações para: {currentOfferTypeDetails?.name}
                   </CardTitle>
-                  <CardDescription>{currentOfferTypeDetails?.description}</CardDescription>
+                  {currentOfferTypeDetails?.description && <CardDescription className="text-xs">{currentOfferTypeDetails.description}</CardDescription>}
               </CardHeader>
               <CardContent className="space-y-6 pt-6">
                 <OfferSpecificFields />

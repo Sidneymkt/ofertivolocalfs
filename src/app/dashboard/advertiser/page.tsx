@@ -2,13 +2,13 @@
 'use client';
 
 import React from 'react';
-import AdvertiserMetricsGrid, { type AdvertiserMetricItem } from '@/components/dashboard/advertiser/AdvertiserMetricsGrid';
+import AdvertiserMetricsGrid from '@/components/dashboard/advertiser/AdvertiserMetricsGrid';
 import PerformanceChartPlaceholder from '@/components/dashboard/advertiser/PerformanceChartPlaceholder';
 import QuickActionsCard from '@/components/dashboard/advertiser/QuickActionsCard';
-import PublishedOffersSection, { type PublishedOfferSummary } from '@/components/dashboard/advertiser/PublishedOffersSection';
+import PublishedOffersSection from '@/components/dashboard/advertiser/PublishedOffersSection';
 import GenericDashboardSection from '@/components/dashboard/advertiser/GenericDashboardSection';
 import AdvertiserProfileSettingsCard from '@/components/dashboard/advertiser/AdvertiserProfileSettingsCard';
-import { mockAdvertiserUser } from '@/types'; 
+import { mockAdvertiserUser, type AdvertiserMetricItem, type PublishedOfferSummary } from '@/types'; 
 import { BarChart2, Eye, MousePointerClick, CheckCircle, Users, Coins, TrendingUp, ShoppingBag, Settings, Bell, Gift, ListFilter, FileText, DollarSign, AlertCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -33,9 +33,58 @@ const metrics: AdvertiserMetricItem[] = [
 ];
 
 const publishedOffers: PublishedOfferSummary[] = [
-  { id: 'offer1', title: '50% Off Pizza Gigante', status: 'active', views: 1200, clicks: 300, isFeatured: true, dataAiHint: 'pizza food' },
-  { id: 'offer2', title: 'Corte de Cabelo + Barba', status: 'expired', views: 800, clicks: 150, isFeatured: false, dataAiHint: 'barber shop' },
-  { id: 'offer3', title: 'Happy Hour Chopp Dobrado', status: 'pending', views: 0, clicks: 0, isFeatured: false, dataAiHint: 'beer glass' },
+  { 
+    id: 'offer-pizza-1', 
+    title: '50% Off Pizza Gigante + Refri Grátis HOJE!', 
+    status: 'active', 
+    views: 1200, clicks: 300, 
+    isFeatured: true, 
+    dataAiHint: 'pizza food', 
+    imageUrl: 'https://placehold.co/64x64.png?text=PZ',
+    visibility: 'destaque',
+    discountedPrice: 35.00,
+    originalPrice: 70.00,
+    category: 'Alimentação',
+    usersUsedCount: 138,
+  },
+  { 
+    id: 'offer-barber-2', 
+    title: 'Corte Masculino + Barba Modelada', 
+    status: 'active', 
+    views: 800, clicks: 150, 
+    isFeatured: false, 
+    dataAiHint: 'barber shop',
+    imageUrl: 'https://placehold.co/64x64.png?text=BB',
+    visibility: 'normal',
+    discountedPrice: 45.00,
+    originalPrice: 70.00,
+    category: 'Serviços',
+    usersUsedCount: 72,
+  },
+  { 
+    id: 'new-offer-pending', 
+    title: 'Nova Super Oferta de Teste (Pendente)', 
+    status: 'pending', 
+    views: 0, clicks: 0, 
+    isFeatured: false, 
+    dataAiHint: 'generic offer',
+    imageUrl: 'https://placehold.co/64x64.png?text=NO',
+    visibility: 'normal',
+    discountedPrice: 19.99,
+    category: 'Outros',
+  },
+    { 
+    id: 'expired-offer-sample', 
+    title: 'Oferta Expirada Exemplo', 
+    status: 'expired', 
+    views: 500, clicks: 50, 
+    isFeatured: false, 
+    dataAiHint: 'old paper',
+    imageUrl: 'https://placehold.co/64x64.png?text=EX',
+    visibility: 'normal',
+    discountedPrice: 10.00,
+    category: 'Diversos',
+  },
 ];
 
 export default function AdvertiserDashboardPage() {
@@ -78,10 +127,6 @@ export default function AdvertiserDashboardPage() {
       </div>
       
       <PublishedOffersSection offers={publishedOffers} />
-
-      <GenericDashboardSection title="Formulário de Nova Oferta" icon={ShoppingBag} description="Crie e configure suas próximas promoções aqui.">
-        <p className="text-muted-foreground text-center py-10">Formulário de criação de oferta em breve.</p>
-      </GenericDashboardSection>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <GenericDashboardSection title="CRM de Leads e Engajamento" icon={ListFilter} description="Acompanhe usuários que interagiram e ranking de seguidores.">

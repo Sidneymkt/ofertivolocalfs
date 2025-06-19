@@ -17,16 +17,16 @@ body {
     --popover: 0 0% 100%;
     --popover-foreground: 210 10% 23%;
 
-    --primary: 211 100% 50%; /* Saturated Blue #007BFF */
+    --primary: 211 100% 50%; /* Azul #007BFF */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 134 61% 41%; /* Green #28A745 */
+    --secondary: 145 63% 49%; /* Verde #28A745 */
     --secondary-foreground: 0 0% 100%; /* White for good contrast on green */
 
     --muted: 211 15% 88%; /* Softer blue-gray for muted elements */
     --muted-foreground: 211 10% 45%; /* Softer text color for muted */
 
-    --accent: 45 100% 51%; /* Orange #FFC107 */
+    --accent: 45 100% 51%; /* Laranja #FFC107 */
     --accent-foreground: 0 0% 3.9%; /* Default dark foreground for text on accent */
 
     --destructive: 0 84.2% 60.2%;
@@ -64,11 +64,11 @@ body {
     --popover-foreground: 0 0% 98%;
     --primary: 211 100% 50%; /* Retain primary blue for dark mode consistency */
     --primary-foreground: 0 0% 100%;
-    --secondary: 134 61% 41%; /* Green */
+    --secondary: 145 63% 49%; /* Verde #28A745 */
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 45 100% 51%; /* Orange */
+    --accent: 45 100% 51%; /* Laranja #FFC107 */
     --accent-foreground: 0 0% 3.9%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;

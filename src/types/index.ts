@@ -1,5 +1,4 @@
 
-
 import type React from 'react'; 
 import { 
   Activity, AlertTriangle, Award, BadgeCheck, BarChart3, BookOpen, Building, Building2, CalendarCheck2, CheckCircle, CheckCheck, Coins, CreditCard, DollarSign, Eye, FileText, Filter, Gift, HandCoins, HeartPulse, HelpCircle, ListChecks, LocateFixed, MailQuestion, MapPin, MapPinned, Megaphone, MessageSquare, MousePointerClick, Package, PackageCheck, QrCode, Settings2, ShieldAlert, ShoppingCart, Smile, Smartphone, Sparkles, Star, ThumbsUp, Ticket, TrendingDown, TrendingUp, UserCheck, UserCog, UserPlus, Users, Utensils, Wrench, Zap 
@@ -9,7 +8,7 @@ import {
 export interface Badge {
   id: string;
   name: string;
-  icon: string; 
+  icon: 'Star' | 'Users' | 'Award' | 'MessageSquare' | 'Zap'; // Use string identifiers
   description: string;
   unlockedDate?: Date;
   'data-ai-hint'?: string;
@@ -17,9 +16,8 @@ export interface Badge {
 
 export interface Category { 
   name: string;
-  icon: string; 
+  icon: 'Utensils' | 'Wrench' | 'ShoppingCart' | 'Smile' | 'HeartPulse' | 'BookOpen' | string; // string for flexibility
 }
-
 
 export interface Comment {
   id: string;
@@ -35,34 +33,87 @@ export interface Comment {
   pointsEarned?: number; 
 }
 
+export const offerTypes = [
+  { id: 'relampago', name: 'Oferta Relâmpago', icon: Zap, description: 'Duração curta, alto impacto. Ideal para promoções urgentes.', colorClass: 'border-orange-500' },
+  { id: 'exclusiva_app', name: 'Oferta Exclusiva App', icon: Smartphone, description: 'Requer validação via QR Code no app. Incentiva o uso do aplicativo.', colorClass: 'border-blue-500'},
+  { id: 'cupom_qr', name: 'Cupom Digital com QR Code', icon: QrCode, description: 'Cupom digital único validado por QR Code na loja.', colorClass: 'border-green-500' },
+  { id: 'primeiro_uso', name: 'Oferta para Primeiro Uso', icon: UserCheck, description: 'Atraia novos clientes com um benefício especial na primeira compra/uso.', colorClass: 'border-purple-500' },
+  { id: 'checkin_premiado', name: 'Check-in Premiado', icon: CheckCheck, description: 'Recompense clientes por check-ins múltiplos em suas ofertas ou estabelecimento.', colorClass: 'border-teal-500' },
+  { id: 'combo', name: 'Combo Econômico', icon: Package, description: 'Agrupe produtos ou serviços por um preço especial.', colorClass: 'border-red-500' },
+  { id: 'bairro', name: 'Oferta do Dia por Bairro', icon: LocateFixed, description: 'Foco em geolocalização específica para atingir clientes próximos.', colorClass: 'border-yellow-500' },
+  { id: 'padrao', name: 'Oferta Padrão', icon: ListChecks, description: 'Oferta genérica com desconto ou benefício.', colorClass: 'border-gray-500'}
+] as const;
+
+export type OfferTypeId = typeof offerTypes[number]['id'];
+export type OfferTypeDetails = typeof offerTypes[number];
+
+
 export interface Offer {
   id: string;
   title: string;
+  description: string; 
+  fullDescription?: string; 
   merchantName: string;
   merchantId: string; 
   merchantIsVerified?: boolean;
   imageUrl: string; 
+  'data-ai-hint'?: string;
   galleryImages?: string[];
   galleryImageHints?: string[];
-  originalPrice?: number;
-  discountedPrice: number;
-  distance: string; 
+  
+  offerType: OfferTypeId;
   category: string;
-  rating?: number; 
-  reviews?: number; 
-  timeRemaining?: string; 
+  
+  originalPrice?: number;
+  discountType?: "percentage" | "finalValue";
+  discountPercentage?: number;
+  discountedPrice: number;
+  
   tags?: string[];
+  validityStartDate: Date;
+  validityEndDate: Date;
+  timeRemaining?: string; // Calculated or static string for display
+  
+  quantity?: number;
+  isUnlimited?: boolean;
+  usersUsedCount?: number;
+  
+  terms?: string;
+  visibility: "normal" | "destaque" | "sorteio";
+  status: 'active' | 'pending' | 'expired' | 'draft' | 'awaiting_approval' | 'rejected';
+
+  // Specific fields based on offerType
+  timeLimit?: string; // HH:mm for Relâmpago
+  isPresentialOnly?: boolean; // For Exclusiva App / Cupom QR - implies QR validation
+  isForNewUsersOnly?: boolean; // For Primeiro Uso
+  minCheckins?: number; // For Checkin Premiado
+  checkinReward?: string; // For Checkin Premiado
+  comboItem1?: string; // For Combo
+  comboItem2?: string;
+  comboItem3?: string;
+  targetNeighborhood?: string; // For Bairro
+
+  // Gamification
+  pointsAwarded?: number; 
+  pointsForCheckin?: number;
+  pointsForShare?: number;
+  pointsForComment?: number;
+  isRedeemableWithPoints?: boolean;
+  
+  // Location & Rating (optional on creation, might be auto-populated or admin-set)
   latitude?: number;
   longitude?: number;
-  description?: string; 
-  fullDescription?: string;
-  validUntil?: string | Date; 
-  usersUsedCount?: number;
-  qrCodeValue?: string; 
-  pointsAwarded?: number; 
+  distance?: string; // Calculated for display
+  rating?: number; 
+  reviews?: number; 
+  
+  // Meta
+  createdBy: string; // advertiserId (should match merchantId for advertiser-created offers)
+  createdAt: Date;
+  updatedAt: Date;
   comments?: Comment[];
-  'data-ai-hint'?: string;
 }
+
 
 export interface CheckIn {
   id: string;
@@ -115,16 +166,18 @@ export interface User {
   sharedOffersHistory?: SharedOffer[];
   sweepstakeParticipations?: SweepstakeParticipation[];
   commentsMade?: Comment[];
+  
   isAdvertiser?: boolean; 
   advertiserProfileId?: string; 
   businessName?: string;
   businessLogoUrl?: string;
   businessLogoHint?: string;
+  businessDescription?: string;
+  
   address?: string;
   city?: string;
   whatsapp?: string;
   isProfileComplete?: boolean;
-  businessDescription?: string; // Added from AdvertiserProfileSettingsCard
 }
 
 
@@ -133,24 +186,10 @@ export interface Sweepstake {
   title: string;
   description: string;
   imageUrl: string;
+  'data-ai-hint'?: string;
   pointsToEnter: number;
   endDate: Date;
-  'data-ai-hint'?: string;
 }
-
-
-export const offerTypes = [
-  { id: 'relampago', name: 'Oferta Relâmpago', icon: Zap, description: 'Duração curta, alto impacto. Ideal para promoções urgentes.', color: 'border-orange-500' },
-  { id: 'exclusiva_app', name: 'Oferta Exclusiva App', icon: Smartphone, description: 'Requer validação via QR Code no app. Incentiva o uso do aplicativo.', color: 'border-blue-500'},
-  { id: 'cupom_qr', name: 'Cupom Digital com QR Code', icon: QrCode, description: 'Cupom digital único validado por QR Code na loja.', color: 'border-green-500' },
-  { id: 'primeiro_uso', name: 'Oferta para Primeiro Uso', icon: UserCheck, description: 'Atraia novos clientes com um benefício especial na primeira compra/uso.', color: 'border-purple-500' },
-  { id: 'checkin_premiado', name: 'Check-in Premiado', icon: CheckCheck, description: 'Recompense clientes por check-ins múltiplos em suas ofertas ou estabelecimento.', color: 'border-teal-500' },
-  { id: 'combo', name: 'Combo Econômico', icon: Package, description: 'Agrupe produtos ou serviços por um preço especial.', color: 'border-red-500' },
-  { id: 'bairro', name: 'Oferta do Dia por Bairro', icon: LocateFixed, description: 'Foco em geolocalização específica para atingir clientes próximos.', color: 'border-yellow-500' },
-] as const;
-
-export type OfferTypeId = typeof offerTypes[number]['id'];
-export type OfferTypeDetails = typeof offerTypes[number];
 
 
 export type AdvertiserMetricItem = {
@@ -161,15 +200,14 @@ export type AdvertiserMetricItem = {
   description?: string;
 };
 
-export type PublishedOfferSummary = {
-  id: string;
-  title: string;
-  status: 'active' | 'pending' | 'expired' | 'draft';
-  views: number;
-  clicks: number;
-  isFeatured: boolean;
-  imageUrl?: string; 
-  dataAiHint?: string;
+// Summary for advertiser's list of their own offers
+export type PublishedOfferSummary = Pick<
+  Offer, 
+  'id' | 'title' | 'status' | 'imageUrl' | 'data-ai-hint' | 'visibility' | 'discountedPrice' | 'originalPrice' | 'usersUsedCount' | 'category'
+> & {
+  views?: number; // Example, would come from analytics
+  clicks?: number; // Example
+  isFeatured?: boolean; // Derived from visibility === 'destaque'
 };
 
 
@@ -201,31 +239,31 @@ export const mockBadges: Badge[] = [
 export const mockUser: User = {
   id: 'user123',
   name: 'Ana Clara Explorer',
-  avatarUrl: 'https://placehold.co/100x100.png',
+  avatarUrl: 'https://placehold.co/100x100.png?text=AE',
   avatarHint: 'person woman',
   points: 1250,
   level: USER_LEVELS.PRATA.name,
   currentXp: 650, 
   xpToNextLevel: USER_LEVELS.PRATA.nextLevelXp,
   badges: mockBadges.slice(0,3),
-  favoriteOffers: ['1', '3'],
+  favoriteOffers: ['offer-pizza-1', 'offer-sports-3'],
   followedMerchants: ['pizzariaSaborosaMerchant', 'atletaShopMerchant', 'botecoMestreMerchant'],
   checkInHistory: [
-    { id: 'chk1', offerId: '2', offerTitle: 'Corte de Cabelo + Barba', merchantName: 'Barbearia Premium', timestamp: new Date(Date.now() - 86400000 * 2), pointsEarned: POINTS_CHECKIN },
-    { id: 'chk2', offerId: '4', offerTitle: 'Happy Hour Dose Dupla Chopp', merchantName: 'Boteco do Mestre', timestamp: new Date(Date.now() - 86400000 * 5), pointsEarned: POINTS_CHECKIN },
-    { id: 'chk3', offerId: '1', offerTitle: '50% Off Pizza Gigante', merchantName: 'Pizzaria Saborosa', timestamp: new Date(Date.now() - 86400000 * 10), pointsEarned: POINTS_CHECKIN },
+    { id: 'chk1', offerId: 'offer-barber-2', offerTitle: 'Corte Masculino + Barba Modelada', merchantName: 'Barbearia Premium', timestamp: new Date(Date.now() - 86400000 * 2), pointsEarned: POINTS_CHECKIN },
+    { id: 'chk2', offerId: 'offer-bar-4', offerTitle: 'Happy Hour Dose Dupla Chopp', merchantName: 'Boteco do Mestre', timestamp: new Date(Date.now() - 86400000 * 5), pointsEarned: POINTS_CHECKIN },
+    { id: 'chk3', offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante', merchantName: 'Pizzaria Saborosa', timestamp: new Date(Date.now() - 86400000 * 10), pointsEarned: POINTS_CHECKIN },
   ],
   sharedOffersHistory: [
-      { id: 'share1', offerId: '1', offerTitle: '50% Off Pizza Gigante', platform: 'WhatsApp', timestamp: new Date(Date.now() - 86400000 * 1), pointsEarned: POINTS_SHARE_OFFER },
-      { id: 'share2', offerId: '3', offerTitle: 'Tênis Corrida ProBoost X', platform: 'Instagram', timestamp: new Date(Date.now() - 86400000 * 4), pointsEarned: POINTS_SHARE_OFFER },
+      { id: 'share1', offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante', platform: 'WhatsApp', timestamp: new Date(Date.now() - 86400000 * 1), pointsEarned: POINTS_SHARE_OFFER },
+      { id: 'share2', offerId: 'offer-sports-3', offerTitle: 'Tênis Corrida ProBoost X', platform: 'Instagram', timestamp: new Date(Date.now() - 86400000 * 4), pointsEarned: POINTS_SHARE_OFFER },
   ],
   sweepstakeParticipations: [
       { id: 'swp1', sweepstakeId: 'sw1', sweepstakeTitle: 'Jantar Romântico Vale R$300', timestamp: new Date(Date.now() - 86400000 * 3), pointsSpent: 100 },
       { id: 'swp2', sweepstakeId: 'sw2', sweepstakeTitle: 'Vale Compras de R$200 Loja X', timestamp: new Date(Date.now() - 86400000 * 8), pointsSpent: 50 },
   ],
   commentsMade: [
-      { id: 'cmtUser1', userId: 'user123', userName: 'Ana Clara Explorer', rating: 5, text: 'Adorei a pizza, super recomendo! Massa fininha e crocante.', timestamp: new Date(Date.now() - 86400000), offerId: '1', offerTitle: '50% Off Pizza Gigante + Refri Grátis', pointsEarned: POINTS_COMMENT_OFFER },
-      { id: 'cmtUser2', userId: 'user123', userName: 'Ana Clara Explorer', rating: 4, text: 'O corte ficou bom, mas o ambiente poderia ser mais silencioso.', timestamp: new Date(Date.now() - 86400000 * 3), offerId: '2', offerTitle: 'Corte Masculino + Barba Modelada', pointsEarned: POINTS_COMMENT_OFFER },
+      { id: 'cmtUser1', userId: 'user123', userName: 'Ana Clara Explorer', rating: 5, text: 'Adorei a pizza, super recomendo! Massa fininha e crocante.', timestamp: new Date(Date.now() - 86400000), offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante + Refri Grátis', pointsEarned: POINTS_COMMENT_OFFER },
+      { id: 'cmtUser2', userId: 'user123', userName: 'Ana Clara Explorer', rating: 4, text: 'O corte ficou bom, mas o ambiente poderia ser mais silencioso.', timestamp: new Date(Date.now() - 86400000 * 3), offerId: 'offer-barber-2', offerTitle: 'Corte Masculino + Barba Modelada', pointsEarned: POINTS_COMMENT_OFFER },
   ],
   isAdvertiser: false,
   address: 'Rua das Palmeiras, 123, Bairro Flores',
@@ -241,6 +279,7 @@ export const mockAdvertiserUser: User = {
   businessName: 'Pizzaria Saborosa',
   businessLogoUrl: 'https://placehold.co/150x150.png?text=PS',
   businessLogoHint: 'pizza logo',
+  businessDescription: 'A melhor pizza da cidade, com ingredientes frescos e forno a lenha! Venha conferir nossas promoções.',
   avatarUrl: 'https://placehold.co/100x100.png?text=CP',
   avatarHint: 'person chef',
   points: 0, 
@@ -250,133 +289,214 @@ export const mockAdvertiserUser: User = {
   isAdvertiser: true,
   advertiserProfileId: 'pizzariaSaborosaMerchant', 
   email: 'carlos.pizza@saborosa.com',
-  address: 'Avenida Principal, 789, Centro',
+  address: 'Avenida Principal, 789, Centro, Manaus-AM',
+  city: 'Manaus, AM',
   whatsapp: '(92) 98877-6655',
-  businessDescription: 'A melhor pizza da cidade, com ingredientes frescos e forno a lenha! Venha conferir nossas promoções.',
+  isProfileComplete: true,
 };
 
+const now = new Date();
+const oneDay = 86400000;
 
 export const mockOffers: Offer[] = [
   { 
-    id: '1', 
-    title: '50% Off Pizza Gigante + Refri Grátis', 
+    id: 'offer-pizza-1', 
+    offerType: 'relampago',
+    title: '🍕 50% Off Pizza Gigante + Refri Grátis HOJE!', 
+    description: 'Deliciosa pizza gigante com 50% de desconto e refrigerante de 2L grátis! Sabores selecionados. Apenas hoje!',
+    fullDescription: 'Aproveite nossa oferta relâmpago: pizza gigante (12 fatias, até 3 sabores selecionáveis) com 50% de desconto e leve um refrigerante de 2 litros totalmente grátis! Nossa massa é artesanal, com fermentação natural, e usamos apenas ingredientes frescos e de alta qualidade. Perfeito para compartilhar com a família e amigos. Válido para consumo no local, retirada ou delivery (taxa de entrega não inclusa). Promoção não acumulativa com outras ofertas. Corra, é só hoje!',
     merchantName: 'Pizzaria Saborosa', 
     merchantId: 'pizzariaSaborosaMerchant', 
+    createdBy: 'pizzariaSaborosaMerchant',
     merchantIsVerified: true,
-    imageUrl: 'https://placehold.co/600x300.png',
+    imageUrl: 'https://placehold.co/600x300.png?text=Pizza+Oferta',
     'data-ai-hint': 'pizza restaurant',
     galleryImages: [
-      'https://placehold.co/800x450.png',
-      'https://placehold.co/800x450.png',
-      'https://placehold.co/800x450.png',
-      'https://placehold.co/800x450.png',
+      'https://placehold.co/800x450.png?text=Pizza+1',
+      'https://placehold.co/800x450.png?text=Pizza+2',
+      'https://placehold.co/800x450.png?text=Interior+Restaurante',
+      'https://placehold.co/800x450.png?text=Clientes+Felizes',
     ],
     galleryImageHints: ['pizza variety', 'pizza slice', 'restaurant interior', 'happy customers'],
     originalPrice: 70.00, 
+    discountType: "finalValue",
     discountedPrice: 35.00, 
+    discountPercentage: 50,
     distance: '500m', 
     category: 'Alimentação', 
     rating: 4.8, 
     reviews: 210, 
-    timeRemaining: '1h 30m restantes', 
-    tags: ['#Relâmpago', '#Local', '#Popular', '#PizzaLovers'],
+    timeRemaining: 'Encerra Hoje!', 
+    timeLimit: '23:00',
+    tags: ['#Relâmpago', '#PizzaLovers', '#Promoção', '#Comida'],
     latitude: -3.0912, 
     longitude: -59.9734,
-    description: 'Deliciosa pizza gigante com 50% de desconto e refrigerante de 2L grátis! Sabores selecionados.',
-    fullDescription: 'Aproveite nossa oferta especial: pizza gigante (12 fatias, até 3 sabores selecionáveis) com 50% de desconto e leve um refrigerante de 2 litros totalmente grátis! Nossa massa é artesanal, com fermentação natural, e usamos apenas ingredientes frescos e de alta qualidade. Perfeito para compartilhar com a família e amigos. Válido para consumo no local, retirada ou delivery (taxa de entrega não inclusa). Promoção não acumulativa com outras ofertas.',
-    validUntil: new Date(Date.now() + 86400000 * 2).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric'}), 
+    validityStartDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0), 
+    validityEndDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59), 
     usersUsedCount: 138,
-    qrCodeValue: 'OFERTA1-PIZZASABOROSA-12345', 
-    pointsAwarded: POINTS_CHECKIN,
+    pointsAwarded: POINTS_CHECKIN + 2, 
+    pointsForCheckin: POINTS_CHECKIN + 2,
+    pointsForShare: POINTS_SHARE_OFFER,
+    pointsForComment: POINTS_COMMENT_OFFER,
     comments: [
-      { id: 'c1', userId: 'userX', userName: 'João Silva', userAvatarUrl: 'https://placehold.co/40x40.png', userAvatarHint: 'person avatar', rating: 5, text: 'Pizza maravilhosa, atendimento top!', timestamp: new Date(Date.now() - 3600000 * 5), pointsEarned: POINTS_COMMENT_OFFER },
-      { id: 'c2', userId: 'userY', userName: 'Maria Oliveira', userAvatarUrl: 'https://placehold.co/40x40.png', userAvatarHint: 'woman avatar', rating: 4, text: 'Gostei muito, ótimo custo-benefício.', timestamp: new Date(Date.now() - 3600000 * 24), pointsEarned: POINTS_COMMENT_OFFER },
-      { id: 'c3', userId: 'userZ', userName: 'Pedro Costa', rating: 5, text: 'Sempre peço, a melhor da cidade!', timestamp: new Date(Date.now() - 3600000 * 48), userAvatarUrl: 'https://placehold.co/40x40.png', userAvatarHint: 'person smiling', pointsEarned: POINTS_COMMENT_OFFER },
+      { id: 'c1', userId: 'userX', userName: 'João Silva', userAvatarUrl: 'https://placehold.co/40x40.png?text=JS', userAvatarHint: 'person avatar', rating: 5, text: 'Pizza maravilhosa, atendimento top!', timestamp: new Date(now.getTime() - 3600000 * 5), pointsEarned: POINTS_COMMENT_OFFER },
+      { id: 'c2', userId: 'userY', userName: 'Maria Oliveira', userAvatarUrl: 'https://placehold.co/40x40.png?text=MO', userAvatarHint: 'woman avatar', rating: 4, text: 'Gostei muito, ótimo custo-benefício.', timestamp: new Date(now.getTime() - 3600000 * 24), pointsEarned: POINTS_COMMENT_OFFER },
     ],
+    status: 'active',
+    visibility: 'destaque',
+    createdAt: new Date(now.getTime() - oneDay * 5),
+    updatedAt: new Date(now.getTime() - oneDay * 1),
+    isPresentialOnly: false,
+    isUnlimited: false,
+    quantity: 50,
   },
   { 
-    id: '2', 
-    title: 'Corte Masculino + Barba Modelada', 
+    id: 'offer-barber-2', 
+    offerType: 'padrao',
+    title: '💇‍♂️ Corte Masculino + Barba Modelada', 
+    description: 'Renove seu visual com corte de cabelo moderno e barba modelada por nossos especialistas.',
+    fullDescription: 'Dê um trato completo no visual na Barbearia Premium. Nossos barbeiros são especialistas em cortes modernos e tradicionais, além de modelagem de barba com toalha quente e produtos de alta qualidade. Ambiente climatizado, som ambiente e um café expresso cortesia para você relaxar enquanto cuidamos do seu estilo.',
     merchantName: 'Barbearia Premium', 
     merchantId: 'barbeariaPremiumMerchant',
+    createdBy: 'barbeariaPremiumMerchant',
     merchantIsVerified: false,
-    imageUrl: 'https://placehold.co/600x300.png',
+    imageUrl: 'https://placehold.co/600x300.png?text=Barbearia',
     'data-ai-hint': 'barber shop',
+    galleryImages: ['https://placehold.co/800x450.png?text=Corte+Estilo', 'https://placehold.co/800x450.png?text=Barbeiro+Trabalhando'],
+    galleryImageHints: ['haircut style', 'barber working'],
     originalPrice: 70.00, 
     discountedPrice: 45.00, 
+    discountType: 'finalValue',
+    discountPercentage: Math.round(((70-45)/70)*100),
     distance: '1.2km', 
     category: 'Serviços', 
     rating: 4.9, 
     reviews: 95, 
-    timeRemaining: 'Encerra amanhã', 
-    tags: ['cabelo', 'barba', 'beleza'],
+    timeRemaining: 'Encerra em 2 dias', 
+    tags: ['#Barbearia', '#EstiloMasculino', '#Beleza'],
     latitude: -3.1022,
     longitude: -59.9810,
-    description: 'Renove seu visual com corte de cabelo moderno e barba modelada por nossos especialistas. Ambiente climatizado e café expresso cortesia.',
-    fullDescription: 'Dê um trato completo no visual na Barbearia Premium. Nossos barbeiros são especialistas em cortes modernos e tradicionais, além de modelagem de barba com toalha quente e produtos de alta qualidade. Ambiente climatizado, som ambiente e um café expresso cortesia para você relaxar enquanto cuidamos do seu estilo.',
-    validUntil: 'Amanhã',
+    validityStartDate: new Date(now.getTime() - oneDay * 2), 
+    validityEndDate: new Date(now.getTime() + oneDay * 2), 
     usersUsedCount: 72,
     pointsAwarded: POINTS_CHECKIN,
-    galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'],
-    galleryImageHints: ['haircut style', 'barber working'],
+    pointsForCheckin: POINTS_CHECKIN,
+    status: 'active',
+    visibility: 'normal',
+    createdAt: new Date(now.getTime() - oneDay * 10),
+    updatedAt: new Date(now.getTime() - oneDay * 2),
+    isPresentialOnly: true,
   },
   { 
-    id: '3', 
-    title: 'Tênis Corrida ProBoost X', 
+    id: 'offer-sports-3', 
+    offerType: 'cupom_qr',
+    title: '👟 Tênis Corrida ProBoost X - Cupom Exclusivo!', 
+    description: 'Performance e conforto com o ProBoost X. Cupom QR para desconto especial na loja!',
+    fullDescription: 'Supere seus limites com o Tênis Corrida ProBoost X. Desenvolvido para corredores exigentes, oferece máximo amortecimento, responsividade e estabilidade. Cabedal em mesh respirável, solado de alta durabilidade e design moderno. Ideal para treinos diários e provas. Apresente o QR Code no caixa para validar seu desconto exclusivo.',
     merchantName: 'Atleta Shop', 
     merchantId: 'atletaShopMerchant',
+    createdBy: 'atletaShopMerchant',
     merchantIsVerified: true,
-    imageUrl: 'https://placehold.co/600x300.png',
+    imageUrl: 'https://placehold.co/600x300.png?text=Tenis+Esportivo',
     'data-ai-hint': 'sport shoes',
+    galleryImages: ['https://placehold.co/800x450.png?text=Tenis+Detalhe', 'https://placehold.co/800x450.png?text=Sola+Tenis', 'https://placehold.co/800x450.png?text=Pessoa+Correndo'],
+    galleryImageHints: ['running shoe', 'shoe sole detail', 'person running'],
     originalPrice: 450.00, 
     discountedPrice: 299.90, 
+    discountType: 'finalValue',
+    discountPercentage: Math.round(((450-299.90)/450)*100),
     distance: '2.5km', 
     category: 'Compras', 
     rating: 4.5, 
     reviews: 230, 
-    timeRemaining: '3 dias restantes', 
-    tags: ['tênis', 'esporte', 'corrida'],
+    timeRemaining: 'Válido por 1 semana', 
+    tags: ['#Esporte', '#Corrida', '#CupomQR', '#Desconto'],
     latitude: -3.0850,
     longitude: -60.0170,
-    description: 'Performance e conforto para suas corridas com o Tênis ProBoost X. Tecnologia de amortecimento avançada e design arrojado.',
-    fullDescription: 'Supere seus limites com o Tênis Corrida ProBoost X. Desenvolvido para corredores exigentes, oferece máximo amortecimento, responsividade e estabilidade. Cabedal em mesh respirável, solado de alta durabilidade e design moderno. Ideal para treinos diários e provas.',
-    validUntil: new Date(Date.now() + 86400000 * 3).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric'}),
+    validityStartDate: new Date(now.getTime() - oneDay * 1), 
+    validityEndDate: new Date(now.getTime() + oneDay * 7), 
     usersUsedCount: 95,
-    pointsAwarded: POINTS_CHECKIN, 
-    galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'],
-    galleryImageHints: ['running shoe', 'shoe sole', 'person running'],
+    pointsAwarded: POINTS_CHECKIN,
+    pointsForCheckin: POINTS_CHECKIN,
+    isPresentialOnly: true,
+    status: 'active',
+    visibility: 'destaque',
+    createdAt: new Date(now.getTime() - oneDay * 15),
+    updatedAt: new Date(now.getTime() - oneDay * 1),
   },
   { 
-    id: '4', 
-    title: 'Happy Hour: Chopp Artesanal em Dobro', 
+    id: 'offer-bar-4', 
+    offerType: 'combo',
+    title: '🍻 Combo Happy Hour: 2 Chopps + Porção', 
+    description: 'Relaxe após o trabalho: 2 chopps artesanais (300ml) + porção de batata frita especial.',
+    fullDescription: 'O Happy Hour perfeito te espera! Desfrute de 2 canecas de chopp artesanal (Pilsen ou IPA, 300ml cada) acompanhadas de uma generosa porção de batatas fritas crocantes com nosso molho especial da casa. Ideal para compartilhar e botar o papo em dia.',
     merchantName: 'Boteco do Mestre', 
     merchantId: 'botecoMestreMerchant',
-    imageUrl: 'https://placehold.co/600x300.png',
-    'data-ai-hint': 'beer bar',
-    originalPrice: 20.00, 
-    discountedPrice: 10.00, 
+    createdBy: 'botecoMestreMerchant',
+    merchantIsVerified: false,
+    imageUrl: 'https://placehold.co/600x300.png?text=Happy+Hour',
+    'data-ai-hint': 'beer bar food',
+    galleryImages: ['https://placehold.co/800x450.png?text=Chopp+Duplo', 'https://placehold.co/800x450.png?text=Porcao+Batata'],
+    galleryImageHints: ['draft beer glass', 'fries portion'],
+    originalPrice: 55.00, // Estimativa do valor original dos itens separados
+    discountedPrice: 39.90, 
+    discountType: 'finalValue',
+    discountPercentage: Math.round(((55-39.90)/55)*100),
+    comboItem1: "2 Chopps Artesanais (300ml cada)",
+    comboItem2: "1 Porção de Batata Frita Especial",
     distance: '800m', 
     category: 'Alimentação', 
     rating: 4.3, 
     reviews: 78, 
-    timeRemaining: 'Hoje 17h-20h', 
-    tags: ['bar', 'bebidas', 'happy hour'],
+    timeRemaining: 'Válido todos os dias 17h-20h', 
+    tags: ['#Bar', '#HappyHour', '#Combo', '#Petiscos'],
     latitude: -3.1105,
     longitude: -60.0056,
-    description: 'Todo dia das 17h às 20h, peça um chopp artesanal e ganhe outro! Perfeito para relaxar após o trabalho com amigos.',
-    fullDescription: 'O melhor Happy Hour da cidade é no Boteco do Mestre! Das 17h às 20h, todos os dias, na compra de um chopp artesanal (Pilsen, IPA ou Weiss), o segundo é por nossa conta. Ambiente descontraído, petiscos deliciosos e música ambiente. Chame os amigos e venha aproveitar!',
-    validUntil: 'Hoje até 20:00',
+    validityStartDate: new Date(now.getFullYear(), now.getMonth(), 1), 
+    validityEndDate: new Date(now.getFullYear(), now.getMonth() + 1, 0), // Fim do mês corrente
     usersUsedCount: 150,
     pointsAwarded: POINTS_CHECKIN,
-    galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'],
-    galleryImageHints: ['draft beer', 'bar snacks'],
+    pointsForCheckin: POINTS_CHECKIN,
+    status: 'active',
+    visibility: 'normal',
+    createdAt: new Date(now.getTime() - oneDay * 20),
+    updatedAt: new Date(now.getTime() - oneDay * 3),
+  },
+  {
+    id: 'offer-checkin-5',
+    offerType: 'checkin_premiado',
+    title: '🌟 Check-in Premiado: Ganhe Sobremesa!',
+    description: 'Faça 3 check-ins em nosso café e ganhe uma sobremesa especial na sua próxima visita.',
+    fullDescription: 'Participe do nosso programa de fidelidade Check-in Premiado! Ao realizar 3 check-ins (em qualquer oferta ou visita normal) em nosso estabelecimento, você ganha um voucher para uma deliciosa sobremesa do dia na sua quarta visita. Acumule check-ins e saboreie!',
+    merchantName: 'Café Aconchego',
+    merchantId: 'cafeAconchegoMerchant',
+    createdBy: 'cafeAconchegoMerchant',
+    merchantIsVerified: true,
+    imageUrl: 'https://placehold.co/600x300.png?text=Cafe+Aconchego',
+    'data-ai-hint': 'coffee shop dessert',
+    category: 'Alimentação',
+    discountedPrice: 0, // A "oferta" é a recompensa
+    originalPrice: 20, // Valor estimado da recompensa
+    minCheckins: 3,
+    checkinReward: 'Uma Sobremesa Especial (do dia)',
+    validityStartDate: new Date(now.getFullYear(), 0, 1), // Início do ano
+    validityEndDate: new Date(now.getFullYear(), 11, 31), // Fim do ano
+    tags: ['#Fidelidade', '#CheckinPremiado', '#SobremesaGratis'],
+    status: 'active',
+    visibility: 'normal',
+    createdAt: new Date(now.getTime() - oneDay * 30),
+    updatedAt: new Date(now.getTime() - oneDay * 5),
+    pointsAwarded: 0, // Pontos são ganhos nos check-ins normais
+    distance: '1.5km',
+    latitude: -3.0987,
+    longitude: -60.0012,
   },
 ];
 
 export const mockSweepstakes: Sweepstake[] = [
-  { id: 'sw1', title: 'Ganhe um Jantar Romântico', description: 'Concorra a um jantar especial para duas pessoas no Restaurante Aconchego. Sorteio dia 30!', imageUrl: 'https://placehold.co/600x300.png', pointsToEnter: 100, endDate: new Date(Date.now() + 86400000 * 7), 'data-ai-hint': 'romantic dinner' },
-  { id: 'sw2', title: 'Vale Compras de R$200', description: 'Use seus pontos para concorrer a um vale compras de R$200 na Loja Estilo Total. O resultado sai em 2 semanas!', imageUrl: 'https://placehold.co/600x300.png', pointsToEnter: 50, endDate: new Date(Date.now() + 86400000 * 14), 'data-ai-hint': 'shopping giftcard' },
-  { id: 'sw3', title: 'Um Ano de Pizza Grátis', description: 'Imagine: uma pizza grande por mês, por um ano inteiro! Participe com 200 pontos.', imageUrl: 'https://placehold.co/600x300.png', pointsToEnter: 200, endDate: new Date(Date.now() + 86400000 * 30), 'data-ai-hint': 'pizza stack' },
+  { id: 'sw1', title: 'Ganhe um Jantar Romântico', description: 'Concorra a um jantar especial para duas pessoas no Restaurante Aconchego. Sorteio dia 30!', imageUrl: 'https://placehold.co/600x300.png?text=Jantar', 'data-ai-hint': 'romantic dinner', pointsToEnter: 100, endDate: new Date(now.getTime() + oneDay * 7) },
+  { id: 'sw2', title: 'Vale Compras de R$200', description: 'Use seus pontos para concorrer a um vale compras de R$200 na Loja Estilo Total. O resultado sai em 2 semanas!', imageUrl: 'https://placehold.co/600x300.png?text=Vale+Compras', 'data-ai-hint': 'shopping giftcard', pointsToEnter: 50, endDate: new Date(now.getTime() + oneDay * 14) },
+  { id: 'sw3', title: 'Um Ano de Pizza Grátis', description: 'Imagine: uma pizza grande por mês, por um ano inteiro! Participe com 200 pontos.', imageUrl: 'https://placehold.co/600x300.png?text=Pizza+Ano', 'data-ai-hint': 'pizza stack', pointsToEnter: 200, endDate: new Date(now.getTime() + oneDay * 30) },
 ];
 
 export const categories: Category[] = [ 
@@ -386,6 +506,7 @@ export const categories: Category[] = [
   { name: 'Lazer', icon: 'Smile' },
   { name: 'Saúde', icon: 'HeartPulse' },
   { name: 'Educação', icon: 'BookOpen' },
+  { name: 'Outros', icon: 'Package' },
 ];
 
 
@@ -406,9 +527,12 @@ export const getMockMerchantById = (id: string): { id: string, name: string, ima
         };
     }
     
+    // Fallback for specific known merchants not in current mockOffers for some reason
     if (id === 'pizzariaSaborosaMerchant') return {id, name: 'Pizzaria Saborosa', isVerified: true, 'data-ai-hint': 'pizza place', imageUrl: 'https://placehold.co/64x64.png?text=PS'};
     if (id === 'atletaShopMerchant') return {id, name: 'Atleta Shop', isVerified: true, 'data-ai-hint': 'sport store', imageUrl: 'https://placehold.co/64x64.png?text=AS'};
     if (id === 'botecoMestreMerchant') return {id, name: 'Boteco do Mestre', isVerified: false, 'data-ai-hint': 'bar restaurant', imageUrl: 'https://placehold.co/64x64.png?text=BM'};
+    if (id === 'cafeAconchegoMerchant') return {id, name: 'Café Aconchego', isVerified: true, 'data-ai-hint': 'coffee shop', imageUrl: 'https://placehold.co/64x64.png?text=CA'};
+
 
     return undefined;
 };

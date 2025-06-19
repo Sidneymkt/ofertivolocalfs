@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Edit3, Copy, Trash2, Star, Eye, MousePointerClick, ListChecks } from 'lucide-react';
-import Image from 'next/image'; // For placeholder images
+import { Edit3, Copy, Trash2, Star, Eye, MousePointerClick, ListChecks, AlertTriangle, ClockIcon, Hourglass } from 'lucide-react';
+import Image from 'next/image'; 
 import type { PublishedOfferSummary } from '@/types';
 
 interface PublishedOffersSectionProps {
@@ -15,22 +15,45 @@ interface PublishedOffersSectionProps {
 const StatusBadge: React.FC<{ status: PublishedOfferSummary['status'] }> = ({ status }) => {
   let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
   let text = status.charAt(0).toUpperCase() + status.slice(1);
+  let Icon = null;
 
-  if (status === 'active') {
-    variant = 'secondary'; // Greenish
-    text = 'Ativa';
-  } else if (status === 'expired') {
-    variant = 'destructive';
-    text = 'Expirada';
-  } else if (status === 'pending') {
-    variant = 'default'; // Bluish (primary)
-    text = 'Pendente';
-  } else if (status === 'draft') {
-    variant = 'outline';
-    text = 'Rascunho';
+  switch (status) {
+    case 'active':
+      variant = 'secondary'; 
+      text = 'Ativa';
+      Icon = CheckCircle;
+      break;
+    case 'expired':
+      variant = 'destructive';
+      text = 'Expirada';
+      Icon = Hourglass;
+      break;
+    case 'pending':
+    case 'awaiting_approval':
+      variant = 'default'; 
+      text = 'Pendente';
+      Icon = ClockIcon;
+      break;
+    case 'draft':
+      variant = 'outline';
+      text = 'Rascunho';
+      Icon = Edit3;
+      break;
+    case 'rejected':
+      variant = 'destructive';
+      text = 'Rejeitada';
+      Icon = AlertTriangle;
+      break;
+    default:
+      Icon = ListChecks;
+      text = status;
   }
 
-  return <Badge variant={variant}>{text}</Badge>;
+
+  return <Badge variant={variant} className="flex items-center gap-1 whitespace-nowrap">
+    {Icon && <Icon size={13}/>}
+    {text}
+    </Badge>;
 };
 
 const PublishedOffersSection: React.FC<PublishedOffersSectionProps> = ({ offers }) => {
@@ -51,20 +74,21 @@ const PublishedOffersSection: React.FC<PublishedOffersSectionProps> = ({ offers 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[80px] hidden md:table-cell">Imagem</TableHead>
+                  <TableHead className="w-[60px] hidden md:table-cell">Imagem</TableHead>
                   <TableHead>Título</TableHead>
+                  <TableHead className="hidden sm:table-cell">Categoria</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Visualizações</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Cliques</TableHead>
+                  <TableHead className="text-center hidden sm:table-cell">Preço</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Usos</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {offers.map((offer) => (
                   <TableRow key={offer.id} className="hover:bg-muted/50">
-                    <TableCell className="hidden md:table-cell">
+                    <TableCell className="hidden md:table-cell p-2">
                       <Image 
-                        src={offer.imageUrl || `https://placehold.co/64x64.png?text=Oferta`} 
+                        src={offer.imageUrl || `https://placehold.co/48x48.png?text=Img`} 
                         alt={offer.title} 
                         width={48} 
                         height={48} 
@@ -72,24 +96,24 @@ const PublishedOffersSection: React.FC<PublishedOffersSectionProps> = ({ offers 
                         data-ai-hint={offer.dataAiHint || "offer image"}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium max-w-[200px] truncate">
                       <div className="flex items-center gap-2">
                         {offer.title}
-                        {offer.isFeatured && <Star className="h-4 w-4 text-accent fill-accent" title="Oferta Destaque" />}
+                        {offer.visibility === 'destaque' && <Star className="h-4 w-4 text-accent fill-accent shrink-0" title="Oferta Destaque" />}
                       </div>
                     </TableCell>
+                    <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">{offer.category}</TableCell>
                     <TableCell>
                       <StatusBadge status={offer.status} />
                     </TableCell>
                     <TableCell className="text-center hidden sm:table-cell">
-                      <div className="flex items-center justify-center gap-1 text-muted-foreground">
-                        <Eye size={14}/> {offer.views}
+                      <div className="flex flex-col items-center">
+                        <span className="font-semibold text-primary">R${offer.discountedPrice.toFixed(2)}</span>
+                        {offer.originalPrice && <span className="text-xs text-muted-foreground line-through">R${offer.originalPrice.toFixed(2)}</span>}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center hidden sm:table-cell">
-                       <div className="flex items-center justify-center gap-1 text-muted-foreground">
-                        <MousePointerClick size={14}/> {offer.clicks}
-                      </div>
+                    <TableCell className="text-center hidden lg:table-cell text-sm text-muted-foreground">
+                        {offer.usersUsedCount || 0}
                     </TableCell>
                     <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary" title="Editar">
