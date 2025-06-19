@@ -155,6 +155,8 @@ export interface User {
   email?: string;
   avatarUrl?: string;
   avatarHint?: string;
+  coverPhotoUrl?: string;
+  coverPhotoHint?: string;
   points: number;
   level: string;
   currentXp: number;
@@ -168,12 +170,18 @@ export interface User {
   commentsMade?: Comment[];
 
   isAdvertiser?: boolean;
-  advertiserProfileId?: string;
+  advertiserProfileId?: string; // ID of the advertiser's specific profile/business entity
   businessName?: string;
   businessLogoUrl?: string;
   businessLogoHint?: string;
+  businessCoverPhotoUrl?: string;
+  businessCoverPhotoHint?: string;
   businessDescription?: string;
+  businessAddress?: string; // This might be different from user's personal address
+  businessCity?: string;   // This might be different from user's personal city
+  businessWhatsapp?: string; // Commercial contact
 
+  // Personal details (might be distinct from business details if user is also an advertiser)
   address?: string;
   city?: string;
   whatsapp?: string;
@@ -241,6 +249,8 @@ export const mockUser: User = {
   name: 'Ana Clara Explorer',
   avatarUrl: 'https://placehold.co/100x100.png?text=AE',
   avatarHint: 'person woman',
+  coverPhotoUrl: 'https://placehold.co/1200x300.png?text=Capa+Perfil',
+  coverPhotoHint: 'profile cover abstract',
   points: 1250,
   level: USER_LEVELS.PRATA.name,
   currentXp: 650,
@@ -275,25 +285,32 @@ export const mockUser: User = {
 
 export const mockAdvertiserUser: User = {
   id: 'advUserPizzariaSaborosa',
-  name: 'Carlos Pizzaiolo',
+  name: 'Carlos Pizzaiolo', // Personal name of the advertiser
+  avatarUrl: 'https://placehold.co/100x100.png?text=CP', // Personal avatar
+  avatarHint: 'person chef',
+  
+  isAdvertiser: true,
+  advertiserProfileId: 'pizzariaSaborosaMerchant',
   businessName: 'Pizzaria Saborosa',
   businessLogoUrl: 'https://placehold.co/150x150.png?text=PS',
   businessLogoHint: 'pizza logo',
+  businessCoverPhotoUrl: 'https://placehold.co/1200x400.png?text=Pizzaria+Capa',
+  businessCoverPhotoHint: 'pizzeria banner',
   businessDescription: 'A melhor pizza da cidade, com ingredientes frescos e forno a lenha! Venha conferir nossas promoções.',
-  avatarUrl: 'https://placehold.co/100x100.png?text=CP',
-  avatarHint: 'person chef',
-  points: 0,
+  businessAddress: 'Avenida Principal, 789, Centro, Manaus-AM',
+  businessCity: 'Manaus, AM',
+  businessWhatsapp: '(92) 98877-6655',
+  
+  // User-specific gamification points (advertisers can also be users of the app)
+  points: 50, // Example points for the advertiser as a user
   level: USER_LEVELS.INICIANTE.name,
-  currentXp: 0,
+  currentXp: 10,
   xpToNextLevel: USER_LEVELS.INICIANTE.nextLevelXp,
-  isAdvertiser: true,
-  advertiserProfileId: 'pizzariaSaborosaMerchant',
-  email: 'carlos.pizza@saborosa.com',
-  address: 'Avenida Principal, 789, Centro, Manaus-AM',
-  city: 'Manaus, AM',
-  whatsapp: '(92) 98877-6655',
-  isProfileComplete: true,
+  
+  email: 'carlos.pizza@saborosa.com', // Business contact email
+  isProfileComplete: true, // Referring to business profile completion
 };
+
 
 const now = new Date();
 const oneDay = 86400000;
@@ -568,3 +585,5 @@ export const adminModules = [
   { id: 'finance', title: 'Financeiro e Assinaturas', icon: CreditCard, description: 'Controle pagamentos, assinaturas e receita.' },
   { id: 'support', title: 'Central de Suporte', icon: HelpCircle, description: 'Gerencie tickets e forneça suporte aos usuários.' },
 ];
+
+    

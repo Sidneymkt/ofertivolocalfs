@@ -9,48 +9,59 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
-import { Settings, Edit3, Building, Phone, Link2, MapPin, Clock } from 'lucide-react';
+import { Settings, Edit3, Building, Phone, Link2, MapPin, Clock, Camera, Image as ImageIconLucide } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface AdvertiserProfileSettingsCardProps {
-  advertiserUser: User; // Assuming User type includes businessName, businessLogoUrl etc.
+  advertiserUser: User; 
 }
 
 const AdvertiserProfileSettingsCard: React.FC<AdvertiserProfileSettingsCardProps> = ({ advertiserUser }) => {
   const { toast } = useToast();
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverPhotoInputRef = useRef<HTMLInputElement>(null);
+
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(advertiserUser.businessLogoUrl || null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(advertiserUser.businessCoverPhotoUrl || null);
   
   // State for other form fields (simplified for now)
   const [businessName, setBusinessName] = useState(advertiserUser.businessName || '');
-  const [businessAddress, setBusinessAddress] = useState(advertiserUser.address || '');
-  const [businessWhatsapp, setBusinessWhatsapp] = useState(advertiserUser.whatsapp || '');
+  const [businessAddress, setBusinessAddress] = useState(advertiserUser.businessAddress || advertiserUser.address || '');
+  const [businessWhatsapp, setBusinessWhatsapp] = useState(advertiserUser.businessWhatsapp || advertiserUser.whatsapp || '');
 
   const handleEditLogoClick = () => {
     logoInputRef.current?.click();
   };
 
-  const handleLogoChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleEditCoverPhotoClick = () => {
+    coverPhotoInputRef.current?.click();
+  };
+
+  const handleImageChange = (
+    event: ChangeEvent<HTMLInputElement>, 
+    setImagePreviewUrl: React.Dispatch<React.SetStateAction<string | null>>,
+    imageType: 'logo' | 'cover'
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setLogoPreviewUrl(reader.result as string);
+        setImagePreviewUrl(reader.result as string);
         toast({
-          title: "Logo Selecionada",
-          description: `Nova imagem de logo "${file.name}" pronta para upload.`,
+          title: `Imagem de ${imageType === 'logo' ? 'logo' : 'capa'} selecionada`,
+          description: `Nova imagem "${file.name}" pronta para upload.`,
         });
       };
       reader.readAsDataURL(file);
       // In a real app, you would then upload the 'file' object.
-      console.log("Selected logo file:", file.name);
+      console.log(`Selected ${imageType} file:`, file.name);
     }
   };
 
   const handleSaveChanges = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, collect all form data and send to backend
-    console.log("Saving changes:", { businessName, businessAddress, businessWhatsapp, logoPreviewUrl });
+    console.log("Saving changes:", { businessName, businessAddress, businessWhatsapp, logoPreviewUrl, coverPreviewUrl });
     toast({
       title: "Alterações Salvas (Simulado)",
       description: "As informações do seu negócio foram atualizadas.",
@@ -64,10 +75,45 @@ const AdvertiserProfileSettingsCard: React.FC<AdvertiserProfileSettingsCardProps
           <Settings className="h-6 w-6 text-primary" />
           Configurações do Perfil do Negócio
         </CardTitle>
-        <CardDescription>Atualize as informações do seu negócio, logo e horário de funcionamento.</CardDescription>
+        <CardDescription>Atualize as informações do seu negócio, logo, capa e horário de funcionamento.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSaveChanges} className="space-y-6">
+        <form onSubmit={handleSaveChanges} className="space-y-8">
+          {/* Cover Photo Upload Section */}
+          <div className="space-y-2">
+            <Label htmlFor="businessCoverPhoto" className="text-base font-medium flex items-center gap-2">
+              <ImageIconLucide size={18} className="text-muted-foreground" /> Foto de Capa do Negócio
+            </Label>
+            <div className="relative w-full aspect-[16/5] md:aspect-[16/4] rounded-md overflow-hidden border bg-muted group">
+              <Image 
+                src={coverPreviewUrl || "https://placehold.co/1200x300.png?text=Capa+do+Negócio"} 
+                alt="Foto de Capa do Negócio" 
+                layout="fill" 
+                objectFit="cover"
+                className="transition-opacity duration-300 group-hover:opacity-80"
+                data-ai-hint={advertiserUser.businessCoverPhotoHint || "business banner storefront"}
+              />
+               <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                className="absolute top-3 right-3 bg-card/80 backdrop-blur-sm border-primary text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={handleEditCoverPhotoClick}
+              >
+                <Camera size={16} className="mr-2" /> Alterar Capa
+              </Button>
+            </div>
+            <input
+              type="file"
+              id="businessCoverPhoto"
+              ref={coverPhotoInputRef}
+              onChange={(e) => handleImageChange(e, setCoverPreviewUrl, 'cover')}
+              accept="image/*"
+              className="hidden"
+            />
+          </div>
+
+
           {/* Logo Upload Section */}
           <div className="space-y-2">
             <Label htmlFor="businessLogo" className="text-base font-medium">Logo do Negócio</Label>
@@ -88,7 +134,7 @@ const AdvertiserProfileSettingsCard: React.FC<AdvertiserProfileSettingsCardProps
                 type="file"
                 id="businessLogo"
                 ref={logoInputRef}
-                onChange={handleLogoChange}
+                onChange={(e) => handleImageChange(e, setLogoPreviewUrl, 'logo')}
                 accept="image/*"
                 className="hidden"
               />
@@ -96,7 +142,7 @@ const AdvertiserProfileSettingsCard: React.FC<AdvertiserProfileSettingsCardProps
           </div>
 
           {/* Business Info Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
               <Label htmlFor="businessName">Nome do Negócio</Label>
               <div className="relative">
@@ -114,10 +160,10 @@ const AdvertiserProfileSettingsCard: React.FC<AdvertiserProfileSettingsCardProps
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="businessAddress">Endereço Completo</Label>
+            <Label htmlFor="businessAddressFull">Endereço Completo</Label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="businessAddress" value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)} placeholder="Rua Exemplo, 123, Bairro, Cidade - Estado, CEP" className="pl-10" />
+              <Input id="businessAddressFull" value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)} placeholder="Rua Exemplo, 123, Bairro, Cidade - Estado, CEP" className="pl-10" />
             </div>
           </div>
           
@@ -145,7 +191,7 @@ const AdvertiserProfileSettingsCard: React.FC<AdvertiserProfileSettingsCardProps
           {/* Placeholder for Map Integration */}
           <div className="space-y-2">
             <Label className="text-base font-medium">Localização no Mapa</Label>
-            <div className="w-full h-40 bg-muted rounded-md border flex items-center justify-center">
+            <div className="w-full h-48 bg-muted rounded-md border flex items-center justify-center">
               <p className="text-muted-foreground text-sm">Integração com mapa em breve.</p>
             </div>
           </div>
@@ -160,3 +206,5 @@ const AdvertiserProfileSettingsCard: React.FC<AdvertiserProfileSettingsCardProps
 };
 
 export default AdvertiserProfileSettingsCard;
+
+    
