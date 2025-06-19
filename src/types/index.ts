@@ -1,12 +1,19 @@
 
+
 export interface Badge {
   id: string;
   name: string;
-  icon: string; // Changed from React.ElementType to string
+  icon: string; // String identifier for the icon (e.g., 'Star', 'Users')
   description: string;
   unlockedDate?: Date;
   'data-ai-hint'?: string;
 }
+
+export interface Category { // Updated Category interface
+  name: string;
+  icon: string; // String identifier for the icon (e.g., 'Utensils')
+}
+
 
 export interface Comment {
   id: string;
@@ -153,10 +160,10 @@ export interface AdminMetricItem {
 
 // MOCK DATA
 
-import type React from 'react';
+import type React from 'react'; // Keep for other ElementType usage
 import { 
   Activity, AlertTriangle, Award, BadgeCheck, BarChart3, BookOpen, Building2, CalendarCheck2, CheckCircle, Coins, CreditCard, DollarSign, Eye, FileText, Filter, Gift, HandCoins, HeartPulse, HelpCircle, ListChecks, MailQuestion, MapPinned, Megaphone, MessageSquare, MousePointerClick, PackageCheck, Settings2, ShieldAlert, ShoppingCart, Smile, Sparkles, Star, ThumbsUp, Ticket, TrendingDown, TrendingUp, UserCheck, UserCog, UserPlus, Users, Utensils, Wrench, Zap 
-} from 'lucide-react'; // Keep these imports for other parts of types.ts that might use them directly (e.g., categories, adminModules)
+} from 'lucide-react';
 
 // Point values for user actions
 export const POINTS_CHECKIN = 5; 
@@ -351,13 +358,13 @@ export const mockSweepstakes: Sweepstake[] = [
   { id: 'sw3', title: 'Um Ano de Pizza Grátis', description: 'Imagine: uma pizza grande por mês, por um ano inteiro! Participe com 200 pontos.', imageUrl: 'https://placehold.co/600x300.png', pointsToEnter: 200, endDate: new Date(Date.now() + 86400000 * 30), 'data-ai-hint': 'pizza stack' },
 ];
 
-export const categories = [
-  { name: 'Alimentação', icon: Utensils },
-  { name: 'Serviços', icon: Wrench },
-  { name: 'Compras', icon: ShoppingCart },
-  { name: 'Lazer', icon: Smile },
-  { name: 'Saúde', icon: HeartPulse },
-  { name: 'Educação', icon: BookOpen },
+export const categories: Category[] = [ // Updated to use string icons
+  { name: 'Alimentação', icon: 'Utensils' },
+  { name: 'Serviços', icon: 'Wrench' },
+  { name: 'Compras', icon: 'ShoppingCart' },
+  { name: 'Lazer', icon: 'Smile' },
+  { name: 'Saúde', icon: 'HeartPulse' },
+  { name: 'Educação', icon: 'BookOpen' },
 ];
 
 // Helper function to get a mock offer by ID
