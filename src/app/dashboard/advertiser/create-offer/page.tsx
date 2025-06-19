@@ -18,10 +18,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { categories } from '@/types';
-import { CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIcon, AlertCircle, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Image from 'next/image';
+import { cn } from '@/lib/utils'; // Added missing import
 
 const offerFormSchema = z.object({
   title: z.string().min(5, "O título deve ter pelo menos 5 caracteres.").max(100, "Título muito longo."),
