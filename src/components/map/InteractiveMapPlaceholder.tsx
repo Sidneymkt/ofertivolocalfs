@@ -1,4 +1,4 @@
-import { Map } from 'lucide-react';
+import { Map, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 
@@ -23,8 +23,13 @@ const InteractiveMapPlaceholder = () => {
             objectFit="cover"
             data-ai-hint="city map"
           />
-          {/* Você pode adicionar um ícone de marcador sobreposto aqui se desejar */}
-          {/* Exemplo: <MapPin className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500" size={32} /> */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <MapPin
+              className="h-10 w-10 text-destructive drop-shadow-lg animate-bounce"
+              fill="currentColor"
+              style={{ animationDuration: '1.5s' }}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
