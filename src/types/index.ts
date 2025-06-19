@@ -50,6 +50,7 @@ export interface User {
   // For determining if the user is an advertiser and owns an offer
   isAdvertiser?: boolean; 
   advertiserProfileId?: string; 
+  businessName?: string; // Added for advertiser dashboard
 }
 
 export interface CheckIn {
@@ -70,6 +71,27 @@ export interface Sweepstake {
   'data-ai-hint'?: string;
 }
 
+// Types for Advertiser Dashboard
+export interface AdvertiserMetricItem {
+  title: string;
+  value: string | number;
+  icon: React.ElementType;
+  trend?: string; // e.g., '+10%', '-5%'
+  description?: string;
+}
+
+export interface PublishedOfferSummary {
+  id: string;
+  title: string;
+  status: 'active' | 'pending' | 'expired' | 'draft';
+  views: number;
+  clicks: number;
+  isFeatured: boolean;
+  imageUrl?: string; // Optional image for the list
+  dataAiHint?: string;
+}
+
+
 export const mockUser: User = {
   id: 'user123',
   name: 'Ana Clara',
@@ -88,6 +110,7 @@ export const mockUser: User = {
 export const mockAdvertiserUser: User = {
   id: 'advUserPizzariaSaborosa', // This ID should match a merchantId in an offer
   name: 'Carlos Pizzaiolo',
+  businessName: 'Pizzaria Saborosa',
   avatarUrl: 'https://placehold.co/100x100.png',
   points: 0, // Advertisers might not have points in the same way
   isAdvertiser: true,
