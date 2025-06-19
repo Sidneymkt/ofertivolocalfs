@@ -22,12 +22,13 @@ import { categories, offerTypes, type OfferTypeId, type OfferTypeDetails } from 
 import { 
   CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIcon, 
   AlertCircle, CheckCircle, Info, QrCode as QrCodeIcon, Smartphone, UserCheck, CheckCheck as CheckCheckIcon, Package as PackageIcon, LocateFixed, Building as BuildingIcon,
-  Zap as ZapIcon, AlertTriangle // Added AlertTriangle
+  Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon // Added AlertTriangle, Renamed Loader2 to SpinnerIcon for clarity
 } from 'lucide-react';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { generateOfferContent, type GenerateOfferContentInput } from '@/ai/flows/generate-offer-content-flow';
 
 const offerFormSchemaBase = z.object({
   offerType: z.custom<OfferTypeId>(
@@ -54,8 +55,8 @@ const offerFormSchemaBase = z.object({
     z.number({ invalid_type_error: "Deve ser um número" }).min(0, "Não pode ser negativo").max(100, "Máximo 100%").optional()
   ),
   discountedPrice: z.preprocess(
-    (val) => (String(val).trim() === "" ? undefined : parseFloat(String(val).replace(',', '.'))), // Allow undefined if empty
-    z.number({ invalid_type_error: "Deve ser um número" }).positive("Deve ser um valor positivo").optional() // Make optional, then refine
+    (val) => (String(val).trim() === "" ? undefined : parseFloat(String(val).replace(',', '.'))), 
+    z.number({ invalid_type_error: "Deve ser um número" }).positive("Deve ser um valor positivo").optional() 
   ),
   
   quantity: z.preprocess(
@@ -95,14 +96,14 @@ const offerFormSchemaBase = z.object({
 
 const offerFormSchema = offerFormSchemaBase.refine(data => {
   if (data.discountedPrice === undefined && data.discountType === 'finalValue' && data.originalPrice !== undefined) {
-    return false; // Discounted price must be set if discountType is finalValue and original price is set
+    return false; 
   }
-  if (data.discountType === 'finalValue' && data.discountedPrice === undefined) {
+  if (data.discountType === 'finalValue' && data.discountedPrice === undefined && data.originalPrice !== undefined) {
      return false;
   }
   return true;
 }, {
-  message: "Preço promocional é obrigatório para este tipo de desconto.",
+  message: "Preço promocional é obrigatório para este tipo de desconto quando o preço original é informado.",
   path: ["discountedPrice"],
 }).refine(data => {
   if (data.originalPrice && data.discountedPrice !== undefined && data.discountedPrice >= data.originalPrice) {
@@ -123,12 +124,12 @@ const offerFormSchema = offerFormSchemaBase.refine(data => {
 }, {
   message: "Porcentagem de desconto é obrigatória para este tipo de desconto.",
   path: ["discountPercentage"],
-}).refine(data => { // Conditional requirements based on offerType
+}).refine(data => { 
   if (data.offerType === 'relampago' && !data.timeLimit) return false;
   if (data.offerType === 'checkin_premiado' && (!data.minCheckins || !data.checkinReward)) return false;
-  if (data.offerType === 'combo' && !data.comboItem1) return false; // At least one item for combo
+  if (data.offerType === 'combo' && !data.comboItem1) return false; 
   return true;
-}, (data) => { // Custom message based on path
+}, (data) => { 
   if (data.offerType === 'relampago' && !data.timeLimit) {
     return { message: "Horário limite é obrigatório para Oferta Relâmpago.", path: ["timeLimit"] };
   }
@@ -141,7 +142,7 @@ const offerFormSchema = offerFormSchemaBase.refine(data => {
   if (data.offerType === 'combo' && !data.comboItem1) {
     return { message: "Pelo menos o Item 1 do combo é obrigatório.", path: ["comboItem1"] };
   }
-  return {}; // No error
+  return {}; 
 });
 
 
@@ -158,6 +159,7 @@ export default function CreateOfferPage() {
   const { toast } = useToast();
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
 
   const form = useForm<OfferFormValues>({
     resolver: zodResolver(offerFormSchema),
@@ -194,7 +196,7 @@ export default function CreateOfferPage() {
     },
   });
 
-  const { watch, setValue, getValues, trigger, control } = form; // Added control
+  const { watch, setValue, getValues, trigger, control } = form;
   const isUnlimited = watch("isUnlimited");
   const selectedOfferType = watch("offerType");
   const discountType = watch("discountType");
@@ -212,7 +214,6 @@ export default function CreateOfferPage() {
     }
   }, [isUnlimited, setValue]);
 
-  // Discount calculation logic
   useEffect(() => {
     const op = originalPrice;
     const dp = discountedPrice;
@@ -229,19 +230,16 @@ export default function CreateOfferPage() {
          setValue("discountPercentage", calculatedPercentage, { shouldValidate: true });
       }
     } else if (discountType === "percentage" && (op === undefined || discPerc === undefined || discPerc < 0 || discPerc > 100)) {
-        // if inputs for percentage calc are invalid, clear discounted price
         if (getValues("discountedPrice") !== undefined) {
             setValue("discountedPrice", undefined, { shouldValidate: true });
         }
     } else if (discountType === "finalValue" && (op === undefined || dp === undefined || dp >= op)) {
-        // if inputs for final value calc are invalid for percentage, clear percentage
         if (getValues("discountPercentage") !== undefined) {
             setValue("discountPercentage", undefined, { shouldValidate: true });
         }
     }
   }, [originalPrice, discountPercentage, discountedPrice, discountType, setValue, getValues]);
 
-  // Auto-set isPresentialOnly for certain offer types
   useEffect(() => {
     if (selectedOfferType === 'exclusiva_app' || selectedOfferType === 'cupom_qr') {
       setValue('isPresentialOnly', true, { shouldValidate: true });
@@ -275,16 +273,14 @@ export default function CreateOfferPage() {
 
   const onSubmit: SubmitHandler<OfferFormValues> = (data) => {
     console.log('Offer data:', data);
-    // Add AI hint to images based on title and category for mock data (optional)
     const imageHintsFromData = data.images?.map((_, index) => `${data.title.split(" ")[0]} ${data.category}`.toLowerCase()) || [];
 
     const finalData = {
         ...data,
         galleryImageHints: imageHintsFromData,
-        // In a real app, this would come from the advertiser's session/profile
         merchantId: 'mockMerchant123', 
         merchantName: 'Nome do Anunciante Mock',
-        distance: '1km', // Placeholder
+        distance: '1km', 
     };
     console.log('Final Offer Data (Simulated Firestore):', finalData);
 
@@ -294,18 +290,78 @@ export default function CreateOfferPage() {
       variant: "default",
       duration: 5000,
     });
-    // form.reset(); // Consider if reset is always desired
-    // setImagePreviews([]);
-    // setSelectedFiles([]);
   };
 
-  const handleGenerateWithAI = () => {
-    toast({
-      title: "Gerando com IA (Simulado)",
-      description: "Em breve, sugestões de título e descrição otimizadas para o tipo de oferta selecionado aparecerão aqui!",
-    });
-    form.setValue("title", "Título Gerado por IA para " + (currentOfferTypeDetails?.name || "Oferta"));
-    form.setValue("description", "Esta é uma descrição super otimizada gerada por IA, considerando que a oferta é do tipo " + (currentOfferTypeDetails?.name || "geral") + ". Aproveite todos os benefícios e economize agora mesmo!");
+  const handleGenerateWithAI = async () => {
+    const offerTypeId = getValues("offerType");
+    const businessCategory = getValues("category");
+    const currentTitle = getValues("title");
+    const currentDescription = getValues("description");
+    const op = getValues("originalPrice");
+    const dp = getValues("discountedPrice");
+    const discPerc = getValues("discountPercentage");
+
+    if (!offerTypeId) {
+      toast({ variant: "destructive", title: "Seleção Necessária", description: "Por favor, selecione um Tipo de Oferta primeiro." });
+      return;
+    }
+    if (!businessCategory) {
+      toast({ variant: "destructive", title: "Seleção Necessária", description: "Por favor, selecione uma Categoria do Negócio." });
+      return;
+    }
+    if (!currentTitle && !currentDescription && !op && !dp && !discPerc) {
+        toast({ variant: "destructive", title: "Informação Necessária", description: "Forneça ao menos um título, descrição ou detalhes de preço para a IA." });
+        return;
+    }
+
+
+    let discountDetails = "Nenhum desconto principal informado.";
+    if (dp !== undefined) {
+        discountDetails = `Preço promocional de R$${dp.toFixed(2)}`;
+        if (op !== undefined) {
+            discountDetails += `, original R$${op.toFixed(2)}`;
+        }
+        if (discPerc !== undefined && discPerc > 0 && discPerc <= 100) {
+             discountDetails += ` (${discPerc.toFixed(0)}% de desconto)`;
+        }
+    } else if (discPerc !== undefined && discPerc > 0 && discPerc <= 100) {
+        discountDetails = `${discPerc.toFixed(0)}% de desconto`;
+        if (op !== undefined) {
+            discountDetails += ` sobre R$${op.toFixed(2)}`;
+        }
+    }
+    
+    const productServiceHint = currentTitle || businessCategory; // Use title as hint if available, else category
+
+
+    setIsLoadingAI(true);
+    toast({ title: "Gerando com IA...", description: "Aguarde enquanto criamos sugestões para você." });
+
+    try {
+      const input: GenerateOfferContentInput = {
+        offerTypeId,
+        businessCategory,
+        productServiceHint,
+        discountDetails,
+        currentTitle: currentTitle || undefined,
+        currentDescription: currentDescription || undefined,
+      };
+      
+      const result = await generateOfferContent(input);
+      
+      if (result.suggestedTitle) {
+        setValue("title", result.suggestedTitle, { shouldValidate: true });
+      }
+      if (result.suggestedDescription) {
+        setValue("description", result.suggestedDescription, { shouldValidate: true });
+      }
+      toast({ title: "Conteúdo Gerado pela IA!", description: "Título e descrição atualizados com as sugestões." });
+    } catch (error: any) {
+      console.error("AI generation error:", error);
+      toast({ variant: "destructive", title: "Erro na IA", description: error.message || "Não foi possível gerar conteúdo com IA." });
+    } finally {
+      setIsLoadingAI(false);
+    }
   };
 
   const handleSaveDraft = () => {
@@ -331,7 +387,7 @@ export default function CreateOfferPage() {
                 <FormItem>
                   <FormLabel htmlFor="timeLimit">Horário Limite (HH:mm)</FormLabel>
                   <FormControl>
-                    <Input id="timeLimit" type="time" placeholder="Ex: 23:59" {...field} />
+                    <Input id="timeLimit" type="time" placeholder="Ex: 23:59" {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormDescription>Defina o horário final para a oferta relâmpago no último dia de validade.</FormDescription>
                   <FormMessage />
@@ -402,7 +458,7 @@ export default function CreateOfferPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel htmlFor="checkinReward">Recompensa do Check-in</FormLabel>
-                  <FormControl><Textarea id="checkinReward" placeholder="Ex: Um café expresso grátis, 10% off na próxima compra" {...field} /></FormControl>
+                  <FormControl><Textarea id="checkinReward" placeholder="Ex: Um café expresso grátis, 10% off na próxima compra" {...field} value={field.value ?? ''} /></FormControl>
                   <FormDescription>Descreva o prêmio que o usuário receberá ao atingir o nº de check-ins.</FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -413,9 +469,9 @@ export default function CreateOfferPage() {
       case 'combo':
         return (
           <>
-            <FormField control={form.control} name="comboItem1" render={({ field }) => ( <FormItem> <FormLabel>Item 1 do Combo</FormLabel> <FormControl><Input placeholder="Ex: Hambúrguer Clássico" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="comboItem2" render={({ field }) => ( <FormItem> <FormLabel>Item 2 do Combo (Opcional)</FormLabel> <FormControl><Input placeholder="Ex: Batata Frita Média" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="comboItem3" render={({ field }) => ( <FormItem> <FormLabel>Item 3 do Combo (Opcional)</FormLabel> <FormControl><Input placeholder="Ex: Refrigerante Lata" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
+            <FormField control={form.control} name="comboItem1" render={({ field }) => ( <FormItem> <FormLabel>Item 1 do Combo</FormLabel> <FormControl><Input placeholder="Ex: Hambúrguer Clássico" {...field} value={field.value ?? ''} /></FormControl> <FormMessage /> </FormItem> )}/>
+            <FormField control={form.control} name="comboItem2" render={({ field }) => ( <FormItem> <FormLabel>Item 2 do Combo (Opcional)</FormLabel> <FormControl><Input placeholder="Ex: Batata Frita Média" {...field} value={field.value ?? ''} /></FormControl> <FormMessage /> </FormItem> )}/>
+            <FormField control={form.control} name="comboItem3" render={({ field }) => ( <FormItem> <FormLabel>Item 3 do Combo (Opcional)</FormLabel> <FormControl><Input placeholder="Ex: Refrigerante Lata" {...field} value={field.value ?? ''} /></FormControl> <FormMessage /> </FormItem> )}/>
           </>
         );
       case 'bairro':
@@ -428,7 +484,7 @@ export default function CreateOfferPage() {
                 <FormLabel htmlFor="targetNeighborhood">Bairro Alvo</FormLabel>
                  <div className="relative">
                     <LocateFixed className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <FormControl><Input id="targetNeighborhood" placeholder="Ex: Centro (comece a digitar para sugestões)" {...field} className="pl-10"/></FormControl>
+                    <FormControl><Input id="targetNeighborhood" placeholder="Ex: Centro (comece a digitar para sugestões)" {...field} className="pl-10" value={field.value ?? ''}/></FormControl>
                  </div>
                 <FormDescription>Esta oferta será destacada para usuários no bairro especificado. (Dropdown dinâmico em breve).</FormDescription>
                 <FormMessage />
@@ -520,7 +576,7 @@ export default function CreateOfferPage() {
                   <FormItem>
                     <FormLabel htmlFor="title">Nome da Oferta (Título)</FormLabel>
                     <FormControl>
-                      <Input id="title" placeholder="Ex: 50% Off em TODO o cardápio!" {...field} />
+                      <Input id="title" placeholder="Ex: 50% Off em TODO o cardápio!" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -533,16 +589,18 @@ export default function CreateOfferPage() {
                   <FormItem>
                     <FormLabel htmlFor="description">Descrição da Oferta</FormLabel>
                     <FormControl>
-                      <Textarea id="description" placeholder="Descreva os detalhes, diferenciais e o que está incluso na sua oferta..." {...field} rows={4}/>
+                      <Textarea id="description" placeholder="Descreva os detalhes, diferenciais e o que está incluso na sua oferta..." {...field} rows={4} value={field.value ?? ''}/>
                     </FormControl>
                     <FormDescription>Limite de 380 caracteres.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="button" variant="outline" onClick={handleGenerateWithAI} className="w-full md:w-auto" disabled={!selectedOfferType}>
-                <Brain className="mr-2 h-4 w-4" /> Gerar com IA (Simulado)
-                {!selectedOfferType && <span className="text-xs ml-2 text-muted-foreground">(Selecione tipo de oferta)</span>}
+              <Button type="button" variant="outline" onClick={handleGenerateWithAI} className="w-full md:w-auto" disabled={isLoadingAI || !selectedOfferType || !form.getValues("category")}>
+                {isLoadingAI ? <SpinnerIcon className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
+                {isLoadingAI ? "Gerando..." : "Gerar com IA"}
+                {!selectedOfferType && !isLoadingAI && <span className="text-xs ml-1 text-muted-foreground">(Selecione tipo)</span>}
+                {selectedOfferType && !form.getValues("category") && !isLoadingAI && <span className="text-xs ml-1 text-muted-foreground">(Selecione categoria)</span>}
               </Button>
             </CardContent>
           </Card>
@@ -557,7 +615,7 @@ export default function CreateOfferPage() {
               <FormField
                 control={form.control}
                 name="images"
-                render={({ field }) => ( /* field is not directly used here, but required by FormField */
+                render={({ field }) => ( 
                   <FormItem>
                     <FormLabel htmlFor="images-upload" className={cn("flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/70", imagePreviews.length >= 6 && "cursor-not-allowed opacity-60")}>
                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -584,7 +642,7 @@ export default function CreateOfferPage() {
               {imagePreviews.length > 0 && (
                 <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-video group"> {/* Changed aspect ratio for offer images */}
+                    <div key={index} className="relative aspect-video group"> 
                       <Image src={preview} alt={`Preview ${index + 1}`} layout="fill" objectFit="cover" className="rounded-md" />
                       <Button
                         type="button"
@@ -620,9 +678,9 @@ export default function CreateOfferPage() {
                       <RadioGroup onValueChange={(value) => {
                           field.onChange(value);
                           if (value === "percentage") {
-                            setValue("discountedPrice", undefined, {shouldValidate: true}); // Clear discounted price
-                          } else { // finalValue
-                            setValue("discountPercentage", undefined, {shouldValidate: true}); // Clear percentage
+                            setValue("discountedPrice", undefined, {shouldValidate: true}); 
+                          } else { 
+                            setValue("discountPercentage", undefined, {shouldValidate: true}); 
                           }
                         }}
                         defaultValue={field.value} className="flex flex-col sm:flex-row gap-4 sm:gap-8">
@@ -767,7 +825,7 @@ export default function CreateOfferPage() {
                       <FormLabel htmlFor="tags">Tags (Opcional)</FormLabel>
                        <div className="relative">
                         <Tag className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <FormControl><Input id="tags" placeholder="Ex: #relampago, #exclusivo, #diadasmaes" {...field} className="pl-10" /></FormControl>
+                        <FormControl><Input id="tags" placeholder="Ex: #relampago, #exclusivo, #diadasmaes" {...field} className="pl-10" value={field.value ?? ''} /></FormControl>
                       </div>
                       <FormDescription>Separe as tags por vírgula. Ajuda os usuários a encontrar sua oferta.</FormDescription>
                       <FormMessage />
@@ -777,7 +835,7 @@ export default function CreateOfferPage() {
               <FormField control={form.control} name="terms" render={({ field }) => (
                   <FormItem className="md:col-span-2">
                       <FormLabel htmlFor="terms">Termos e Condições (Opcional)</FormLabel>
-                      <FormControl><Textarea id="terms" placeholder="Ex: Válido apenas para consumo no local. Não cumulativo com outras promoções." {...field} rows={3}/></FormControl>
+                      <FormControl><Textarea id="terms" placeholder="Ex: Válido apenas para consumo no local. Não cumulativo com outras promoções." {...field} rows={3} value={field.value ?? ''}/></FormControl>
                       <FormMessage />
                   </FormItem>
                   )}
@@ -795,7 +853,7 @@ export default function CreateOfferPage() {
                   </CardTitle>
                   <CardDescription>{currentOfferTypeDetails?.description}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 pt-6">
                 <OfferSpecificFields />
               </CardContent>
             </Card>
@@ -866,9 +924,9 @@ export default function CreateOfferPage() {
                 <CardDescription>Defina quantos pontos os usuários ganharão ao interagir com esta oferta.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <FormField control={form.control} name="pointsForCheckin" render={({ field }) => ( <FormItem> <FormLabel htmlFor="pointsForCheckin">Pontos por Check-in</FormLabel> <FormControl><Input id="pointsForCheckin" type="number" placeholder="Ex: 5" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
-                <FormField control={form.control} name="pointsForShare" render={({ field }) => ( <FormItem> <FormLabel htmlFor="pointsForShare">Pontos por Compartilhamento</FormLabel> <FormControl><Input id="pointsForShare" type="number" placeholder="Ex: 3" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
-                <FormField control={form.control} name="pointsForComment" render={({ field }) => ( <FormItem> <FormLabel htmlFor="pointsForComment">Pontos por Comentário</FormLabel> <FormControl><Input id="pointsForComment" type="number" placeholder="Ex: 1" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
+                <FormField control={form.control} name="pointsForCheckin" render={({ field }) => ( <FormItem> <FormLabel htmlFor="pointsForCheckin">Pontos por Check-in</FormLabel> <FormControl><Input id="pointsForCheckin" type="number" placeholder="Ex: 5" {...field} value={field.value ?? 0} /></FormControl> <FormMessage /> </FormItem> )}/>
+                <FormField control={form.control} name="pointsForShare" render={({ field }) => ( <FormItem> <FormLabel htmlFor="pointsForShare">Pontos por Compartilhamento</FormLabel> <FormControl><Input id="pointsForShare" type="number" placeholder="Ex: 3" {...field} value={field.value ?? 0} /></FormControl> <FormMessage /> </FormItem> )}/>
+                <FormField control={form.control} name="pointsForComment" render={({ field }) => ( <FormItem> <FormLabel htmlFor="pointsForComment">Pontos por Comentário</FormLabel> <FormControl><Input id="pointsForComment" type="number" placeholder="Ex: 1" {...field} value={field.value ?? 0} /></FormControl> <FormMessage /> </FormItem> )}/>
                 <div className="sm:col-span-2 lg:col-span-3">
                      <FormField control={form.control} name="isRedeemableWithPoints" render={({ field }) => (
                         <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
@@ -892,7 +950,7 @@ export default function CreateOfferPage() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="p-4 border rounded-md bg-muted/30">
-                    <h4 className="font-semibold mb-2 text-sm">Mini Pré-visualização da Oferta (Placeholder)</h4>
+                    <h4 className="font-semibold mb-2 text-sm">Mini Pré-visualização da Oferta (Exemplo)</h4>
                     {getValues("title") && <p className="text-sm font-medium">Título: {getValues("title")}</p>}
                     {getValues("offerType") && <p className="text-xs text-muted-foreground">Tipo: {offerTypes.find(ot => ot.id === getValues("offerType"))?.name}</p>}
                     {getValues("discountedPrice") !== undefined && <p className="text-lg font-bold text-primary">R$ {getValues("discountedPrice")?.toFixed(2)}</p>}
@@ -917,8 +975,8 @@ export default function CreateOfferPage() {
                     <Button type="button" variant="outline" onClick={handleSaveDraft} className="w-full sm:w-auto">
                         <Save className="mr-2 h-4 w-4" /> Salvar como Rascunho
                     </Button>
-                    <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Publicando...</> : <><Send className="mr-2 h-4 w-4" /> Publicar Oferta</>}
+                    <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting || isLoadingAI}>
+                        {form.formState.isSubmitting ? <><SpinnerIcon className="mr-2 h-4 w-4 animate-spin" /> Publicando...</> : <><Send className="mr-2 h-4 w-4" /> Publicar Oferta</>}
                     </Button>
                 </div>
                  <p className="text-xs text-muted-foreground text-center">Ao publicar, sua oferta poderá passar por uma breve moderação.</p>
@@ -930,9 +988,3 @@ export default function CreateOfferPage() {
     </div>
   );
 }
-
-// Helper icon component for specific offer types
-const Loader2 = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-);
-
