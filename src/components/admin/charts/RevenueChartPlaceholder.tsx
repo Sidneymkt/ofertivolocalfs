@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, DollarSign } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 import Image from 'next/image';
 
 const RevenueChartPlaceholder: React.FC = () => {
@@ -32,3 +32,5 @@ const RevenueChartPlaceholder: React.FC = () => {
 };
 
 export default RevenueChartPlaceholder;
+
+    

@@ -71,7 +71,7 @@ export default function AdminDashboardPage() {
       <div>
         <h2 className="text-2xl font-headline font-semibold mb-4 text-foreground">Módulos de Gestão</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {adminModules.map((module) => (
+          {adminModules.filter(module => module.id !== 'dashboard').map((module) => (
             <AdminModuleCard 
               key={module.id} 
               title={module.title} 
@@ -79,7 +79,7 @@ export default function AdminDashboardPage() {
               description={module.description}
             >
                 <Button variant="ghost" className="w-full mt-4 text-primary hover:bg-primary/10">
-                    Gerenciar {module.title.split(' ')[1] || module.title.split(' ')[0]}
+                    Gerenciar {module.title.split(' ').length > 1 ? module.title.split(' ')[1] : module.title.split(' ')[0]}
                 </Button>
             </AdminModuleCard>
           ))}
@@ -89,3 +89,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    

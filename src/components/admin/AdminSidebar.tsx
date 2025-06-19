@@ -3,24 +3,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Building2, PackageCheck, BarChart3, Filter, FileText, Settings2, Gift, ShieldAlert, CreditCard, HelpCircle, BarChartHorizontalBig } from 'lucide-react';
+import { adminModules } from '@/types';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-const adminNavItems = [
-  { href: '/admin', label: 'Dashboard', icon: Home },
-  { href: '/admin/users', label: 'Usuários', icon: Users },
-  { href: '/admin/advertisers', label: 'Anunciantes', icon: Building2 },
-  { href: '/admin/offers', label: 'Ofertas', icon: PackageCheck },
-  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/admin/categories', label: 'Categorias', icon: Filter },
-  { href: '/admin/reports', label: 'Relatórios', icon: FileText },
-  { href: '/admin/sweepstakes', label: 'Sorteios', icon: Gift },
-  { href: '/admin/moderation', label: 'Moderação', icon: ShieldAlert },
-  { href: '/admin/finance', label: 'Financeiro', icon: CreditCard },
-  { href: '/admin/support', label: 'Suporte', icon: HelpCircle },
-  { href: '/admin/settings', label: 'Configurações', icon: Settings2 },
-];
+import { BarChartHorizontalBig } from 'lucide-react';
 
 const AdminSidebar = () => {
   const pathname = usePathname();
@@ -35,22 +21,21 @@ const AdminSidebar = () => {
       </div>
       <ScrollArea className="flex-1">
         <nav className="flex flex-col gap-1 p-4">
-          {adminNavItems.map((item) => {
-            // For now, only the main dashboard link will be considered "active"
-            // In a full implementation, each item.href would be checked against pathname
-            const isActive = item.href === '/admin' ? pathname === item.href : pathname.startsWith(item.href);
+          {adminModules.map((module) => {
+            const itemHref = module.id === 'dashboard' ? '/admin' : `/admin/${module.id}`;
+            const isActive = pathname === itemHref || (pathname.startsWith(itemHref) && itemHref !== '/admin');
             
             return (
               <Link
-                href={item.href}
-                key={item.label}
+                href={itemHref}
+                key={module.id}
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-muted-foreground transition-all hover:text-primary hover:bg-primary/10',
                   isActive && 'bg-primary/10 text-primary font-medium'
                 )}
               >
-                <item.icon className="h-5 w-5" />
-                {item.label}
+                <module.icon className="h-5 w-5" />
+                {module.title}
               </Link>
             );
           })}
@@ -64,3 +49,5 @@ const AdminSidebar = () => {
 };
 
 export default AdminSidebar;
+
+    
