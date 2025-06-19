@@ -33,13 +33,16 @@ const OfferLocationSection: React.FC<OfferLocationSectionProps> = ({ offer }) =>
         <CardDescription>{offer.merchantName}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Placeholder for an interactive map component */}
-        <div className="w-full h-60 bg-muted rounded-md flex items-center justify-center border border-dashed">
-          <div className="text-center text-muted-foreground">
-            <MapPin size={40} className="mx-auto mb-2" />
-            <p className="font-medium">Mapa Interativo (Em Breve)</p>
-            <p className="text-sm">Aqui você verá a localização exata do negócio.</p>
-          </div>
+        <div className="w-full h-60 relative bg-muted rounded-md overflow-hidden border border-border">
+          <Image
+            src="https://placehold.co/600x300.png"
+            alt={`Localização de ${offer.merchantName} placeholder`}
+            layout="fill"
+            objectFit="cover"
+            data-ai-hint="street map"
+          />
+           {/* Você pode adicionar um ícone de marcador sobreposto aqui se desejar */}
+           {/* Exemplo: <MapPin className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500" size={24} /> */}
         </div>
         <Button onClick={openGoogleMaps} className="w-full bg-secondary hover:bg-secondary/90">
           <Navigation className="mr-2" /> Ver Rotas no Google Maps

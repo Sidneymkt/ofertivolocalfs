@@ -1,5 +1,6 @@
 import { Map } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Image from 'next/image';
 
 const InteractiveMapPlaceholder = () => {
   return (
@@ -11,15 +12,19 @@ const InteractiveMapPlaceholder = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div 
-          className="w-full h-80 bg-muted rounded-md flex items-center justify-center border border-dashed border-border"
+        <div
+          className="w-full h-80 relative bg-muted rounded-md overflow-hidden border border-border"
           aria-label="Placeholder para mapa interativo"
         >
-          <div className="text-center text-muted-foreground">
-            <Map size={48} className="mx-auto mb-2" />
-            <p className="font-medium">Mapa em breve</p>
-            <p className="text-sm">Aqui você verá as ofertas geolocalizadas.</p>
-          </div>
+          <Image
+            src="https://placehold.co/800x400.png"
+            alt="Mapa interativo placeholder"
+            layout="fill"
+            objectFit="cover"
+            data-ai-hint="city map"
+          />
+          {/* Você pode adicionar um ícone de marcador sobreposto aqui se desejar */}
+          {/* Exemplo: <MapPin className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500" size={32} /> */}
         </div>
       </CardContent>
     </Card>
