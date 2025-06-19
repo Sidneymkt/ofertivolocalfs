@@ -39,7 +39,12 @@ export default function OfferDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Hooks for isFavorited and isFollowing moved to the top
+  const [isFavorited, setIsFavorited] = useState(false); // Initialized to false
+  const [isFollowing, setIsFollowing] = useState(false); // Placeholder
+
   const currentUser = getCurrentUser(); // Simulated current user
+  // isOwner calculation is safe with offer? even if offer is null initially
   const isOwner = currentUser.isAdvertiser && currentUser.advertiserProfileId === offer?.merchantId;
 
 
@@ -50,6 +55,8 @@ export default function OfferDetailPage() {
         .then(data => {
           if (data) {
             setOffer(data);
+            // Update isFavorited state after offer data is fetched
+            setIsFavorited(mockUser.favoriteOffers?.includes(data.id) ?? false);
           } else {
             setError('Oferta não encontrada.');
           }
@@ -84,10 +91,6 @@ export default function OfferDetailPage() {
   if (!offer) {
     return <div className="text-center py-10 text-muted-foreground">Oferta não encontrada.</div>;
   }
-
-  // For actions that depend on user state (e.g., favorited)
-  const [isFavorited, setIsFavorited] = useState(mockUser.favoriteOffers?.includes(offer.id) ?? false);
-  const [isFollowing, setIsFollowing] = useState(false); // Placeholder
 
   const toggleFavorite = () => setIsFavorited(!isFavorited);
   const toggleFollow = () => setIsFollowing(!isFollowing);
