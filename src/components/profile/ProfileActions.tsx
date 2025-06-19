@@ -1,6 +1,7 @@
+
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, History, Settings, HelpCircle, LogOut, ShieldCheck } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChevronRight, History, Settings, HelpCircle, LogOut, ShieldCheck, UserPlus, Gift } from 'lucide-react';
 import Link from 'next/link';
 
 const actionItems = [
@@ -13,7 +14,10 @@ const actionItems = [
 const ProfileActions = () => {
   return (
     <Card className="shadow-lg">
-      <CardContent className="p-4">
+      <CardHeader>
+        <CardTitle className="text-xl">Ações e Suporte</CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
         <ul className="space-y-2">
           {actionItems.map((item) => (
             <li key={item.label}>
@@ -28,6 +32,15 @@ const ProfileActions = () => {
               </Button>
             </li>
           ))}
+          <li>
+            <Button variant="ghost" className="w-full justify-between h-12 px-3 group text-green-600 hover:bg-green-500/10 hover:text-green-700">
+              <div className="flex items-center gap-3">
+                <Gift className="w-5 h-5 transition-colors" />
+                <span>Convidar Amigos (Ganhe Pontos!)</span>
+              </div>
+              <ChevronRight className="w-5 h-5 transition-colors" />
+            </Button>
+          </li>
            <li>
               <Button variant="ghost" className="w-full justify-between h-12 px-3 text-destructive hover:bg-destructive/10 group">
                 <div className="flex items-center gap-3">
@@ -44,3 +57,5 @@ const ProfileActions = () => {
 };
 
 export default ProfileActions;
+
+    
