@@ -1,0 +1,46 @@
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ChevronRight, History, Settings, HelpCircle, LogOut, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
+
+const actionItems = [
+  { label: 'Histórico de Check-ins', icon: History, href: '/profile/history' },
+  { label: 'Configurações da Conta', icon: Settings, href: '/profile/settings' },
+  { label: 'Central de Ajuda', icon: HelpCircle, href: '/help' },
+  { label: 'Termos e Privacidade', icon: ShieldCheck, href: '/terms' },
+];
+
+const ProfileActions = () => {
+  return (
+    <Card className="shadow-lg">
+      <CardContent className="p-4">
+        <ul className="space-y-2">
+          {actionItems.map((item) => (
+            <li key={item.label}>
+              <Button variant="ghost" className="w-full justify-between h-12 px-3 group" asChild>
+                <Link href={item.href}>
+                  <div className="flex items-center gap-3">
+                    <item.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span className="text-card-foreground">{item.label}</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </Link>
+              </Button>
+            </li>
+          ))}
+           <li>
+              <Button variant="ghost" className="w-full justify-between h-12 px-3 text-destructive hover:bg-destructive/10 group">
+                <div className="flex items-center gap-3">
+                  <LogOut className="w-5 h-5 group-hover:text-destructive transition-colors" />
+                  <span>Sair da Conta</span>
+                </div>
+                <ChevronRight className="w-5 h-5 group-hover:text-destructive transition-colors" />
+              </Button>
+            </li>
+        </ul>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ProfileActions;
