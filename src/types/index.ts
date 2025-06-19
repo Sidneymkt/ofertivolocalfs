@@ -1,17 +1,23 @@
 
 
+import type React from 'react'; 
+import { 
+  Activity, AlertTriangle, Award, BadgeCheck, BarChart3, BookOpen, Building, Building2, CalendarCheck2, CheckCircle, CheckCheck, Coins, CreditCard, DollarSign, Eye, FileText, Filter, Gift, HandCoins, HeartPulse, HelpCircle, ListChecks, LocateFixed, MailQuestion, MapPin, MapPinned, Megaphone, MessageSquare, MousePointerClick, Package, PackageCheck, QrCode, Settings2, ShieldAlert, ShoppingCart, Smile, Smartphone, Sparkles, Star, ThumbsUp, Ticket, TrendingDown, TrendingUp, UserCheck, UserCog, UserPlus, Users, Utensils, Wrench, Zap 
+} from 'lucide-react';
+
+
 export interface Badge {
   id: string;
   name: string;
-  icon: string; // String identifier for the icon (e.g., 'Star', 'Users')
+  icon: string; 
   description: string;
   unlockedDate?: Date;
   'data-ai-hint'?: string;
 }
 
-export interface Category { // Updated Category interface
+export interface Category { 
   name: string;
-  icon: string; // String identifier for the icon (e.g., 'Utensils')
+  icon: string; 
 }
 
 
@@ -21,7 +27,7 @@ export interface Comment {
   userName: string;
   userAvatarUrl?: string;
   userAvatarHint?: string;
-  rating: number; // 1-5
+  rating: number; 
   text: string;
   timestamp: Date;
   offerId?: string; 
@@ -118,6 +124,7 @@ export interface User {
   city?: string;
   whatsapp?: string;
   isProfileComplete?: boolean;
+  businessDescription?: string; // Added from AdvertiserProfileSettingsCard
 }
 
 
@@ -131,16 +138,30 @@ export interface Sweepstake {
   'data-ai-hint'?: string;
 }
 
-// Types for Advertiser Dashboard
-export interface AdvertiserMetricItem {
+
+export const offerTypes = [
+  { id: 'relampago', name: 'Oferta Relâmpago', icon: Zap, description: 'Duração curta, alto impacto. Ideal para promoções urgentes.', color: 'border-orange-500' },
+  { id: 'exclusiva_app', name: 'Oferta Exclusiva App', icon: Smartphone, description: 'Requer validação via QR Code no app. Incentiva o uso do aplicativo.', color: 'border-blue-500'},
+  { id: 'cupom_qr', name: 'Cupom Digital com QR Code', icon: QrCode, description: 'Cupom digital único validado por QR Code na loja.', color: 'border-green-500' },
+  { id: 'primeiro_uso', name: 'Oferta para Primeiro Uso', icon: UserCheck, description: 'Atraia novos clientes com um benefício especial na primeira compra/uso.', color: 'border-purple-500' },
+  { id: 'checkin_premiado', name: 'Check-in Premiado', icon: CheckCheck, description: 'Recompense clientes por check-ins múltiplos em suas ofertas ou estabelecimento.', color: 'border-teal-500' },
+  { id: 'combo', name: 'Combo Econômico', icon: Package, description: 'Agrupe produtos ou serviços por um preço especial.', color: 'border-red-500' },
+  { id: 'bairro', name: 'Oferta do Dia por Bairro', icon: LocateFixed, description: 'Foco em geolocalização específica para atingir clientes próximos.', color: 'border-yellow-500' },
+] as const;
+
+export type OfferTypeId = typeof offerTypes[number]['id'];
+export type OfferTypeDetails = typeof offerTypes[number];
+
+
+export type AdvertiserMetricItem = {
   title: string;
   value: string | number;
   icon: React.ElementType;
   trend?: string; 
   description?: string;
-}
+};
 
-export interface PublishedOfferSummary {
+export type PublishedOfferSummary = {
   id: string;
   title: string;
   status: 'active' | 'pending' | 'expired' | 'draft';
@@ -149,25 +170,18 @@ export interface PublishedOfferSummary {
   isFeatured: boolean;
   imageUrl?: string; 
   dataAiHint?: string;
-}
+};
 
-// Types for Admin Dashboard
-export interface AdminMetricItem {
+
+export type AdminMetricItem = {
   title: string;
   value: string | number;
   icon: React.ElementType;
-  change?: string; // e.g. "+5% vs Mês Anterior"
-  bgColorClass?: string; // Optional background color class for the card or icon
-}
+  change?: string; 
+  bgColorClass?: string; 
+};
 
-// MOCK DATA
 
-import type React from 'react'; // Keep for other ElementType usage
-import { 
-  Activity, AlertTriangle, Award, BadgeCheck, BarChart3, BookOpen, Building2, CalendarCheck2, CheckCircle, Coins, CreditCard, DollarSign, Eye, FileText, Filter, Gift, HandCoins, HeartPulse, HelpCircle, ListChecks, MailQuestion, MapPinned, Megaphone, MessageSquare, MousePointerClick, PackageCheck, Settings2, ShieldAlert, ShoppingCart, Smile, Sparkles, Star, ThumbsUp, Ticket, TrendingDown, TrendingUp, UserCheck, UserCog, UserPlus, Users, Utensils, Wrench, Zap 
-} from 'lucide-react';
-
-// Point values for user actions
 export const POINTS_CHECKIN = 5; 
 export const POINTS_SHARE_OFFER = 3;
 export const POINTS_FOLLOW_MERCHANT = 2;
@@ -225,9 +239,9 @@ export const mockAdvertiserUser: User = {
   id: 'advUserPizzariaSaborosa', 
   name: 'Carlos Pizzaiolo',
   businessName: 'Pizzaria Saborosa',
-  businessLogoUrl: 'https://placehold.co/150x150.png',
+  businessLogoUrl: 'https://placehold.co/150x150.png?text=PS',
   businessLogoHint: 'pizza logo',
-  avatarUrl: 'https://placehold.co/100x100.png',
+  avatarUrl: 'https://placehold.co/100x100.png?text=CP',
   avatarHint: 'person chef',
   points: 0, 
   level: USER_LEVELS.INICIANTE.name, 
@@ -238,6 +252,7 @@ export const mockAdvertiserUser: User = {
   email: 'carlos.pizza@saborosa.com',
   address: 'Avenida Principal, 789, Centro',
   whatsapp: '(92) 98877-6655',
+  businessDescription: 'A melhor pizza da cidade, com ingredientes frescos e forno a lenha! Venha conferir nossas promoções.',
 };
 
 
@@ -248,13 +263,13 @@ export const mockOffers: Offer[] = [
     merchantName: 'Pizzaria Saborosa', 
     merchantId: 'pizzariaSaborosaMerchant', 
     merchantIsVerified: true,
-    imageUrl: 'https://placehold.co/600x400.png',
+    imageUrl: 'https://placehold.co/600x300.png',
     'data-ai-hint': 'pizza restaurant',
     galleryImages: [
-      'https://placehold.co/800x500.png',
-      'https://placehold.co/800x500.png',
-      'https://placehold.co/800x500.png',
-      'https://placehold.co/800x500.png',
+      'https://placehold.co/800x450.png',
+      'https://placehold.co/800x450.png',
+      'https://placehold.co/800x450.png',
+      'https://placehold.co/800x450.png',
     ],
     galleryImageHints: ['pizza variety', 'pizza slice', 'restaurant interior', 'happy customers'],
     originalPrice: 70.00, 
@@ -285,7 +300,7 @@ export const mockOffers: Offer[] = [
     merchantName: 'Barbearia Premium', 
     merchantId: 'barbeariaPremiumMerchant',
     merchantIsVerified: false,
-    imageUrl: 'https://placehold.co/600x400.png',
+    imageUrl: 'https://placehold.co/600x300.png',
     'data-ai-hint': 'barber shop',
     originalPrice: 70.00, 
     discountedPrice: 45.00, 
@@ -302,7 +317,7 @@ export const mockOffers: Offer[] = [
     validUntil: 'Amanhã',
     usersUsedCount: 72,
     pointsAwarded: POINTS_CHECKIN,
-    galleryImages: ['https://placehold.co/800x500.png', 'https://placehold.co/800x500.png'],
+    galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'],
     galleryImageHints: ['haircut style', 'barber working'],
   },
   { 
@@ -311,7 +326,7 @@ export const mockOffers: Offer[] = [
     merchantName: 'Atleta Shop', 
     merchantId: 'atletaShopMerchant',
     merchantIsVerified: true,
-    imageUrl: 'https://placehold.co/600x400.png',
+    imageUrl: 'https://placehold.co/600x300.png',
     'data-ai-hint': 'sport shoes',
     originalPrice: 450.00, 
     discountedPrice: 299.90, 
@@ -328,7 +343,7 @@ export const mockOffers: Offer[] = [
     validUntil: new Date(Date.now() + 86400000 * 3).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric'}),
     usersUsedCount: 95,
     pointsAwarded: POINTS_CHECKIN, 
-    galleryImages: ['https://placehold.co/800x500.png', 'https://placehold.co/800x500.png', 'https://placehold.co/800x500.png'],
+    galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'],
     galleryImageHints: ['running shoe', 'shoe sole', 'person running'],
   },
   { 
@@ -336,7 +351,7 @@ export const mockOffers: Offer[] = [
     title: 'Happy Hour: Chopp Artesanal em Dobro', 
     merchantName: 'Boteco do Mestre', 
     merchantId: 'botecoMestreMerchant',
-    imageUrl: 'https://placehold.co/600x400.png',
+    imageUrl: 'https://placehold.co/600x300.png',
     'data-ai-hint': 'beer bar',
     originalPrice: 20.00, 
     discountedPrice: 10.00, 
@@ -353,7 +368,7 @@ export const mockOffers: Offer[] = [
     validUntil: 'Hoje até 20:00',
     usersUsedCount: 150,
     pointsAwarded: POINTS_CHECKIN,
-    galleryImages: ['https://placehold.co/800x500.png', 'https://placehold.co/800x500.png'],
+    galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'],
     galleryImageHints: ['draft beer', 'bar snacks'],
   },
 ];
@@ -364,7 +379,7 @@ export const mockSweepstakes: Sweepstake[] = [
   { id: 'sw3', title: 'Um Ano de Pizza Grátis', description: 'Imagine: uma pizza grande por mês, por um ano inteiro! Participe com 200 pontos.', imageUrl: 'https://placehold.co/600x300.png', pointsToEnter: 200, endDate: new Date(Date.now() + 86400000 * 30), 'data-ai-hint': 'pizza stack' },
 ];
 
-export const categories: Category[] = [ // Updated to use string icons
+export const categories: Category[] = [ 
   { name: 'Alimentação', icon: 'Utensils' },
   { name: 'Serviços', icon: 'Wrench' },
   { name: 'Compras', icon: 'ShoppingCart' },
@@ -373,12 +388,12 @@ export const categories: Category[] = [ // Updated to use string icons
   { name: 'Educação', icon: 'BookOpen' },
 ];
 
-// Helper function to get a mock offer by ID
+
 export const getMockOfferById = (id: string): Offer | undefined => {
   return mockOffers.find(offer => offer.id === id);
 };
 
-// Helper function to get a mock merchant by ID (simplified)
+
 export const getMockMerchantById = (id: string): { id: string, name: string, imageUrl?: string, 'data-ai-hint'?: string, isVerified?: boolean } | undefined => {
     const offerFromMerchant = mockOffers.find(offer => offer.merchantId === id);
     if (offerFromMerchant) {
@@ -390,15 +405,15 @@ export const getMockMerchantById = (id: string): { id: string, name: string, ima
             isVerified: offerFromMerchant.merchantIsVerified
         };
     }
-    // Fallback for merchants that might not have offers listed in mockOffers but are followed
-    if (id === 'pizzariaSaborosaMerchant') return {id, name: 'Pizzaria Saborosa', isVerified: true, 'data-ai-hint': 'pizza place'};
-    if (id === 'atletaShopMerchant') return {id, name: 'Atleta Shop', isVerified: true, 'data-ai-hint': 'sport store'};
-    if (id === 'botecoMestreMerchant') return {id, name: 'Boteco do Mestre', isVerified: false, 'data-ai-hint': 'bar restaurant'};
+    
+    if (id === 'pizzariaSaborosaMerchant') return {id, name: 'Pizzaria Saborosa', isVerified: true, 'data-ai-hint': 'pizza place', imageUrl: 'https://placehold.co/64x64.png?text=PS'};
+    if (id === 'atletaShopMerchant') return {id, name: 'Atleta Shop', isVerified: true, 'data-ai-hint': 'sport store', imageUrl: 'https://placehold.co/64x64.png?text=AS'};
+    if (id === 'botecoMestreMerchant') return {id, name: 'Boteco do Mestre', isVerified: false, 'data-ai-hint': 'bar restaurant', imageUrl: 'https://placehold.co/64x64.png?text=BM'};
 
     return undefined;
 };
 
-// Mock Admin Metrics
+
 export const mockAdminMetrics: AdminMetricItem[] = [
   { title: 'Usuários Ativos', value: '12.580', icon: Users, change: '+150 esta semana', bgColorClass: 'bg-blue-500/10 text-blue-600' },
   { title: 'Anunciantes Ativos', value: '450', icon: Building2, change: '+5 esta semana', bgColorClass: 'bg-green-500/10 text-green-600' },
@@ -408,7 +423,7 @@ export const mockAdminMetrics: AdminMetricItem[] = [
   { title: 'Pontos Dist. (Mês)', value: '1.250.000', icon: HandCoins, change: '+5% vs mês ant.', bgColorClass: 'bg-yellow-500/10 text-yellow-600' },
 ];
 
-// Mock Admin Module Placeholders
+
 export const adminModules = [
   { id: 'users', title: 'Gestão de Usuários', icon: Users, description: 'Gerencie perfis, permissões e dados de usuários.' },
   { id: 'advertisers', title: 'Gestão de Anunciantes', icon: Building2, description: 'Monitore contas, planos e desempenho de anunciantes.' },
@@ -422,4 +437,3 @@ export const adminModules = [
   { id: 'finance', title: 'Financeiro e Assinaturas', icon: CreditCard, description: 'Controle pagamentos, assinaturas e receita.' },
   { id: 'support', title: 'Central de Suporte', icon: HelpCircle, description: 'Gerencie tickets e forneça suporte aos usuários.' },
 ];
-
