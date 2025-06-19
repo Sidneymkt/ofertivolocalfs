@@ -3,7 +3,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Offer, mockOffers, mockUser, mockAdvertiserUser } from '@/types';
+import type { Offer } from '@/types'; // Adjusted import path
+import { mockOffers, mockUser, mockAdvertiserUser } from '@/types'; // Adjusted import path
 import OfferImageGallery from '@/components/offers/OfferImageGallery';
 import OfferInfoSection from '@/components/offers/OfferInfoSection';
 import OfferActionsSection from '@/components/offers/OfferActionsSection';
@@ -26,6 +27,9 @@ const getOfferById = (id: string): Promise<Offer | undefined> => {
 
 // Simulate determining current user type (for advertiser panel)
 const getCurrentUser = () => {
+  // In a real app, this would come from auth context or similar
+  // Forcing a specific user type for testing advertiser panel:
+  // const isCurrentUserAdvertiser = true; 
   const isCurrentUserAdvertiser = false; 
   return isCurrentUserAdvertiser ? mockAdvertiserUser : mockUser;
 }
@@ -37,11 +41,16 @@ export default function OfferDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Hooks moved to the top and initialized with default values
   const [isFavorited, setIsFavorited] = useState(false);
-  const [isFollowingMerchant, setIsFollowingMerchant] = useState(false); // Renamed from isFollowing
+  const [isFollowingMerchant, setIsFollowingMerchant] = useState(false);
 
   const currentUser = getCurrentUser(); 
-  const isOwner = currentUser.isAdvertiser && currentUser.advertiserProfileId === offer?.merchantId;
+  
+  // isOwner calculation needs to be after offer is potentially set, or handle offer being null
+  // We can calculate it safely before the return statements, checking for offer existence.
+  const isOwner = !!offer && currentUser.isAdvertiser && currentUser.advertiserProfileId === offer.merchantId;
+
 
   useEffect(() => {
     if (offerId) {
@@ -51,6 +60,7 @@ export default function OfferDetailPage() {
         .then(data => {
           if (data) {
             setOffer(data);
+            // Set states based on fetched offer and current user
             setIsFavorited(currentUser.favoriteOffers?.includes(data.id) ?? false);
             setIsFollowingMerchant(currentUser.followedMerchants?.includes(data.merchantId) ?? false);
           } else {
@@ -64,7 +74,7 @@ export default function OfferDetailPage() {
           setLoading(false);
         });
     }
-  }, [offerId]); // currentUser is stable based on mock data, so not needed as dependency here
+  }, [offerId, currentUser.favoriteOffers, currentUser.followedMerchants]); // Added relevant parts of currentUser to dependencies
 
   if (loading) {
     return (
@@ -86,11 +96,12 @@ export default function OfferDetailPage() {
   }
 
   if (!offer) {
+    // This check is after loading and error, so if offer is still null, it means it wasn't found or another issue.
     return <div className="text-center py-10 text-muted-foreground">Oferta não encontrada.</div>;
   }
 
   const toggleFavorite = () => setIsFavorited(!isFavorited);
-  const toggleFollow = () => setIsFollowingMerchant(!isFollowingMerchant); // Updated to use renamed state setter
+  const toggleFollow = () => setIsFollowingMerchant(!isFollowingMerchant);
 
 
   return (
@@ -102,9 +113,9 @@ export default function OfferDetailPage() {
       <OfferActionsSection 
         offerId={offer.id}
         isFavorited={isFavorited}
-        isFollowingMerchant={isFollowingMerchant} // Passed renamed state
+        isFollowingMerchant={isFollowingMerchant}
         onToggleFavorite={toggleFavorite}
-        onToggleFollow={toggleFollow} // Passes the renamed toggle function
+        onToggleFollow={toggleFollow}
         onCommentClick={() => document.getElementById('comment-section')?.scrollIntoView({ behavior: 'smooth' })}
       />
 
@@ -134,3 +145,4 @@ export default function OfferDetailPage() {
     </div>
   );
 }
+
