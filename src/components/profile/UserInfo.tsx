@@ -2,6 +2,7 @@
 'use client';
 
 import type React from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Edit3, Star as StarIcon, Users as UsersIcon, Award as AwardIcon, MessageSquare as MessageSquareIcon, Zap as ZapIcon, type LucideProps } from 'lucide-react';
@@ -9,6 +10,7 @@ import type { User, Badge as BadgeType } from '@/types';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card, CardContent } from '@/components/ui/card';
+import { useToast } from "@/hooks/use-toast";
 
 interface UserInfoProps {
   user: User;
@@ -23,22 +25,58 @@ const badgeIconMap: { [key: string]: React.ElementType<LucideProps> } = {
 };
 
 const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
+  const { toast } = useToast();
   const xpProgress = user.currentXp && user.xpToNextLevel ? (user.currentXp / user.xpToNextLevel) * 100 : 0;
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+
+  const handleEditAvatarClick = () => {
+    avatarFileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreviewUrl(reader.result as string);
+        toast({
+          title: "Avatar Selecionado",
+          description: `Nova imagem de avatar "${file.name}" pronta para upload.`,
+        });
+      };
+      reader.readAsDataURL(file);
+      // In a real app, you would then upload the 'file' object to your backend/storage.
+      console.log("Selected avatar file:", file.name);
+    }
+  };
 
   return (
     <Card className="shadow-xl overflow-hidden">
       <CardContent className="p-6 flex flex-col items-center text-center bg-gradient-to-b from-primary/10 to-background">
         <div className="relative mb-4">
           <Avatar className="w-28 h-28 border-4 border-primary shadow-lg ring-2 ring-offset-background ring-offset-2 ring-primary">
-            <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint || "profile person"} />
+            <AvatarImage src={avatarPreviewUrl || user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint || "profile person"} />
             <AvatarFallback className="text-4xl bg-muted text-muted-foreground">
               {user.name?.substring(0, 1).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <Button variant="outline" size="icon" className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 bg-card border-primary text-primary hover:bg-primary/10">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 bg-card border-primary text-primary hover:bg-primary/10"
+            onClick={handleEditAvatarClick}
+            aria-label="Editar foto do perfil"
+          >
             <Edit3 size={14} />
-            <span className="sr-only">Editar foto</span>
           </Button>
+          <input
+            type="file"
+            ref={avatarFileInputRef}
+            onChange={handleAvatarChange}
+            accept="image/*"
+            className="hidden"
+          />
         </div>
 
         <h2 className="text-2xl font-headline font-bold text-foreground mb-1">{user.name}</h2>

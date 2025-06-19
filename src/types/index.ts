@@ -111,7 +111,9 @@ export interface User {
   commentsMade?: Comment[];
   isAdvertiser?: boolean; 
   advertiserProfileId?: string; 
-  businessName?: string; 
+  businessName?: string;
+  businessLogoUrl?: string;
+  businessLogoHint?: string;
   address?: string;
   city?: string;
   whatsapp?: string;
@@ -223,6 +225,8 @@ export const mockAdvertiserUser: User = {
   id: 'advUserPizzariaSaborosa', 
   name: 'Carlos Pizzaiolo',
   businessName: 'Pizzaria Saborosa',
+  businessLogoUrl: 'https://placehold.co/150x150.png',
+  businessLogoHint: 'pizza logo',
   avatarUrl: 'https://placehold.co/100x100.png',
   avatarHint: 'person chef',
   points: 0, 
@@ -232,6 +236,8 @@ export const mockAdvertiserUser: User = {
   isAdvertiser: true,
   advertiserProfileId: 'pizzariaSaborosaMerchant', 
   email: 'carlos.pizza@saborosa.com',
+  address: 'Avenida Principal, 789, Centro',
+  whatsapp: '(92) 98877-6655',
 };
 
 
@@ -416,3 +422,4 @@ export const adminModules = [
   { id: 'finance', title: 'Financeiro e Assinaturas', icon: CreditCard, description: 'Controle pagamentos, assinaturas e receita.' },
   { id: 'support', title: 'Central de Suporte', icon: HelpCircle, description: 'Gerencie tickets e forneça suporte aos usuários.' },
 ];
+

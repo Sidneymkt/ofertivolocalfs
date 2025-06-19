@@ -7,18 +7,17 @@ import PerformanceChartPlaceholder from '@/components/dashboard/advertiser/Perfo
 import QuickActionsCard from '@/components/dashboard/advertiser/QuickActionsCard';
 import PublishedOffersSection, { type PublishedOfferSummary } from '@/components/dashboard/advertiser/PublishedOffersSection';
 import GenericDashboardSection from '@/components/dashboard/advertiser/GenericDashboardSection';
+import AdvertiserProfileSettingsCard from '@/components/dashboard/advertiser/AdvertiserProfileSettingsCard';
 import { mockAdvertiserUser } from '@/types'; 
 import { BarChart2, Eye, MousePointerClick, CheckCircle, Users, Coins, TrendingUp, ShoppingBag, Settings, Bell, Gift, ListFilter, FileText, DollarSign, AlertCircle } from 'lucide-react';
-import { Progress } from '@/components/ui/progress'; // Added for points progress
+import { Progress } from '@/components/ui/progress';
 
-// Mock data - in a real app, this would come from an API
 const advertiserName = mockAdvertiserUser.businessName || "Meu Negócio"; 
 
-// Simulated advertiser plan data
 const advertiserPlan = {
   name: "Plano Pro",
   monthlyPointsLimit: 1000,
-  pointsDistributedThisMonth: 650, // Example
+  pointsDistributedThisMonth: 650, 
 };
 
 const pointsUsagePercentage = (advertiserPlan.pointsDistributedThisMonth / advertiserPlan.monthlyPointsLimit) * 100;
@@ -51,7 +50,6 @@ export default function AdvertiserDashboardPage() {
 
       <AdvertiserMetricsGrid metrics={metrics} />
 
-      {/* Advertiser Points Plan Usage Section */}
       <GenericDashboardSection 
         title="Uso de Pontos do Plano Mensal" 
         icon={Coins}
@@ -98,9 +96,7 @@ export default function AdvertiserDashboardPage() {
          <p className="text-muted-foreground text-center py-10">Gerenciador de Sorteios em breve.</p>
       </GenericDashboardSection>
 
-      <GenericDashboardSection title="Configurações do Perfil" icon={Settings} description="Atualize as informações do seu negócio.">
-        <p className="text-muted-foreground text-center py-10">Configurações do Perfil do Negócio em breve.</p>
-      </GenericDashboardSection>
+      <AdvertiserProfileSettingsCard advertiserUser={mockAdvertiserUser} />
 
        <GenericDashboardSection title="Notificações" icon={Bell} description="Fique por dentro das novidades e alertas.">
         <p className="text-muted-foreground text-center py-10">Central de notificações em breve.</p>
@@ -118,5 +114,3 @@ export default function AdvertiserDashboardPage() {
     </div>
   );
 }
-
-    
