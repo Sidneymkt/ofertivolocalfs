@@ -19,7 +19,7 @@ export interface Comment {
   timestamp: Date;
   offerId?: string; 
   offerTitle?: string; 
-  pointsEarned?: number; // Added for gamification
+  pointsEarned?: number; 
 }
 
 export interface Offer {
@@ -46,7 +46,7 @@ export interface Offer {
   validUntil?: string | Date; 
   usersUsedCount?: number;
   qrCodeValue?: string; 
-  pointsAwarded?: number; // Points user gets for check-in
+  pointsAwarded?: number; 
   comments?: Comment[];
   'data-ai-hint'?: string;
 }
@@ -64,7 +64,7 @@ export interface SharedOffer {
   id: string;
   offerId: string;
   offerTitle: string;
-  platform: string; // e.g., WhatsApp, Instagram
+  platform: string; 
   timestamp: Date;
   pointsEarned?: number;
 }
@@ -92,7 +92,7 @@ export interface User {
   avatarUrl?: string;
   avatarHint?: string;
   points: number;
-  level: string; // e.g., "Bronze"
+  level: string; 
   currentXp: number;
   xpToNextLevel: number;
   badges?: Badge[];
@@ -142,13 +142,21 @@ export interface PublishedOfferSummary {
   dataAiHint?: string;
 }
 
+// Types for Admin Dashboard
+export interface AdminMetricItem {
+  title: string;
+  value: string | number;
+  icon: React.ElementType;
+  change?: string; // e.g. "+5% vs Mês Anterior"
+  bgColorClass?: string; // Optional background color class for the card or icon
+}
 
 // MOCK DATA
 
-import { Award, Coins, Gift, MessageSquare, Share2, ShoppingCart, Star, Users, Utensils, Wrench, BookOpen, HeartPulse, Smile, Trophy, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, BadgeCheck, BarChart3, BookOpen, Building2, CalendarCheck2, CheckCircle, Coins, CreditCard, DollarSign, Eye, FileText, Filter, Gift, HandCoins, HeartPulse, HelpCircle, ListChecks, MailQuestion, MapPinned, Megaphone, MessageSquare, MousePointerClick, PackageCheck, Settings2, ShieldAlert, ShoppingCart, Smile, Sparkles, Star, ThumbsUp, Ticket, TrendingDown, TrendingUp, UserCheck, UserCog, UserPlus, Users, Utensils, Wrench, Zap } from 'lucide-react';
 
-// Point values for user actions (as per new spec)
-export const POINTS_CHECKIN = 50; // Kept higher as it's a core action, but can be 5 from spec
+// Point values for user actions
+export const POINTS_CHECKIN = 5; // As per new spec
 export const POINTS_SHARE_OFFER = 3;
 export const POINTS_FOLLOW_MERCHANT = 2;
 export const POINTS_COMMENT_OFFER = 1;
@@ -171,7 +179,7 @@ export const mockUser: User = {
   avatarHint: 'person woman',
   points: 1250,
   level: USER_LEVELS.PRATA.name,
-  currentXp: 650, // Example XP within Prata level
+  currentXp: 650, 
   xpToNextLevel: USER_LEVELS.PRATA.nextLevelXp,
   badges: mockBadges.slice(0,3),
   favoriteOffers: ['1', '3'],
@@ -207,8 +215,8 @@ export const mockAdvertiserUser: User = {
   businessName: 'Pizzaria Saborosa',
   avatarUrl: 'https://placehold.co/100x100.png',
   avatarHint: 'person chef',
-  points: 0, // Advertisers don't accumulate user points this way
-  level: USER_LEVELS.INICIANTE.name, // Default or not applicable
+  points: 0, 
+  level: USER_LEVELS.INICIANTE.name, 
   currentXp: 0,
   xpToNextLevel: USER_LEVELS.INICIANTE.nextLevelXp,
   isAdvertiser: true,
@@ -250,7 +258,7 @@ export const mockOffers: Offer[] = [
     qrCodeValue: 'OFERTA1-PIZZASABOROSA-12345', 
     pointsAwarded: POINTS_CHECKIN,
     comments: [
-      { id: 'c1', userId: 'userX', userName: 'João Silva', userAvatarUrl: 'https://placehold.co/40x40.png', userAvatarHint: 'man avatar', rating: 5, text: 'Pizza maravilhosa, atendimento top!', timestamp: new Date(Date.now() - 3600000 * 5), pointsEarned: POINTS_COMMENT_OFFER },
+      { id: 'c1', userId: 'userX', userName: 'João Silva', userAvatarUrl: 'https://placehold.co/40x40.png', userAvatarHint: 'person avatar', rating: 5, text: 'Pizza maravilhosa, atendimento top!', timestamp: new Date(Date.now() - 3600000 * 5), pointsEarned: POINTS_COMMENT_OFFER },
       { id: 'c2', userId: 'userY', userName: 'Maria Oliveira', userAvatarUrl: 'https://placehold.co/40x40.png', userAvatarHint: 'woman avatar', rating: 4, text: 'Gostei muito, ótimo custo-benefício.', timestamp: new Date(Date.now() - 3600000 * 24), pointsEarned: POINTS_COMMENT_OFFER },
       { id: 'c3', userId: 'userZ', userName: 'Pedro Costa', rating: 5, text: 'Sempre peço, a melhor da cidade!', timestamp: new Date(Date.now() - 3600000 * 48), userAvatarUrl: 'https://placehold.co/40x40.png', userAvatarHint: 'person smiling', pointsEarned: POINTS_COMMENT_OFFER },
     ],
@@ -303,7 +311,7 @@ export const mockOffers: Offer[] = [
     fullDescription: 'Supere seus limites com o Tênis Corrida ProBoost X. Desenvolvido para corredores exigentes, oferece máximo amortecimento, responsividade e estabilidade. Cabedal em mesh respirável, solado de alta durabilidade e design moderno. Ideal para treinos diários e provas.',
     validUntil: new Date(Date.now() + 86400000 * 3).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric'}),
     usersUsedCount: 95,
-    pointsAwarded: POINTS_CHECKIN, // Assuming check-in for a product purchase? Or points for buying.
+    pointsAwarded: POINTS_CHECKIN, 
     galleryImages: ['https://placehold.co/800x500.png', 'https://placehold.co/800x500.png', 'https://placehold.co/800x500.png'],
     galleryImageHints: ['running shoe', 'shoe sole', 'person running'],
   },
@@ -361,7 +369,7 @@ export const getMockMerchantById = (id: string): { id: string, name: string, ima
         return {
             id: offerFromMerchant.merchantId,
             name: offerFromMerchant.merchantName,
-            imageUrl: `https://placehold.co/64x64.png?text=${offerFromMerchant.merchantName.substring(0,1)}`, // Placeholder image
+            imageUrl: `https://placehold.co/64x64.png?text=${offerFromMerchant.merchantName.substring(0,1)}`, 
             'data-ai-hint': 'store logo',
             isVerified: offerFromMerchant.merchantIsVerified
         };
@@ -372,6 +380,30 @@ export const getMockMerchantById = (id: string): { id: string, name: string, ima
     if (id === 'botecoMestreMerchant') return {id, name: 'Boteco do Mestre', isVerified: false, 'data-ai-hint': 'bar restaurant'};
 
     return undefined;
-}
+};
 
-    
+// Mock Admin Metrics
+export const mockAdminMetrics: AdminMetricItem[] = [
+  { title: 'Usuários Ativos', value: '12.580', icon: Users, change: '+150 esta semana', bgColorClass: 'bg-blue-500/10 text-blue-600' },
+  { title: 'Anunciantes Ativos', value: '450', icon: Building2, change: '+5 esta semana', bgColorClass: 'bg-green-500/10 text-green-600' },
+  { title: 'Ofertas Ativas', value: '1.230', icon: ListChecks, change: '-20 vs ontem', bgColorClass: 'bg-sky-500/10 text-sky-600' },
+  { title: 'Check-ins (Hoje)', value: '85', icon: CalendarCheck2, change: '+10% vs ontem', bgColorClass: 'bg-orange-500/10 text-orange-600' },
+  { title: 'Sorteios Ativos', value: '15', icon: Gift, change: '+2 novos', bgColorClass: 'bg-purple-500/10 text-purple-600' },
+  { title: 'Pontos Dist. (Mês)', value: '1.250.000', icon: HandCoins, change: '+5% vs mês ant.', bgColorClass: 'bg-yellow-500/10 text-yellow-600' },
+];
+
+// Mock Admin Module Placeholders
+export const adminModules = [
+  { id: 'users', title: 'Gestão de Usuários', icon: Users, description: 'Gerencie perfis, permissões e dados de usuários.' },
+  { id: 'advertisers', title: 'Gestão de Anunciantes', icon: Building2, description: 'Monitore contas, planos e desempenho de anunciantes.' },
+  { id: 'offers', title: 'Aprovação de Ofertas', icon: PackageCheck, description: 'Revise, aprove ou rejeite ofertas pendentes.' },
+  { id: 'analytics', title: 'Analytics Global', icon: BarChart3, description: 'Visualize gráficos de desempenho e tendências da plataforma.' },
+  { id: 'categories', title: 'Gestão de Categorias', icon: Filter, description: 'Crie, edite e organize categorias de ofertas.' },
+  { id: 'reports', title: 'Banco de Relatórios', icon: FileText, description: 'Gere e baixe relatórios detalhados.' },
+  { id: 'settings', title: 'Configurações Gerais', icon: Settings2, description: 'Ajuste as configurações da plataforma Ofertivo.' },
+  { id: 'sweepstakes', title: 'Gestão de Sorteios', icon: Gift, description: 'Monitore e crie sorteios para engajamento.' },
+  { id: 'moderation', title: 'Moderação de Conteúdo', icon: ShieldAlert, description: 'Revise comentários e trate denúncias.' },
+  { id: 'finance', title: 'Financeiro e Assinaturas', icon: CreditCard, description: 'Controle pagamentos, assinaturas e receita.' },
+  { id: 'support', title: 'Central de Suporte', icon: HelpCircle, description: 'Gerencie tickets e forneça suporte aos usuários.' },
+];
+
