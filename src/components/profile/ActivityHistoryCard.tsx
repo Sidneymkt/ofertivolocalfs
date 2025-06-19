@@ -1,6 +1,7 @@
 
 'use client';
 
+import React, { useState, useEffect } from 'react'; // Added useState and useEffect
 import type { User } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,28 +22,37 @@ const ActivityItem: React.FC<{
   isGain?: boolean;
   icon: React.ElementType;
   iconColor?: string;
-}> = ({ title, subtitle, timestamp, points, isGain, icon: Icon, iconColor = 'text-primary' }) => (
-  <li className="p-3.5 bg-muted/50 rounded-lg shadow-sm hover:bg-muted/70 transition-colors duration-150 ease-in-out">
-    <div className="flex items-start gap-3">
-      <div className={`mt-1 p-1.5 bg-card rounded-full shadow-sm ${iconColor}`}>
-        <Icon size={18} className="opacity-80" />
-      </div>
-      <div className="flex-grow">
-        <p className="font-semibold text-card-foreground text-sm">{title}</p>
-        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
-        <span className="text-xs text-muted-foreground/80">
-          {format(timestamp, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-        </span>
-      </div>
-      {points !== undefined && (
-        <div className={`text-sm font-semibold flex items-center gap-1 whitespace-nowrap ${isGain ? 'text-green-600' : 'text-red-600'}`}>
-          {isGain ? <PlusCircle size={14} /> : <MinusCircle size={14} />}
-          {points} pts
+}> = ({ title, subtitle, timestamp, points, isGain, icon: Icon, iconColor = 'text-primary' }) => {
+  const [formattedDate, setFormattedDate] = useState<string>('');
+
+  useEffect(() => {
+    // Format the date only on the client-side after hydration
+    setFormattedDate(format(timestamp, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
+  }, [timestamp]); // Re-run if timestamp changes
+
+  return (
+    <li className="p-3.5 bg-muted/50 rounded-lg shadow-sm hover:bg-muted/70 transition-colors duration-150 ease-in-out">
+      <div className="flex items-start gap-3">
+        <div className={`mt-1 p-1.5 bg-card rounded-full shadow-sm ${iconColor}`}>
+          <Icon size={18} className="opacity-80" />
         </div>
-      )}
-    </div>
-  </li>
-);
+        <div className="flex-grow">
+          <p className="font-semibold text-card-foreground text-sm">{title}</p>
+          {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+          <span className="text-xs text-muted-foreground/80">
+            {formattedDate || 'Carregando data...'} {/* Display placeholder or formatted date */}
+          </span>
+        </div>
+        {points !== undefined && (
+          <div className={`text-sm font-semibold flex items-center gap-1 whitespace-nowrap ${isGain ? 'text-green-600' : 'text-red-600'}`}>
+            {isGain ? <PlusCircle size={14} /> : <MinusCircle size={14} />}
+            {points} pts
+          </div>
+        )}
+      </div>
+    </li>
+  );
+};
 
 
 const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
@@ -95,7 +105,7 @@ const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
                       subtitle={item.type === 'checkin' ? `Em: ${item.merchantName}` : item.type === 'share' ? `Plataforma: ${item.platform}` : undefined}
                       timestamp={new Date(item.timestamp)}
                       points={item.type === 'sweepstake' ? item.pointsSpent : item.pointsEarned}
-                      isGain={item.isGain}
+                      isGain={item.isGain ?? false} // Ensure isGain has a default
                       icon={item.icon}
                       iconColor={item.iconColor}
                     />
@@ -186,5 +196,3 @@ const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
 };
 
 export default ActivityHistoryCard;
-
-    
