@@ -149,6 +149,9 @@ export const USER_LEVELS = {
   PLATINA: { name: 'Platina', minXp: 5000, nextLevelXp: Infinity },
 };
 
+export type UserStatus = 'active' | 'inactive' | 'suspended' | 'pending_verification';
+export type AdvertiserPlan = 'basic' | 'pro' | 'premium' | 'trial';
+
 export interface User {
   id: string;
   name: string;
@@ -168,6 +171,8 @@ export interface User {
   sharedOffersHistory?: SharedOffer[];
   sweepstakeParticipations?: SweepstakeParticipation[];
   commentsMade?: Comment[];
+  joinDate?: Date; // Added for user lists
+  status?: UserStatus; // Added for user lists
 
   isAdvertiser?: boolean;
   advertiserProfileId?: string; // ID of the advertiser's specific profile/business entity
@@ -177,15 +182,18 @@ export interface User {
   businessCoverPhotoUrl?: string;
   businessCoverPhotoHint?: string;
   businessDescription?: string;
-  businessAddress?: string; // This might be different from user's personal address
-  businessCity?: string;   // This might be different from user's personal city
-  businessWhatsapp?: string; // Commercial contact
+  businessAddress?: string;
+  businessCity?: string;
+  businessWhatsapp?: string;
+  advertiserStatus?: UserStatus; // For advertiser account status
+  advertiserPlan?: AdvertiserPlan; // For advertiser plan
 
   // Personal details (might be distinct from business details if user is also an advertiser)
   address?: string;
   city?: string;
   whatsapp?: string;
   isProfileComplete?: boolean;
+  responsibleName?: string; // For advertiser context
 }
 
 
@@ -244,9 +252,13 @@ export const mockBadges: Badge[] = [
     { id: 'badge5', name: 'Caçador de Ofertas Pro', icon: 'Zap', description: 'Realizou 10 check-ins! +50 XP', 'data-ai-hint': 'lightning zap' },
 ];
 
+const now = new Date();
+const oneDay = 86400000;
+
 export const mockUser: User = {
   id: 'user123',
   name: 'Ana Clara Explorer',
+  email: 'anaclara@exemplo.com',
   avatarUrl: 'https://placehold.co/100x100.png?text=AE',
   avatarHint: 'person woman',
   coverPhotoUrl: 'https://placehold.co/1200x300.png?text=Capa+Perfil',
@@ -259,33 +271,36 @@ export const mockUser: User = {
   favoriteOffers: ['offer-pizza-1', 'offer-sports-3'],
   followedMerchants: ['pizzariaSaborosaMerchant', 'atletaShopMerchant', 'botecoMestreMerchant'],
   checkInHistory: [
-    { id: 'chk1', offerId: 'offer-barber-2', offerTitle: 'Corte Masculino + Barba Modelada', merchantName: 'Barbearia Premium', timestamp: new Date(Date.now() - 86400000 * 2), pointsEarned: POINTS_CHECKIN },
-    { id: 'chk2', offerId: 'offer-bar-4', offerTitle: 'Happy Hour Dose Dupla Chopp', merchantName: 'Boteco do Mestre', timestamp: new Date(Date.now() - 86400000 * 5), pointsEarned: POINTS_CHECKIN },
-    { id: 'chk3', offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante', merchantName: 'Pizzaria Saborosa', timestamp: new Date(Date.now() - 86400000 * 10), pointsEarned: POINTS_CHECKIN },
+    { id: 'chk1', offerId: 'offer-barber-2', offerTitle: 'Corte Masculino + Barba Modelada', merchantName: 'Barbearia Premium', timestamp: new Date(now.getTime() - oneDay * 2), pointsEarned: POINTS_CHECKIN },
+    { id: 'chk2', offerId: 'offer-bar-4', offerTitle: 'Happy Hour Dose Dupla Chopp', merchantName: 'Boteco do Mestre', timestamp: new Date(now.getTime() - oneDay * 5), pointsEarned: POINTS_CHECKIN },
+    { id: 'chk3', offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante', merchantName: 'Pizzaria Saborosa', timestamp: new Date(now.getTime() - oneDay * 10), pointsEarned: POINTS_CHECKIN },
   ],
   sharedOffersHistory: [
-      { id: 'share1', offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante', platform: 'WhatsApp', timestamp: new Date(Date.now() - 86400000 * 1), pointsEarned: POINTS_SHARE_OFFER },
-      { id: 'share2', offerId: 'offer-sports-3', offerTitle: 'Tênis Corrida ProBoost X', platform: 'Instagram', timestamp: new Date(Date.now() - 86400000 * 4), pointsEarned: POINTS_SHARE_OFFER },
+      { id: 'share1', offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante', platform: 'WhatsApp', timestamp: new Date(now.getTime() - oneDay * 1), pointsEarned: POINTS_SHARE_OFFER },
+      { id: 'share2', offerId: 'offer-sports-3', offerTitle: 'Tênis Corrida ProBoost X', platform: 'Instagram', timestamp: new Date(now.getTime() - oneDay * 4), pointsEarned: POINTS_SHARE_OFFER },
   ],
   sweepstakeParticipations: [
-      { id: 'swp1', sweepstakeId: 'sw1', sweepstakeTitle: 'Jantar Romântico Vale R$300', timestamp: new Date(Date.now() - 86400000 * 3), pointsSpent: 100 },
-      { id: 'swp2', sweepstakeId: 'sw2', sweepstakeTitle: 'Vale Compras de R$200 Loja X', timestamp: new Date(Date.now() - 86400000 * 8), pointsSpent: 50 },
+      { id: 'swp1', sweepstakeId: 'sw1', sweepstakeTitle: 'Jantar Romântico Vale R$300', timestamp: new Date(now.getTime() - oneDay * 3), pointsSpent: 100 },
+      { id: 'swp2', sweepstakeId: 'sw2', sweepstakeTitle: 'Vale Compras de R$200 Loja X', timestamp: new Date(now.getTime() - oneDay * 8), pointsSpent: 50 },
   ],
   commentsMade: [
-      { id: 'cmtUser1', userId: 'user123', userName: 'Ana Clara Explorer', rating: 5, text: 'Adorei a pizza, super recomendo! Massa fininha e crocante.', timestamp: new Date(Date.now() - 86400000), offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante + Refri Grátis', pointsEarned: POINTS_COMMENT_OFFER },
-      { id: 'cmtUser2', userId: 'user123', userName: 'Ana Clara Explorer', rating: 4, text: 'O corte ficou bom, mas o ambiente poderia ser mais silencioso.', timestamp: new Date(Date.now() - 86400000 * 3), offerId: 'offer-barber-2', offerTitle: 'Corte Masculino + Barba Modelada', pointsEarned: POINTS_COMMENT_OFFER },
+      { id: 'cmtUser1', userId: 'user123', userName: 'Ana Clara Explorer', rating: 5, text: 'Adorei a pizza, super recomendo! Massa fininha e crocante.', timestamp: new Date(now.getTime() - oneDay), offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante + Refri Grátis', pointsEarned: POINTS_COMMENT_OFFER },
+      { id: 'cmtUser2', userId: 'user123', userName: 'Ana Clara Explorer', rating: 4, text: 'O corte ficou bom, mas o ambiente poderia ser mais silencioso.', timestamp: new Date(now.getTime() - oneDay * 3), offerId: 'offer-barber-2', offerTitle: 'Corte Masculino + Barba Modelada', pointsEarned: POINTS_COMMENT_OFFER },
   ],
   isAdvertiser: false,
   address: 'Rua das Palmeiras, 123, Bairro Flores',
   city: 'Manaus, AM',
   whatsapp: '(92) 99999-8888',
   isProfileComplete: true,
-  email: 'anaclara@exemplo.com',
+  joinDate: new Date(now.getTime() - oneDay * 90),
+  status: 'active',
 };
 
 export const mockAdvertiserUser: User = {
   id: 'advUserPizzariaSaborosa',
-  name: 'Carlos Pizzaiolo', // Personal name of the advertiser
+  responsibleName: 'Carlos Pizzaiolo', // Personal name of the advertiser
+  name: 'Carlos Pizzaiolo', // Fallback for user context
+  email: 'carlos.pizza@saborosa.com', // Business contact email
   avatarUrl: 'https://placehold.co/100x100.png?text=CP', // Personal avatar
   avatarHint: 'person chef',
   
@@ -301,19 +316,17 @@ export const mockAdvertiserUser: User = {
   businessCity: 'Manaus, AM',
   businessWhatsapp: '(92) 98877-6655',
   
-  // User-specific gamification points (advertisers can also be users of the app)
   points: 50, // Example points for the advertiser as a user
   level: USER_LEVELS.INICIANTE.name,
   currentXp: 10,
   xpToNextLevel: USER_LEVELS.INICIANTE.nextLevelXp,
   
-  email: 'carlos.pizza@saborosa.com', // Business contact email
   isProfileComplete: true, // Referring to business profile completion
+  joinDate: new Date(now.getTime() - oneDay * 180),
+  advertiserStatus: 'active',
+  advertiserPlan: 'pro',
 };
 
-
-const now = new Date();
-const oneDay = 86400000;
 
 export const mockOffers: Offer[] = [
   {
@@ -586,4 +599,134 @@ export const adminModules = [
   { id: 'support', title: 'Central de Suporte', icon: HelpCircle, description: 'Gerencie tickets e forneça suporte aos usuários.' },
 ];
 
+// Mock data for user lists
+export const mockUserList: User[] = [
+  mockUser,
+  {
+    id: 'user002',
+    name: 'Bruno Costa',
+    email: 'bruno.costa@example.com',
+    avatarUrl: 'https://placehold.co/40x40.png?text=BC',
+    avatarHint: 'man office',
+    points: 750,
+    level: USER_LEVELS.BRONZE.name,
+    currentXp: 250,
+    xpToNextLevel: USER_LEVELS.BRONZE.nextLevelXp,
+    joinDate: new Date(now.getTime() - oneDay * 60),
+    status: 'active',
+    isAdvertiser: false,
+  },
+  {
+    id: 'user003',
+    name: 'Carla Dias',
+    email: 'carla.dias@example.com',
+    avatarUrl: 'https://placehold.co/40x40.png?text=CD',
+    avatarHint: 'woman smiling',
+    points: 2500,
+    level: USER_LEVELS.PRATA.name,
+    currentXp: 1200,
+    xpToNextLevel: USER_LEVELS.PRATA.nextLevelXp,
+    joinDate: new Date(now.getTime() - oneDay * 120),
+    status: 'active',
+    isAdvertiser: false,
+  },
+  {
+    id: 'user004',
+    name: 'Daniel Evans (Suspenso)',
+    email: 'daniel.evans@example.com',
+    avatarUrl: 'https://placehold.co/40x40.png?text=DE',
+    avatarHint: 'person serious',
+    points: 100,
+    level: USER_LEVELS.INICIANTE.name,
+    currentXp: 50,
+    xpToNextLevel: USER_LEVELS.INICIANTE.nextLevelXp,
+    joinDate: new Date(now.getTime() - oneDay * 30),
+    status: 'suspended',
+    isAdvertiser: false,
+  },
+  {
+    id: 'user005',
+    name: 'Empresa Exemplo (Pendente)',
+    email: 'contato@empresaexemplo.com',
+    avatarUrl: 'https://placehold.co/40x40.png?text=EE',
+    avatarHint: 'company building',
+    points: 0,
+    level: USER_LEVELS.INICIANTE.name,
+    currentXp: 0,
+    xpToNextLevel: USER_LEVELS.INICIANTE.nextLevelXp,
+    joinDate: new Date(now.getTime() - oneDay * 2),
+    status: 'pending_verification',
+    isAdvertiser: true, // This user is also an advertiser but listed here as a general user.
+    responsibleName: 'Felipe Alves',
+    businessName: 'Empresa Exemplo Ltda',
+    businessLogoUrl: 'https://placehold.co/40x40.png?text=EE',
+    advertiserStatus: 'pending_verification',
+    advertiserPlan: 'trial',
+  },
+];
+
+// Mock data for advertiser lists (can reuse parts of User type)
+export const mockAdvertiserList: User[] = [
+  mockAdvertiserUser,
+  {
+    id: 'advUserBarbearia',
+    responsibleName: 'João Barbeiro',
+    name: 'João Barbeiro',
+    email: 'contato@barbeariapremium.com',
+    isAdvertiser: true,
+    advertiserProfileId: 'barbeariaPremiumMerchant',
+    businessName: 'Barbearia Premium',
+    businessLogoUrl: 'https://placehold.co/40x40.png?text=BP',
+    businessLogoHint: 'barber pole',
+    joinDate: new Date(now.getTime() - oneDay * 200),
+    advertiserStatus: 'active',
+    advertiserPlan: 'basic',
+    points: 20, level: 'Iniciante', currentXp: 5, xpToNextLevel: 100, // Basic user stats for advertiser
+  },
+  {
+    id: 'advUserAtletaShop',
+    responsibleName: 'Mariana Esportista',
+    name: 'Mariana Esportista',
+    email: 'vendas@atletashop.com',
+    isAdvertiser: true,
+    advertiserProfileId: 'atletaShopMerchant',
+    businessName: 'Atleta Shop',
+    businessLogoUrl: 'https://placehold.co/40x40.png?text=AS',
+    businessLogoHint: 'sports store',
+    joinDate: new Date(now.getTime() - oneDay * 90),
+    advertiserStatus: 'active',
+    advertiserPlan: 'pro',
+    points: 30, level: 'Iniciante', currentXp: 10, xpToNextLevel: 100,
+  },
+  {
+    id: 'advUserBoteco',
+    responsibleName: 'Pedro Mestre Cervejeiro',
+    name: 'Pedro Mestre Cervejeiro',
+    email: 'reservas@botecodomestre.com',
+    isAdvertiser: true,
+    advertiserProfileId: 'botecoMestreMerchant',
+    businessName: 'Boteco do Mestre',
+    businessLogoUrl: 'https://placehold.co/40x40.png?text=BM',
+    businessLogoHint: 'beer mug',
+    joinDate: new Date(now.getTime() - oneDay * 30),
+    advertiserStatus: 'pending_verification',
+    advertiserPlan: 'trial',
+    points: 0, level: 'Iniciante', currentXp: 0, xpToNextLevel: 100,
+  },
+  {
+    id: 'advUserCafe',
+    responsibleName: 'Sofia Doceira',
+    name: 'Sofia Doceira',
+    email: 'cafe@aconchego.com',
+    isAdvertiser: true,
+    advertiserProfileId: 'cafeAconchegoMerchant',
+    businessName: 'Café Aconchego',
+    businessLogoUrl: 'https://placehold.co/40x40.png?text=CA',
+    businessLogoHint: 'coffee cup',
+    joinDate: new Date(now.getTime() - oneDay * 400),
+    advertiserStatus: 'suspended',
+    advertiserPlan: 'basic',
+    points: 10, level: 'Iniciante', currentXp: 2, xpToNextLevel: 100,
+  },
+];
     
