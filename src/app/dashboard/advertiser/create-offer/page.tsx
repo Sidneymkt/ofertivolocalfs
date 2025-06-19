@@ -18,17 +18,19 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from "@/hooks/use-toast";
-import { categories, offerTypes, type OfferTypeId, type Offer, mockAdvertiserUser } from '@/types'; // Added Offer type
+import { categories, offerTypes, type OfferTypeId, type Offer, mockAdvertiserUser } from '@/types';
 import { 
   CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIcon, 
   AlertCircle, CheckCircle, Info, QrCode as QrCodeIcon, Smartphone, UserCheck, CheckCheck as CheckCheckIcon, Package as PackageIcon, LocateFixed, Building as BuildingIcon,
-  Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon 
+  Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon, FileText
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { generateOfferContent, type GenerateOfferContentInput } from '@/ai/flows/generate-offer-content-flow';
+import { generateOfferTerms, type GenerateOfferTermsInput } from '@/ai/flows/generate-offer-terms-flow';
+
 
 const offerFormSchemaBase = z.object({
   offerType: z.custom<OfferTypeId>(
@@ -37,7 +39,7 @@ const offerFormSchemaBase = z.object({
   ),
   title: z.string().min(5, "O título deve ter pelo menos 5 caracteres.").max(100, "Título muito longo."),
   description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres.").max(380, "Descrição não pode exceder 380 caracteres."),
-  images: z.custom<File[]>().array().min(1, "Pelo menos uma imagem é obrigatória.").max(6, "Máximo de 6 imagens.").optional(), // Made optional for now, can be .min(1)
+  images: z.custom<File[]>().array().min(1, "Pelo menos uma imagem é obrigatória.").max(6, "Máximo de 6 imagens.").optional(),
   category: z.string({ required_error: "Categoria é obrigatória." }),
   validityStartDate: z.date({ required_error: "Data de início é obrigatória." }),
   validityEndDate: z.date({ required_error: "Data de fim é obrigatória." }),
@@ -80,7 +82,6 @@ const offerFormSchemaBase = z.object({
   isRedeemableWithPoints: z.boolean().default(false),
   isPresentialOnly: z.boolean().default(false), 
 
-  // Specific fields
   timeLimit: z.string().optional(), 
   isForNewUsersOnly: z.boolean().default(false), 
   minCheckins: z.preprocess(
@@ -159,7 +160,8 @@ export default function CreateOfferPage() {
   const { toast } = useToast();
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [isLoadingAIContent, setIsLoadingAIContent] = useState(false);
+  const [isLoadingAITerms, setIsLoadingAITerms] = useState(false);
 
   const form = useForm<OfferFormValues>({
     resolver: zodResolver(offerFormSchema),
@@ -170,7 +172,7 @@ export default function CreateOfferPage() {
       images: [],
       category: undefined,
       validityStartDate: new Date(),
-      validityEndDate: new Date(Date.now() + 7 * 86400000), // Default 7 days from now
+      validityEndDate: new Date(Date.now() + 7 * 86400000), 
       terms: '',
       visibility: "normal",
       tags: '',
@@ -243,10 +245,6 @@ export default function CreateOfferPage() {
   useEffect(() => {
     if (selectedOfferType === 'exclusiva_app' || selectedOfferType === 'cupom_qr') {
       setValue('isPresentialOnly', true, { shouldValidate: true });
-    } else {
-      // Reset if not one of these types, unless user explicitly set it
-      // This part can be tricky, might need more refined logic based on user interaction
-      // For now, let's keep it simple: auto-check for these types.
     }
   }, [selectedOfferType, setValue]);
 
@@ -277,30 +275,25 @@ export default function CreateOfferPage() {
 
   const onSubmit: SubmitHandler<OfferFormValues> = (data) => {
     const imageFileNames = selectedFiles.map(file => file.name);
-    const galleryImageHints = imageFileNames.map((_, index) => `${data.title.split(" ")[0]} ${data.category}`.toLowerCase().slice(0,20)); // Simple hint generation
+    const galleryImageHints = imageFileNames.map((_, index) => `${data.title.split(" ")[0]} ${data.category}`.toLowerCase().slice(0,20)); 
 
     const newOffer: Offer = {
-      id: `offer-${Date.now()}-${Math.random().toString(36).substring(2,7)}`, // Mock ID
+      id: `offer-${Date.now()}-${Math.random().toString(36).substring(2,7)}`, 
       ...data,
-      status: 'awaiting_approval', // Default status for new offers
+      status: 'awaiting_approval', 
       createdBy: mockAdvertiserUser.advertiserProfileId || 'unknown_advertiser',
       merchantId: mockAdvertiserUser.advertiserProfileId || 'unknown_advertiser',
       merchantName: mockAdvertiserUser.businessName || 'Nome do Anunciante',
-      merchantIsVerified: mockAdvertiserUser.isProfileComplete, // Example
-      imageUrl: imagePreviews[0] || 'https://placehold.co/600x300.png?text=Oferta', // Use first preview as main image
+      merchantIsVerified: mockAdvertiserUser.isProfileComplete, 
+      imageUrl: imagePreviews[0] || 'https://placehold.co/600x300.png?text=Oferta', 
       'data-ai-hint': `${data.title.split(" ")[0]} ${data.category}`.toLowerCase().slice(0,20),
       galleryImages: imagePreviews,
       galleryImageHints: galleryImageHints,
       createdAt: new Date(),
       updatedAt: new Date(),
-      // Ensure all required fields from Offer type are present or have defaults
-      // Some fields like 'distance', 'rating', 'reviews', 'usersUsedCount' would typically be populated later or dynamically
-      distance: 'Calculando...',
-      usersUsedCount: 0,
-      // Explicitly set optional fields that might not be in data if not touched
       originalPrice: data.originalPrice,
       discountPercentage: data.discountPercentage,
-      discountedPrice: data.discountedPrice || 0, // Ensure discountedPrice is a number
+      discountedPrice: data.discountedPrice || 0, 
       timeLimit: data.timeLimit,
       isForNewUsersOnly: data.isForNewUsersOnly,
       minCheckins: data.minCheckins,
@@ -309,25 +302,20 @@ export default function CreateOfferPage() {
       comboItem2: data.comboItem2,
       comboItem3: data.comboItem3,
       targetNeighborhood: data.targetNeighborhood,
-      pointsAwarded: (data.pointsForCheckin || 0) + (data.pointsForShare || 0) + (data.pointsForComment || 0) || 5, // Example calculation
+      pointsAwarded: (data.pointsForCheckin || 0) + (data.pointsForShare || 0) + (data.pointsForComment || 0) || 5, 
     };
 
     console.log('Simulating saving offer to Firestore:', newOffer);
-    // In a real app, you would add 'newOffer' to your mockOffers array or send to backend
-    // For example: mockOffers.unshift(newOffer); 
-
+    
     toast({
       title: "Oferta Enviada para Aprovação!",
       description: `Sua oferta "${newOffer.title}" foi cadastrada e está aguardando moderação.`,
       variant: "default",
       duration: 7000,
     });
-    // form.reset(); // Optionally reset form
-    // setImagePreviews([]);
-    // setSelectedFiles([]);
   };
 
-  const handleGenerateWithAI = async () => {
+  const handleGenerateContentWithAI = async () => {
     const offerTypeId = getValues("offerType");
     const businessCategory = getValues("category");
     const currentTitle = getValues("title");
@@ -349,7 +337,6 @@ export default function CreateOfferPage() {
         return;
     }
 
-
     let discountDetails = "Nenhum desconto principal informado.";
     if (dp !== undefined) {
         discountDetails = `Preço promocional de R$${dp.toFixed(2)}`;
@@ -368,9 +355,8 @@ export default function CreateOfferPage() {
     
     const productServiceHint = currentTitle || businessCategory; 
 
-
-    setIsLoadingAI(true);
-    toast({ title: "Gerando com IA...", description: "Aguarde enquanto criamos sugestões para você." });
+    setIsLoadingAIContent(true);
+    toast({ title: "Gerando com IA...", description: "Aguarde enquanto criamos sugestões de título e descrição." });
 
     try {
       const input: GenerateOfferContentInput = {
@@ -392,12 +378,45 @@ export default function CreateOfferPage() {
       }
       toast({ title: "Conteúdo Gerado pela IA!", description: "Título e descrição atualizados com as sugestões." });
     } catch (error: any) {
-      console.error("AI generation error:", error);
+      console.error("AI content generation error:", error);
       toast({ variant: "destructive", title: "Erro na IA", description: error.message || "Não foi possível gerar conteúdo com IA." });
     } finally {
-      setIsLoadingAI(false);
+      setIsLoadingAIContent(false);
     }
   };
+
+  const handleGenerateTermsWithAI = async () => {
+    const offerTitle = getValues("title");
+    const offerDescription = getValues("description");
+
+    if (!offerTitle || !offerDescription) {
+      toast({ variant: "destructive", title: "Informação Necessária", description: "Por favor, preencha o título e a descrição da oferta primeiro." });
+      return;
+    }
+
+    setIsLoadingAITerms(true);
+    toast({ title: "Gerando Termos com IA...", description: "Aguarde enquanto criamos sugestões de termos e condições." });
+
+    try {
+      const input: GenerateOfferTermsInput = {
+        offerTitle,
+        offerDescription,
+      };
+      const result = await generateOfferTerms(input);
+      if (result.suggestedTerms) {
+        setValue("terms", result.suggestedTerms, { shouldValidate: true });
+        toast({ title: "Termos Gerados pela IA!", description: "Os termos e condições foram atualizados." });
+      } else {
+        toast({ variant: "destructive", title: "Sem Sugestões", description: "A IA não retornou sugestões de termos." });
+      }
+    } catch (error: any) {
+      console.error("AI terms generation error:", error);
+      toast({ variant: "destructive", title: "Erro na IA", description: error.message || "Não foi possível gerar termos com IA." });
+    } finally {
+      setIsLoadingAITerms(false);
+    }
+  };
+
 
   const handleSaveDraft = () => {
     const data = form.getValues();
@@ -633,11 +652,11 @@ export default function CreateOfferPage() {
                   </FormItem>
                 )}
               />
-              <Button type="button" variant="outline" onClick={handleGenerateWithAI} className="w-full md:w-auto" disabled={isLoadingAI || !selectedOfferType || !form.getValues("category")}>
-                {isLoadingAI ? <SpinnerIcon className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
-                {isLoadingAI ? "Gerando..." : "Gerar com IA"}
-                {!selectedOfferType && !isLoadingAI && <span className="text-xs ml-1 text-muted-foreground">(Selecione tipo)</span>}
-                {selectedOfferType && !form.getValues("category") && !isLoadingAI && <span className="text-xs ml-1 text-muted-foreground">(Selecione categoria)</span>}
+              <Button type="button" variant="outline" onClick={handleGenerateContentWithAI} className="w-full md:w-auto" disabled={isLoadingAIContent || isLoadingAITerms || !selectedOfferType || !form.getValues("category")}>
+                {isLoadingAIContent ? <SpinnerIcon className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
+                {isLoadingAIContent ? "Gerando..." : "Gerar Título/Descrição com IA"}
+                {!selectedOfferType && !isLoadingAIContent && <span className="text-xs ml-1 text-muted-foreground">(Selecione tipo)</span>}
+                {selectedOfferType && !form.getValues("category") && !isLoadingAIContent && <span className="text-xs ml-1 text-muted-foreground">(Selecione categoria)</span>}
               </Button>
             </CardContent>
           </Card>
@@ -869,14 +888,20 @@ export default function CreateOfferPage() {
                   </FormItem>
                   )}
               />
-              <FormField control={form.control} name="terms" render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                      <FormLabel htmlFor="terms">Termos e Condições (Opcional)</FormLabel>
-                      <FormControl><Textarea id="terms" placeholder="Ex: Válido apenas para consumo no local. Não cumulativo com outras promoções." {...field} rows={3} value={field.value ?? ''}/></FormControl>
-                      <FormMessage />
-                  </FormItem>
-                  )}
-              />
+              <div className="md:col-span-2">
+                <FormField control={form.control} name="terms" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel htmlFor="terms">Termos e Condições (Opcional)</FormLabel>
+                        <FormControl><Textarea id="terms" placeholder="Ex: Válido apenas para consumo no local. Não cumulativo com outras promoções." {...field} rows={3} value={field.value ?? ''}/></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={handleGenerateTermsWithAI} className="mt-2" disabled={isLoadingAITerms || isLoadingAIContent || !form.getValues("title") || !form.getValues("description")}>
+                    {isLoadingAITerms ? <SpinnerIcon className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4 text-purple-600" />}
+                    {isLoadingAITerms ? "Gerando..." : "Gerar Termos com IA"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -1012,7 +1037,7 @@ export default function CreateOfferPage() {
                     <Button type="button" variant="outline" onClick={handleSaveDraft} className="w-full sm:w-auto">
                         <Save className="mr-2 h-4 w-4" /> Salvar como Rascunho
                     </Button>
-                    <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting || isLoadingAI}>
+                    <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting || isLoadingAIContent || isLoadingAITerms}>
                         {form.formState.isSubmitting ? <><SpinnerIcon className="mr-2 h-4 w-4 animate-spin" /> Publicando...</> : <><Send className="mr-2 h-4 w-4" /> Publicar Oferta</>}
                     </Button>
                 </div>
@@ -1025,3 +1050,5 @@ export default function CreateOfferPage() {
     </div>
   );
 }
+
+    
