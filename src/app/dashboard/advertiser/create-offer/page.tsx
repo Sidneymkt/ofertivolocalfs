@@ -20,7 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useToast } from "@/hooks/use-toast";
 import { categories, offerTypes, type OfferTypeId, type Offer, mockAdvertiserUser } from '@/types';
 import { 
-  CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIcon, 
+  CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIconLucide, 
   AlertCircle, CheckCircle, Info, QrCode as QrCodeIcon, Smartphone, UserCheck, CheckCheck as CheckCheckIcon, Package as PackageIcon, LocateFixed, Building as BuildingIcon,
   Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon, FileText
 } from 'lucide-react';
@@ -30,6 +30,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { generateOfferContent, type GenerateOfferContentInput } from '@/ai/flows/generate-offer-content-flow';
 import { generateOfferTerms, type GenerateOfferTermsInput } from '@/ai/flows/generate-offer-terms-flow';
+import { QRCodeSVG } from 'react-qr-code';
 
 
 const offerFormSchemaBase = z.object({
@@ -205,6 +206,7 @@ export default function CreateOfferPage() {
   const originalPrice = watch("originalPrice");
   const discountPercentage = watch("discountPercentage");
   const discountedPrice = watch("discountedPrice");
+  const offerTitleForQRCode = watch("title");
 
   const currentOfferTypeDetails = useMemo(() => {
     return offerTypes.find(ot => ot.id === selectedOfferType);
@@ -462,6 +464,7 @@ export default function CreateOfferPage() {
           </div>
         );
       case 'cupom_qr':
+        const qrValue = `https://ofertivo.app/coupon?title=${encodeURIComponent(offerTitleForQRCode || "Oferta")}`;
         return (
            <>
             <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-md text-sm flex items-center gap-2 text-green-700">
@@ -469,9 +472,16 @@ export default function CreateOfferPage() {
               <p className="font-medium">Um QR Code será gerado para esta oferta. O campo "Oferta válida apenas presencialmente" foi marcado automaticamente.</p>
             </div>
             <div className="mt-4 p-4 border rounded-md bg-muted/30 flex flex-col items-center justify-center">
-                <h4 className="font-semibold mb-2 text-sm">QR Code (Exemplo)</h4>
-                <Image src="https://placehold.co/150x150.png?text=QR+CODE" alt="Placeholder QR Code" width={120} height={120} data-ai-hint="qr code"/>
-                <p className="text-xs text-muted-foreground mt-2">O QR Code real será gerado ao publicar.</p>
+                <h4 className="font-semibold mb-2 text-sm">QR Code (Prévia)</h4>
+                {offerTitleForQRCode && (
+                    <div style={{ background: 'white', padding: '16px', borderRadius: '8px' }}>
+                        <QRCodeSVG value={qrValue} size={120} />
+                    </div>
+                )}
+                {!offerTitleForQRCode && (
+                    <Image src="https://placehold.co/150x150.png?text=QR+CODE" alt="Placeholder QR Code" width={120} height={120} data-ai-hint="qr code"/>
+                )}
+                <p className="text-xs text-muted-foreground mt-2">O QR Code real será vinculado ao ID da oferta ao publicar.</p>
             </div>
            </>
         );
@@ -664,7 +674,7 @@ export default function CreateOfferPage() {
           {/* Imagens da Oferta */}
           <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><ImageIcon className="text-primary" /> Imagens da Oferta</CardTitle>
+              <CardTitle className="flex items-center gap-2"><ImageIconLucide className="text-primary" /> Imagens da Oferta</CardTitle>
               <CardDescription>Adicione de 1 a 6 imagens para ilustrar sua oferta. A primeira será a principal.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -1050,5 +1060,3 @@ export default function CreateOfferPage() {
     </div>
   );
 }
-
-    

@@ -1,13 +1,13 @@
 
 'use client';
 
-import React, { useState }  from 'react'; // Added useState
+import React, { useState }  from 'react';
 import type { Offer } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { QrCode, Gift, Users, TrendingUp, KeyRound } from 'lucide-react'; // Added KeyRound
-import Image from 'next/image'; 
+import { QrCode as QrCodeIconLucide, Gift, Users, TrendingUp, KeyRound } from 'lucide-react'; // Renamed QrCode to QrCodeIconLucide
 import { Button } from '@/components/ui/button'; 
 import { useToast } from "@/hooks/use-toast"; 
+import { QRCodeSVG } from 'react-qr-code';
 
 interface OfferValidationSectionProps {
   offer: Offer;
@@ -34,11 +34,13 @@ const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }
     });
   };
 
+  const qrCodeValue = `https://ofertivo.app/validate?offerId=${offer.id}`;
+
   return (
     <Card className="shadow-lg" id="qr-code-section">
       <CardHeader>
         <CardTitle className="flex items-center text-xl">
-          <QrCode className="mr-2 text-primary" /> Valide sua Oferta
+          <QrCodeIconLucide className="mr-2 text-primary" /> Valide sua Oferta
         </CardTitle>
         <CardDescription>
           Apresente o QR Code ou o código numérico no estabelecimento para validar e ganhar pontos.
@@ -47,13 +49,7 @@ const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }
       <CardContent className="space-y-6">
         <div className="flex flex-col items-center space-y-3">
           <div className="p-3 bg-white rounded-lg border shadow-md">
-            <Image 
-              src={`https://placehold.co/200x200.png?text=QR+CODE`} 
-              alt="QR Code da Oferta" 
-              width={180} 
-              height={180}
-              data-ai-hint="qr code" 
-            />
+            <QRCodeSVG value={qrCodeValue} size={180} />
           </div>
           <p className="text-xs text-muted-foreground text-center max-w-xs">
             Mostre este QR Code {numericCode ? 'ou informe o código abaixo ' : ''}
@@ -115,5 +111,3 @@ const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }
 };
 
 export default OfferValidationSection;
-
-    
