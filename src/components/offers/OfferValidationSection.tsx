@@ -4,9 +4,9 @@
 import React, { useState }  from 'react';
 import type { Offer } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { QrCode as QrCodeIconLucide, Gift, Users, TrendingUp, KeyRound } from 'lucide-react'; // Renamed QrCode to QrCodeIconLucide
-import { Button } from '@/components/ui/button'; 
-import { useToast } from "@/hooks/use-toast"; 
+import { QrCode, Gift, Users, TrendingUp, KeyRound } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from 'react-qr-code';
 
 interface OfferValidationSectionProps {
@@ -21,7 +21,7 @@ const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }
     toast({
       title: "Check-in Simulado!",
       description: `Você ganhou +${offer.pointsAwarded || 0} pontos por validar a oferta "${offer.title}".`,
-      duration: 5000, 
+      duration: 5000,
     });
   };
 
@@ -40,7 +40,7 @@ const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }
     <Card className="shadow-lg" id="qr-code-section">
       <CardHeader>
         <CardTitle className="flex items-center text-xl">
-          <QrCodeIconLucide className="mr-2 text-primary" /> Valide sua Oferta
+          <QrCode className="mr-2 text-primary" /> Valide sua Oferta
         </CardTitle>
         <CardDescription>
           Apresente o QR Code ou o código numérico no estabelecimento para validar e ganhar pontos.
@@ -68,7 +68,7 @@ const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }
               Simular Check-in
             </Button>
             <Button onClick={handleGenerateNumericCode} variant="secondary" size="sm" className="flex-grow">
-              <KeyRound size={16} className="mr-2" /> 
+              <KeyRound size={16} className="mr-2" />
               {numericCode ? 'Gerar Novo Código' : 'Gerar Código Numérico'}
             </Button>
           </div>
@@ -98,7 +98,7 @@ const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }
                 </CardContent>
             </Card>
         </div>
-        
+
         <div className="text-center text-sm text-muted-foreground p-3 border rounded-md bg-background">
           <TrendingUp size={20} className="mx-auto mb-1 text-accent" />
           <p>Seu progresso no ranking e XP serão atualizados após o check-in!</p>
