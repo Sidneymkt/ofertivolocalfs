@@ -2,7 +2,7 @@
 export interface Badge {
   id: string;
   name: string;
-  icon: React.ElementType; 
+  icon: string; // Changed from React.ElementType to string
   description: string;
   unlockedDate?: Date;
   'data-ai-hint'?: string;
@@ -156,10 +156,10 @@ export interface AdminMetricItem {
 import type React from 'react';
 import { 
   Activity, AlertTriangle, Award, BadgeCheck, BarChart3, BookOpen, Building2, CalendarCheck2, CheckCircle, Coins, CreditCard, DollarSign, Eye, FileText, Filter, Gift, HandCoins, HeartPulse, HelpCircle, ListChecks, MailQuestion, MapPinned, Megaphone, MessageSquare, MousePointerClick, PackageCheck, Settings2, ShieldAlert, ShoppingCart, Smile, Sparkles, Star, ThumbsUp, Ticket, TrendingDown, TrendingUp, UserCheck, UserCog, UserPlus, Users, Utensils, Wrench, Zap 
-} from 'lucide-react';
+} from 'lucide-react'; // Keep these imports for other parts of types.ts that might use them directly (e.g., categories, adminModules)
 
 // Point values for user actions
-export const POINTS_CHECKIN = 5; // As per new spec
+export const POINTS_CHECKIN = 5; 
 export const POINTS_SHARE_OFFER = 3;
 export const POINTS_FOLLOW_MERCHANT = 2;
 export const POINTS_COMMENT_OFFER = 1;
@@ -168,11 +168,11 @@ export const POINTS_SIGNUP_WELCOME = 100;
 
 
 export const mockBadges: Badge[] = [
-    { id: 'badge1', name: 'Explorador Inicial', icon: Star, description: `Fez seu primeiro check-in! +${POINTS_CHECKIN} XP`, unlockedDate: new Date(), 'data-ai-hint': 'star badge' },
-    { id: 'badge2', name: 'Amigo das Ofertas', icon: Users, description: 'Compartilhou 5 ofertas! +15 XP', 'data-ai-hint': 'people group' },
-    { id: 'badge3', name: 'Super Points', icon: Award, description: 'Acumulou 1000 pontos!', 'data-ai-hint': 'trophy award' },
-    { id: 'badge4', name: 'Comentarista Ativo', icon: MessageSquare, description: 'Fez 10 comentários! +10 XP', 'data-ai-hint': 'speech bubble' },
-    { id: 'badge5', name: 'Caçador de Ofertas Pro', icon: Zap, description: 'Realizou 10 check-ins! +50 XP', 'data-ai-hint': 'lightning zap' },
+    { id: 'badge1', name: 'Explorador Inicial', icon: 'Star', description: `Fez seu primeiro check-in! +${POINTS_CHECKIN} XP`, unlockedDate: new Date(), 'data-ai-hint': 'star badge' },
+    { id: 'badge2', name: 'Amigo das Ofertas', icon: 'Users', description: 'Compartilhou 5 ofertas! +15 XP', 'data-ai-hint': 'people group' },
+    { id: 'badge3', name: 'Super Points', icon: 'Award', description: 'Acumulou 1000 pontos!', 'data-ai-hint': 'trophy award' },
+    { id: 'badge4', name: 'Comentarista Ativo', icon: 'MessageSquare', description: 'Fez 10 comentários! +10 XP', 'data-ai-hint': 'speech bubble' },
+    { id: 'badge5', name: 'Caçador de Ofertas Pro', icon: 'Zap', description: 'Realizou 10 check-ins! +50 XP', 'data-ai-hint': 'lightning zap' },
 ];
 
 export const mockUser: User = {
@@ -409,4 +409,3 @@ export const adminModules = [
   { id: 'finance', title: 'Financeiro e Assinaturas', icon: CreditCard, description: 'Controle pagamentos, assinaturas e receita.' },
   { id: 'support', title: 'Central de Suporte', icon: HelpCircle, description: 'Gerencie tickets e forneça suporte aos usuários.' },
 ];
-

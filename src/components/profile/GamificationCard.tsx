@@ -1,17 +1,26 @@
 
 'use client';
 
+import type React from 'react';
 import type { User, Badge as BadgeType } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Award, TrendingUp, Gift, Star, Shield, Zap } from 'lucide-react';
+import { Award as AwardIconLucide, TrendingUp, Gift, Star as StarIcon, Shield, Zap as ZapIcon, MessageSquare as MessageSquareIcon, Users as UsersIcon, type LucideProps } from 'lucide-react';
 import Link from 'next/link';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface GamificationCardProps {
   user: User;
 }
+
+const badgeIconMap: { [key: string]: React.ElementType<LucideProps> } = {
+  Star: StarIcon,
+  Users: UsersIcon,
+  Award: AwardIconLucide, // Using alias to avoid conflict with the component's main icon
+  MessageSquare: MessageSquareIcon,
+  Zap: ZapIcon,
+};
 
 const GamificationCard: React.FC<GamificationCardProps> = ({ user }) => {
   const xpProgress = user.currentXp && user.xpToNextLevel && user.xpToNextLevel > 0 
@@ -26,7 +35,7 @@ const GamificationCard: React.FC<GamificationCardProps> = ({ user }) => {
     <Card className="shadow-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl">
-          <Award className="text-primary" size={24} />
+          <AwardIconLucide className="text-primary" size={24} />
           Seu Progresso e Conquistas
         </CardTitle>
         <CardDescription>Acompanhe seu nível, XP, pontos e emblemas.</CardDescription>
@@ -82,23 +91,26 @@ const GamificationCard: React.FC<GamificationCardProps> = ({ user }) => {
             <h4 className="font-medium text-card-foreground mb-3">Emblemas Desbloqueados:</h4>
             <div className="flex flex-wrap gap-x-4 gap-y-3 justify-center">
               <TooltipProvider>
-                {user.badges.map((badge: BadgeType) => (
-                  <Tooltip key={badge.id}>
-                    <TooltipTrigger asChild>
-                      <div className="flex flex-col items-center text-center w-16 cursor-pointer group">
-                        <div className="p-2.5 bg-card border-2 border-accent/30 rounded-full shadow-sm group-hover:shadow-md group-hover:border-accent transition-all duration-200 group-hover:scale-110">
-                          <badge.icon className="w-7 h-7 text-accent" data-ai-hint={badge['data-ai-hint']} />
+                {user.badges.map((badge: BadgeType) => {
+                  const IconComponent = badgeIconMap[badge.icon];
+                  return (
+                    <Tooltip key={badge.id}>
+                      <TooltipTrigger asChild>
+                        <div className="flex flex-col items-center text-center w-16 cursor-pointer group">
+                          <div className="p-2.5 bg-card border-2 border-accent/30 rounded-full shadow-sm group-hover:shadow-md group-hover:border-accent transition-all duration-200 group-hover:scale-110">
+                            {IconComponent ? <IconComponent className="w-7 h-7 text-accent" data-ai-hint={badge['data-ai-hint']} /> : null}
+                          </div>
+                          <span className="text-xs text-muted-foreground mt-1 group-hover:text-accent">{badge.name}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground mt-1 group-hover:text-accent">{badge.name}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-popover text-popover-foreground max-w-xs text-center">
-                      <p className="font-semibold">{badge.name}</p>
-                      <p className="text-xs">{badge.description}</p>
-                      {badge.unlockedDate && <p className="text-xs text-muted-foreground/80 mt-0.5">Em: {new Date(badge.unlockedDate).toLocaleDateString('pt-BR')}</p>}
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-popover text-popover-foreground max-w-xs text-center">
+                        <p className="font-semibold">{badge.name}</p>
+                        <p className="text-xs">{badge.description}</p>
+                        {badge.unlockedDate && <p className="text-xs text-muted-foreground/80 mt-0.5">Em: {new Date(badge.unlockedDate).toLocaleDateString('pt-BR')}</p>}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
               </TooltipProvider>
             </div>
           </div>
@@ -119,5 +131,3 @@ const GamificationCard: React.FC<GamificationCardProps> = ({ user }) => {
 };
 
 export default GamificationCard;
-
-    
