@@ -3,14 +3,13 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronRight, History, HelpCircle, LogOut, ShieldCheck, UserPlus, Gift } from 'lucide-react';
+import { ChevronRight, HelpCircle, LogOut, ShieldCheck, Gift } from 'lucide-react'; // Removed History
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 
 const actionItems = [
-  { label: 'Histórico de Check-ins', icon: History, href: '/profile/history' },
-  // { label: 'Configurações da Conta', icon: Settings, href: '/profile/settings' }, // Removido
+  // { label: 'Histórico de Check-ins', icon: History, href: '/profile/history' }, // Removed
   { label: 'Central de Ajuda', icon: HelpCircle, href: '/help' },
   { label: 'Termos e Privacidade', icon: ShieldCheck, href: '/terms' },
 ];
@@ -77,3 +76,4 @@ const ProfileActions = () => {
 };
 
 export default ProfileActions;
+
