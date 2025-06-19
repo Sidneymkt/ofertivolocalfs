@@ -22,7 +22,7 @@ import { categories, offerTypes, type OfferTypeId, type OfferTypeDetails } from 
 import { 
   CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIcon, 
   AlertCircle, CheckCircle, Info, QrCode as QrCodeIcon, Smartphone, UserCheck, CheckCheck as CheckCheckIcon, Package as PackageIcon, LocateFixed, Building as BuildingIcon,
-  Zap as ZapIcon
+  Zap as ZapIcon, AlertTriangle // Added AlertTriangle
 } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -54,8 +54,8 @@ const offerFormSchemaBase = z.object({
     z.number({ invalid_type_error: "Deve ser um número" }).min(0, "Não pode ser negativo").max(100, "Máximo 100%").optional()
   ),
   discountedPrice: z.preprocess(
-    (val) => parseFloat(String(val).replace(',', '.')),
-    z.number({ required_error: "Preço promocional é obrigatório.", invalid_type_error: "Deve ser um número" }).positive("Deve ser um valor positivo")
+    (val) => (String(val).trim() === "" ? undefined : parseFloat(String(val).replace(',', '.'))), // Allow undefined if empty
+    z.number({ invalid_type_error: "Deve ser um número" }).positive("Deve ser um valor positivo").optional() // Make optional, then refine
   ),
   
   quantity: z.preprocess(
@@ -94,7 +94,18 @@ const offerFormSchemaBase = z.object({
 });
 
 const offerFormSchema = offerFormSchemaBase.refine(data => {
-  if (data.originalPrice && data.discountedPrice >= data.originalPrice) {
+  if (data.discountedPrice === undefined && data.discountType === 'finalValue' && data.originalPrice !== undefined) {
+    return false; // Discounted price must be set if discountType is finalValue and original price is set
+  }
+  if (data.discountType === 'finalValue' && data.discountedPrice === undefined) {
+     return false;
+  }
+  return true;
+}, {
+  message: "Preço promocional é obrigatório para este tipo de desconto.",
+  path: ["discountedPrice"],
+}).refine(data => {
+  if (data.originalPrice && data.discountedPrice !== undefined && data.discountedPrice >= data.originalPrice) {
     return false;
   }
   return true;
@@ -183,7 +194,7 @@ export default function CreateOfferPage() {
     },
   });
 
-  const { watch, setValue, getValues, trigger } = form;
+  const { watch, setValue, getValues, trigger, control } = form; // Added control
   const isUnlimited = watch("isUnlimited");
   const selectedOfferType = watch("offerType");
   const discountType = watch("discountType");
@@ -207,18 +218,26 @@ export default function CreateOfferPage() {
     const dp = discountedPrice;
     const discPerc = discountPercentage;
 
-    if (discountType === "percentage" && op !== undefined && discPerc !== undefined) {
+    if (discountType === "percentage" && op !== undefined && discPerc !== undefined && discPerc >=0 && discPerc <=100) {
       const calculatedDiscountedPrice = parseFloat((op * (1 - discPerc / 100)).toFixed(2));
       if (getValues("discountedPrice") !== calculatedDiscountedPrice) {
         setValue("discountedPrice", calculatedDiscountedPrice, { shouldValidate: true });
       }
-    } else if (discountType === "finalValue" && op !== undefined && dp !== undefined && op > 0) {
+    } else if (discountType === "finalValue" && op !== undefined && dp !== undefined && op > 0 && dp < op) {
       const calculatedPercentage = parseFloat(((op - dp) / op * 100).toFixed(2));
       if (getValues("discountPercentage") !== calculatedPercentage && calculatedPercentage >= 0 && calculatedPercentage <= 100) {
          setValue("discountPercentage", calculatedPercentage, { shouldValidate: true });
-      } else if (dp >= op && getValues("discountPercentage") !== undefined) {
-         setValue("discountPercentage", undefined, { shouldValidate: true }); // Clear if discounted price is not lower
       }
+    } else if (discountType === "percentage" && (op === undefined || discPerc === undefined || discPerc < 0 || discPerc > 100)) {
+        // if inputs for percentage calc are invalid, clear discounted price
+        if (getValues("discountedPrice") !== undefined) {
+            setValue("discountedPrice", undefined, { shouldValidate: true });
+        }
+    } else if (discountType === "finalValue" && (op === undefined || dp === undefined || dp >= op)) {
+        // if inputs for final value calc are invalid for percentage, clear percentage
+        if (getValues("discountPercentage") !== undefined) {
+            setValue("discountPercentage", undefined, { shouldValidate: true });
+        }
     }
   }, [originalPrice, discountPercentage, discountedPrice, discountType, setValue, getValues]);
 
@@ -256,6 +275,19 @@ export default function CreateOfferPage() {
 
   const onSubmit: SubmitHandler<OfferFormValues> = (data) => {
     console.log('Offer data:', data);
+    // Add AI hint to images based on title and category for mock data (optional)
+    const imageHintsFromData = data.images?.map((_, index) => `${data.title.split(" ")[0]} ${data.category}`.toLowerCase()) || [];
+
+    const finalData = {
+        ...data,
+        galleryImageHints: imageHintsFromData,
+        // In a real app, this would come from the advertiser's session/profile
+        merchantId: 'mockMerchant123', 
+        merchantName: 'Nome do Anunciante Mock',
+        distance: '1km', // Placeholder
+    };
+    console.log('Final Offer Data (Simulated Firestore):', finalData);
+
     toast({
       title: "Oferta Publicada (Simulado)!",
       description: `Sua oferta "${data.title}" (${data.offerType}) foi enviada.`,
@@ -272,8 +304,8 @@ export default function CreateOfferPage() {
       title: "Gerando com IA (Simulado)",
       description: "Em breve, sugestões de título e descrição otimizadas para o tipo de oferta selecionado aparecerão aqui!",
     });
-    form.setValue("title", "Título Gerado por IA para " + (selectedOfferType || "Oferta"));
-    form.setValue("description", "Esta é uma descrição super otimizada gerada por IA, considerando que a oferta é do tipo " + (selectedOfferType || "geral") + ". Aproveite todos os benefícios e economize agora mesmo!");
+    form.setValue("title", "Título Gerado por IA para " + (currentOfferTypeDetails?.name || "Oferta"));
+    form.setValue("description", "Esta é uma descrição super otimizada gerada por IA, considerando que a oferta é do tipo " + (currentOfferTypeDetails?.name || "geral") + ". Aproveite todos os benefícios e economize agora mesmo!");
   };
 
   const handleSaveDraft = () => {
@@ -358,7 +390,7 @@ export default function CreateOfferPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel htmlFor="minCheckins">Nº Mínimo de Check-ins</FormLabel>
-                  <FormControl><Input id="minCheckins" type="number" placeholder="Ex: 5" {...field} /></FormControl>
+                  <FormControl><Input id="minCheckins" type="number" placeholder="Ex: 5" {...field} value={field.value ?? ''} /></FormControl>
                   <FormDescription>Quantos check-ins (em qualquer oferta sua) o usuário precisa para ganhar esta recompensa.</FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -447,10 +479,20 @@ export default function CreateOfferPage() {
                            const Icon = ot.icon;
                            return(
                             <SelectItem key={ot.id} value={ot.id}>
-                              <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4 text-muted-foreground"/>
-                                <span>{ot.name}</span>
-                              </div>
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center gap-2 w-full">
+                                      <Icon className="h-4 w-4 text-muted-foreground"/>
+                                      <span>{ot.name}</span>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="right" align="start" className="max-w-xs">
+                                    <p className="font-semibold">{ot.name}</p>
+                                    <p className="text-xs">{ot.description}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </SelectItem>
                            );
                         })}
@@ -578,12 +620,12 @@ export default function CreateOfferPage() {
                       <RadioGroup onValueChange={(value) => {
                           field.onChange(value);
                           if (value === "percentage") {
-                            setValue("discountedPrice", undefined, {shouldValidate: true});
-                          } else {
-                            setValue("discountPercentage", undefined, {shouldValidate: true});
+                            setValue("discountedPrice", undefined, {shouldValidate: true}); // Clear discounted price
+                          } else { // finalValue
+                            setValue("discountPercentage", undefined, {shouldValidate: true}); // Clear percentage
                           }
                         }}
-                        defaultValue={field.value} className="flex flex-col space-y-1">
+                        defaultValue={field.value} className="flex flex-col sm:flex-row gap-4 sm:gap-8">
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl><RadioGroupItem value="finalValue" id="finalValue" /></FormControl>
                           <FormLabel htmlFor="finalValue" className="font-normal">Definir Preço Final Promocional</FormLabel>
@@ -598,20 +640,21 @@ export default function CreateOfferPage() {
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                 <FormField
                     control={form.control}
                     name="originalPrice"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel htmlFor="originalPrice">Preço Original (R$) (Opcional)</FormLabel>
-                        <FormControl><Input id="originalPrice" type="text" placeholder="Ex: 100,00" {...field} onChange={e => field.onChange(e.target.value.replace(/[^0-9,.]/g, ''))} /></FormControl>
+                        <FormLabel htmlFor="originalPrice">Preço Original (R$) <span className="text-xs text-muted-foreground">(Opcional)</span></FormLabel>
+                        <FormControl><Input id="originalPrice" type="text" placeholder="Ex: 100,00" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value.replace(/[^0-9,.]/g, ''))} /></FormControl>
                         <FormDescription>Preço antes do desconto.</FormDescription>
                         <FormMessage />
                     </FormItem>
                     )}
                 />
-                {discountType === "percentage" && (
+                
+                {discountType === "percentage" ? (
                   <FormField
                       control={form.control}
                       name="discountPercentage"
@@ -620,29 +663,39 @@ export default function CreateOfferPage() {
                           <FormLabel htmlFor="discountPercentage">Desconto (%)</FormLabel>
                           <div className="relative">
                             <Percent className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <FormControl><Input id="discountPercentage" type="text" placeholder="Ex: 25" {...field} className="pl-10" onChange={e => field.onChange(e.target.value.replace(/[^0-9,.]/g, ''))}/></FormControl>
+                            <FormControl><Input id="discountPercentage" type="text" placeholder="Ex: 25" {...field} value={field.value ?? ''} className="pl-10" onChange={e => field.onChange(e.target.value.replace(/[^0-9,.]/g, ''))}/></FormControl>
                           </div>
-                          <FormDescription>Porcentagem de desconto sobre o preço original.</FormDescription>
+                          <FormDescription>Porcentagem de desconto.</FormDescription>
                           <FormMessage />
                       </FormItem>
                       )}
                   />
+                ) : (
+                     <div className="text-muted-foreground text-center text-2xl hidden md:block">→</div>
                 )}
+
                 <FormField
                     control={form.control}
                     name="discountedPrice"
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel htmlFor="discountedPrice">Preço Promocional (R$)</FormLabel>
-                        <FormControl><Input id="discountedPrice" type="text" placeholder="Ex: 79,90" {...field} readOnly={discountType === 'percentage' && originalPrice !== undefined && discountPercentage !== undefined} onChange={e => field.onChange(e.target.value.replace(/[^0-9,.]/g, ''))}/></FormControl>
+                        <FormControl><Input id="discountedPrice" type="text" placeholder="Ex: 79,90" {...field} value={field.value ?? ''} readOnly={discountType === 'percentage' && originalPrice !== undefined && discountPercentage !== undefined && discountPercentage >=0 && discountPercentage <=100} onChange={e => field.onChange(e.target.value.replace(/[^0-9,.]/g, ''))}/></FormControl>
                         <FormDescription>
-                          {discountType === 'percentage' && originalPrice !== undefined && discountPercentage !== undefined ? 'Calculado automaticamente.' : 'Preço final para o cliente.'}
+                          {discountType === 'percentage' && originalPrice !== undefined && discountPercentage !== undefined && discountPercentage >=0 && discountPercentage <=100 ? 'Calculado automaticamente.' : 'Preço final para o cliente.'}
                         </FormDescription>
                         <FormMessage />
                     </FormItem>
                     )}
                 />
               </div>
+              {discountType === 'finalValue' && originalPrice !== undefined && discountedPrice !== undefined && discountedPrice < originalPrice && (
+                 <p className="text-sm text-green-600 font-medium">
+                    Desconto de {(( (originalPrice - discountedPrice) / originalPrice ) * 100).toFixed(0)}% aplicado!
+                 </p>
+              )}
+
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                     control={form.control}
@@ -695,7 +748,7 @@ export default function CreateOfferPage() {
                   <FormField control={form.control} name="quantity" render={({ field }) => (
                       <FormItem>
                           <FormLabel htmlFor="quantity">Quantidade Disponível (Opcional)</FormLabel>
-                          <FormControl><Input id="quantity" type="number" placeholder="Ex: 50" {...field} disabled={isUnlimited} /></FormControl>
+                          <FormControl><Input id="quantity" type="number" placeholder="Ex: 50" {...field} value={field.value ?? ''} disabled={isUnlimited} /></FormControl>
                           <FormDescription>Deixe em branco ou 0 se ilimitado, ou marque abaixo.</FormDescription>
                           <FormMessage />
                       </FormItem>
@@ -734,8 +787,8 @@ export default function CreateOfferPage() {
 
           {/* Campos específicos do tipo de oferta */}
           {selectedOfferType && (
-            <Card className={cn("shadow-lg", currentOfferTypeDetails?.color)}>
-              <CardHeader>
+            <Card className={cn("shadow-lg", currentOfferTypeDetails?.colorClass || 'border-border')}>
+              <CardHeader className={cn(currentOfferTypeDetails?.colorClass ? currentOfferTypeDetails.colorClass.replace('border-', 'bg-').replace('-500', '-500/5') : '')}>
                   <CardTitle className="flex items-center gap-2">
                     {React.createElement(getIconForOfferType(selectedOfferType), {className: "text-primary h-5 w-5"})}
                     Configurações para: {currentOfferTypeDetails?.name}
