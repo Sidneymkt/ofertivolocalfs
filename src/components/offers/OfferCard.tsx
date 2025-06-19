@@ -8,34 +8,77 @@ import { Button } from '@/components/ui/button';
 import { Bookmark, Share2, Star, Tag, Navigation, Clock } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
+import { useToast } from "@/hooks/use-toast";
 
 interface OfferCardProps {
   offer: Offer;
 }
 
 const OfferCard: React.FC<OfferCardProps> = ({ offer }) => {
+  const { toast } = useToast();
 
   const handleSaveClick = (e: React.MouseEvent) => {
-    e.preventDefault(); // Previne a navegação do Link pai
-    e.stopPropagation(); // Para a propagação do evento
-    // Lógica de salvar (exemplo)
+    e.preventDefault(); 
+    e.stopPropagation(); 
     console.log(`Salvar oferta: ${offer.id}`);
-    alert(`Oferta "${offer.title}" salva (simulado)!`);
+    toast({
+      title: "Oferta Salva (Simulado)",
+      description: `A oferta "${offer.title}" foi adicionada aos seus favoritos!`,
+    });
   };
 
-  const handleShareClick = (e: React.MouseEvent) => {
-    e.preventDefault(); // Previne a navegação do Link pai
-    e.stopPropagation(); // Para a propagação do evento
-    // Lógica de compartilhar (exemplo)
-    console.log(`Compartilhar oferta: ${offer.id}`);
+  const attemptCopyToClipboard = async (textToCopy: string) => {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      toast({
+        title: "Link Copiado!",
+        description: "O link da oferta foi copiado para sua área de transferência.",
+      });
+    } catch (err) {
+      console.error('Falha ao copiar link para a área de transferência:', err);
+      toast({
+        variant: "destructive",
+        title: "Falha ao Copiar Link",
+        description: "Não foi possível copiar o link. Tente manualmente.",
+      });
+    }
+  };
+
+  const handleShareClick = async (e: React.MouseEvent) => {
+    e.preventDefault(); 
+    e.stopPropagation(); 
+    
+    const shareData = {
+      title: offer.title,
+      text: `Confira esta oferta imperdível no Ofertivo: ${offer.description}`,
+      url: `${window.location.origin}/offer/${offer.id}`,
+    };
+
     if (navigator.share) {
-      navigator.share({
-        title: offer.title,
-        text: `Confira esta oferta: ${offer.description}`,
-        url: window.location.origin + `/offer/${offer.id}`,
-      }).catch(console.error);
+      try {
+        await navigator.share(shareData);
+        toast({
+          title: "Conteúdo Compartilhado!",
+          description: "A oferta foi compartilhada com sucesso.",
+        });
+      } catch (error) {
+        console.error('Erro ao compartilhar via navigator.share:', error);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          // User cancelled the share dialog - no toast or a very subtle one if desired.
+        } else if (error instanceof DOMException && error.name === 'NotAllowedError') {
+           toast({
+            variant: "destructive",
+            title: "Compartilhamento Bloqueado",
+            description: "A permissão para compartilhar foi negada ou não é permitida neste contexto.",
+          });
+        } else {
+          // Fallback to clipboard for other errors
+          attemptCopyToClipboard(shareData.url);
+        }
+      }
     } else {
-      alert(`Compartilhar oferta: ${offer.title} (simulado)`);
+      // Fallback for browsers that don't support navigator.share
+      attemptCopyToClipboard(shareData.url);
     }
   };
 
