@@ -17,6 +17,8 @@ export interface Comment {
   rating: number; // 1-5
   text: string;
   timestamp: Date;
+  offerId?: string; // Added for linking
+  offerTitle?: string; // Added for display
 }
 
 export interface Offer {
@@ -134,7 +136,7 @@ export interface PublishedOfferSummary {
 
 // MOCK DATA
 
-import { Award, Coins, Gift, MessageSquare, Share2, ShoppingCart, Star, Users } from 'lucide-react';
+import { Award, Coins, Gift, MessageSquare, Share2, ShoppingCart, Star, Users, Utensils, Wrench, BookOpen, HeartPulse, Smile } from 'lucide-react';
 
 
 export const mockBadges: Badge[] = [
@@ -158,15 +160,19 @@ export const mockUser: User = {
   checkInHistory: [
     { id: 'chk1', offerId: '2', offerTitle: 'Corte de Cabelo + Barba', merchantName: 'Barbearia Premium', timestamp: new Date(Date.now() - 86400000 * 2), pointsEarned: 50 },
     { id: 'chk2', offerId: '4', offerTitle: 'Happy Hour Dose Dupla Chopp', merchantName: 'Boteco do Mestre', timestamp: new Date(Date.now() - 86400000 * 5), pointsEarned: 30 },
+    { id: 'chk3', offerId: '1', offerTitle: '50% Off Pizza Gigante', merchantName: 'Pizzaria Saborosa', timestamp: new Date(Date.now() - 86400000 * 10), pointsEarned: 75 },
   ],
   sharedOffersHistory: [
       { id: 'share1', offerId: '1', offerTitle: '50% Off Pizza Gigante', platform: 'WhatsApp', timestamp: new Date(Date.now() - 86400000 * 1), pointsEarned: 10 },
+      { id: 'share2', offerId: '3', offerTitle: 'Tênis Corrida ProBoost X', platform: 'Instagram', timestamp: new Date(Date.now() - 86400000 * 4), pointsEarned: 15 },
   ],
   sweepstakeParticipations: [
-      { id: 'swp1', sweepstakeId: 'sw1', sweepstakeTitle: 'Jantar Romântico', timestamp: new Date(Date.now() - 86400000 * 3), pointsSpent: 100 },
+      { id: 'swp1', sweepstakeId: 'sw1', sweepstakeTitle: 'Jantar Romântico Vale R$300', timestamp: new Date(Date.now() - 86400000 * 3), pointsSpent: 100 },
+      { id: 'swp2', sweepstakeId: 'sw2', sweepstakeTitle: 'Vale Compras de R$200 Loja X', timestamp: new Date(Date.now() - 86400000 * 8), pointsSpent: 50 },
   ],
   commentsMade: [
-      { id: 'cmt1', userId: 'user123', userName: 'Ana Clara Explorer', rating: 5, text: 'Adorei a pizza, super recomendo!', timestamp: new Date(Date.now() - 86400000), offerId: '1', offerTitle: '50% Off Pizza Gigante' } as any,
+      { id: 'cmtUser1', userId: 'user123', userName: 'Ana Clara Explorer', rating: 5, text: 'Adorei a pizza, super recomendo! Massa fininha e crocante.', timestamp: new Date(Date.now() - 86400000), offerId: '1', offerTitle: '50% Off Pizza Gigante + Refri Grátis' },
+      { id: 'cmtUser2', userId: 'user123', userName: 'Ana Clara Explorer', rating: 4, text: 'O corte ficou bom, mas o ambiente poderia ser mais silencioso.', timestamp: new Date(Date.now() - 86400000 * 3), offerId: '2', offerTitle: 'Corte Masculino + Barba Modelada' },
   ],
   isAdvertiser: false,
   address: 'Rua das Palmeiras, 123, Bairro Flores',
@@ -312,12 +318,12 @@ export const mockSweepstakes: Sweepstake[] = [
 ];
 
 export const categories = [
-  { name: 'Alimentação', icon: 'Utensils' },
-  { name: 'Serviços', icon: 'Wrench' },
-  { name: 'Compras', icon: 'ShoppingCart' },
-  { name: 'Lazer', icon: 'Smile' },
-  { name: 'Saúde', icon: 'HeartPulse' },
-  { name: 'Educação', icon: 'BookOpen' },
+  { name: 'Alimentação', icon: Utensils },
+  { name: 'Serviços', icon: Wrench },
+  { name: 'Compras', icon: ShoppingCart },
+  { name: 'Lazer', icon: Smile },
+  { name: 'Saúde', icon: HeartPulse },
+  { name: 'Educação', icon: BookOpen },
 ];
 
 // Helper function to get a mock offer by ID
@@ -344,5 +350,7 @@ export const getMockMerchantById = (id: string): { id: string, name: string, ima
 
     return undefined;
 }
+
+    
 
     
