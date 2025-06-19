@@ -1,7 +1,7 @@
 
-import type React from 'react'; 
-import { 
-  Activity, AlertTriangle, Award, BadgeCheck, BarChart3, BookOpen, Building, Building2, CalendarCheck2, CheckCircle, CheckCheck, Coins, CreditCard, DollarSign, Eye, FileText, Filter, Gift, HandCoins, HeartPulse, HelpCircle, Home, ListChecks, LocateFixed, MailQuestion, MapPin, MapPinned, Megaphone, MessageSquare, MousePointerClick, Package, PackageCheck, QrCode, Settings2, ShieldAlert, ShieldCheck, ShoppingCart, Smile, Smartphone, Sparkles, Star, ThumbsUp, Ticket, TrendingDown, TrendingUp, UserCheck, UserCog, UserPlus, Users, Utensils, Wrench, Zap 
+import type React from 'react';
+import {
+  Activity, AlertTriangle, Award, BadgeCheck, BarChart3, BookOpen, Building, Building2, CalendarCheck2, CheckCircle, CheckCheck, Coins, CreditCard, DollarSign, Eye, FileText, Filter, Gift, HandCoins, HeartPulse, HelpCircle, Home, Image as ImageIconLucide, ListChecks, LocateFixed, MailQuestion, MapPin, MapPinned, Megaphone, MessageSquare, MousePointerClick, Package, PackageCheck, QrCode, Settings2, ShieldAlert, ShieldCheck, ShoppingCart, Smile, Smartphone, Sparkles, Star, ThumbsUp, Ticket, TrendingDown, TrendingUp, UserCheck, UserCog, UserPlus, Users, Utensils, Wrench, Zap
 } from 'lucide-react';
 
 
@@ -14,7 +14,7 @@ export interface Badge {
   'data-ai-hint'?: string;
 }
 
-export interface Category { 
+export interface Category {
   name: string;
   icon: 'Utensils' | 'Wrench' | 'ShoppingCart' | 'Smile' | 'HeartPulse' | 'BookOpen' | string; // string for flexibility
 }
@@ -25,12 +25,12 @@ export interface Comment {
   userName: string;
   userAvatarUrl?: string;
   userAvatarHint?: string;
-  rating: number; 
+  rating: number;
   text: string;
   timestamp: Date;
-  offerId?: string; 
-  offerTitle?: string; 
-  pointsEarned?: number; 
+  offerId?: string;
+  offerTitle?: string;
+  pointsEarned?: number;
 }
 
 export const offerTypes = [
@@ -51,33 +51,33 @@ export type OfferTypeDetails = typeof offerTypes[number];
 export interface Offer {
   id: string;
   title: string;
-  description: string; 
-  fullDescription?: string; 
+  description: string;
+  fullDescription?: string;
   merchantName: string;
-  merchantId: string; 
+  merchantId: string;
   merchantIsVerified?: boolean;
-  imageUrl: string; 
+  imageUrl: string;
   'data-ai-hint'?: string;
   galleryImages?: string[];
   galleryImageHints?: string[];
-  
+
   offerType: OfferTypeId;
   category: string;
-  
+
   originalPrice?: number;
   discountType?: "percentage" | "finalValue";
   discountPercentage?: number;
   discountedPrice: number;
-  
+
   tags?: string[];
   validityStartDate: Date;
   validityEndDate: Date;
   timeRemaining?: string; // Calculated or static string for display
-  
+
   quantity?: number;
   isUnlimited?: boolean;
   usersUsedCount?: number;
-  
+
   terms?: string;
   visibility: "normal" | "destaque" | "sorteio";
   status: 'active' | 'pending' | 'expired' | 'draft' | 'awaiting_approval' | 'rejected';
@@ -94,19 +94,19 @@ export interface Offer {
   targetNeighborhood?: string; // For Bairro
 
   // Gamification
-  pointsAwarded?: number; 
+  pointsAwarded?: number;
   pointsForCheckin?: number;
   pointsForShare?: number;
   pointsForComment?: number;
   isRedeemableWithPoints?: boolean;
-  
+
   // Location & Rating (optional on creation, might be auto-populated or admin-set)
   latitude?: number;
   longitude?: number;
   distance?: string; // Calculated for display
-  rating?: number; 
-  reviews?: number; 
-  
+  rating?: number;
+  reviews?: number;
+
   // Meta
   createdBy: string; // advertiserId (should match merchantId for advertiser-created offers)
   createdAt: Date;
@@ -128,7 +128,7 @@ export interface SharedOffer {
   id: string;
   offerId: string;
   offerTitle: string;
-  platform: string; 
+  platform: string;
   timestamp: Date;
   pointsEarned?: number;
 }
@@ -156,24 +156,24 @@ export interface User {
   avatarUrl?: string;
   avatarHint?: string;
   points: number;
-  level: string; 
+  level: string;
   currentXp: number;
   xpToNextLevel: number;
   badges?: Badge[];
-  favoriteOffers?: string[]; 
-  followedMerchants?: string[]; 
+  favoriteOffers?: string[];
+  followedMerchants?: string[];
   checkInHistory?: CheckIn[];
   sharedOffersHistory?: SharedOffer[];
   sweepstakeParticipations?: SweepstakeParticipation[];
   commentsMade?: Comment[];
-  
-  isAdvertiser?: boolean; 
-  advertiserProfileId?: string; 
+
+  isAdvertiser?: boolean;
+  advertiserProfileId?: string;
   businessName?: string;
   businessLogoUrl?: string;
   businessLogoHint?: string;
   businessDescription?: string;
-  
+
   address?: string;
   city?: string;
   whatsapp?: string;
@@ -196,13 +196,13 @@ export type AdvertiserMetricItem = {
   title: string;
   value: string | number;
   icon: React.ElementType;
-  trend?: string; 
+  trend?: string;
   description?: string;
 };
 
 // Summary for advertiser's list of their own offers
 export type PublishedOfferSummary = Pick<
-  Offer, 
+  Offer,
   'id' | 'title' | 'status' | 'imageUrl' | 'data-ai-hint' | 'visibility' | 'discountedPrice' | 'originalPrice' | 'usersUsedCount' | 'category'
 > & {
   views?: number; // Example, would come from analytics
@@ -215,12 +215,12 @@ export type AdminMetricItem = {
   title: string;
   value: string | number;
   icon: React.ElementType;
-  change?: string; 
-  bgColorClass?: string; 
+  change?: string;
+  bgColorClass?: string;
 };
 
 
-export const POINTS_CHECKIN = 5; 
+export const POINTS_CHECKIN = 5;
 export const POINTS_SHARE_OFFER = 3;
 export const POINTS_FOLLOW_MERCHANT = 2;
 export const POINTS_COMMENT_OFFER = 1;
@@ -243,7 +243,7 @@ export const mockUser: User = {
   avatarHint: 'person woman',
   points: 1250,
   level: USER_LEVELS.PRATA.name,
-  currentXp: 650, 
+  currentXp: 650,
   xpToNextLevel: USER_LEVELS.PRATA.nextLevelXp,
   badges: mockBadges.slice(0,3),
   favoriteOffers: ['offer-pizza-1', 'offer-sports-3'],
@@ -269,12 +269,12 @@ export const mockUser: User = {
   address: 'Rua das Palmeiras, 123, Bairro Flores',
   city: 'Manaus, AM',
   whatsapp: '(92) 99999-8888',
-  isProfileComplete: true, 
+  isProfileComplete: true,
   email: 'anaclara@exemplo.com',
 };
 
 export const mockAdvertiserUser: User = {
-  id: 'advUserPizzariaSaborosa', 
+  id: 'advUserPizzariaSaborosa',
   name: 'Carlos Pizzaiolo',
   businessName: 'Pizzaria Saborosa',
   businessLogoUrl: 'https://placehold.co/150x150.png?text=PS',
@@ -282,12 +282,12 @@ export const mockAdvertiserUser: User = {
   businessDescription: 'A melhor pizza da cidade, com ingredientes frescos e forno a lenha! Venha conferir nossas promoções.',
   avatarUrl: 'https://placehold.co/100x100.png?text=CP',
   avatarHint: 'person chef',
-  points: 0, 
-  level: USER_LEVELS.INICIANTE.name, 
+  points: 0,
+  level: USER_LEVELS.INICIANTE.name,
   currentXp: 0,
   xpToNextLevel: USER_LEVELS.INICIANTE.nextLevelXp,
   isAdvertiser: true,
-  advertiserProfileId: 'pizzariaSaborosaMerchant', 
+  advertiserProfileId: 'pizzariaSaborosaMerchant',
   email: 'carlos.pizza@saborosa.com',
   address: 'Avenida Principal, 789, Centro, Manaus-AM',
   city: 'Manaus, AM',
@@ -299,14 +299,14 @@ const now = new Date();
 const oneDay = 86400000;
 
 export const mockOffers: Offer[] = [
-  { 
-    id: 'offer-pizza-1', 
+  {
+    id: 'offer-pizza-1',
     offerType: 'relampago',
-    title: '🍕 50% Off Pizza Gigante + Refri Grátis HOJE!', 
+    title: '🍕 50% Off Pizza Gigante + Refri Grátis HOJE!',
     description: 'Deliciosa pizza gigante com 50% de desconto e refrigerante de 2L grátis! Sabores selecionados. Apenas hoje!',
     fullDescription: 'Aproveite nossa oferta relâmpago: pizza gigante (12 fatias, até 3 sabores selecionáveis) com 50% de desconto e leve um refrigerante de 2 litros totalmente grátis! Nossa massa é artesanal, com fermentação natural, e usamos apenas ingredientes frescos e de alta qualidade. Perfeito para compartilhar com a família e amigos. Válido para consumo no local, retirada ou delivery (taxa de entrega não inclusa). Promoção não acumulativa com outras ofertas. Corra, é só hoje!',
-    merchantName: 'Pizzaria Saborosa', 
-    merchantId: 'pizzariaSaborosaMerchant', 
+    merchantName: 'Pizzaria Saborosa',
+    merchantId: 'pizzariaSaborosaMerchant',
     createdBy: 'pizzariaSaborosaMerchant',
     merchantIsVerified: true,
     imageUrl: 'https://placehold.co/600x300.png?text=Pizza+Oferta',
@@ -318,23 +318,23 @@ export const mockOffers: Offer[] = [
       'https://placehold.co/800x450.png?text=Clientes+Felizes',
     ],
     galleryImageHints: ['pizza variety', 'pizza slice', 'restaurant interior', 'happy customers'],
-    originalPrice: 70.00, 
+    originalPrice: 70.00,
     discountType: "finalValue",
-    discountedPrice: 35.00, 
+    discountedPrice: 35.00,
     discountPercentage: 50,
-    distance: '500m', 
-    category: 'Alimentação', 
-    rating: 4.8, 
-    reviews: 210, 
-    timeRemaining: 'Encerra Hoje!', 
+    distance: '500m',
+    category: 'Alimentação',
+    rating: 4.8,
+    reviews: 210,
+    timeRemaining: 'Encerra Hoje!',
     timeLimit: '23:00',
     tags: ['#Relâmpago', '#PizzaLovers', '#Promoção', '#Comida'],
-    latitude: -3.0912, 
+    latitude: -3.0912,
     longitude: -59.9734,
-    validityStartDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0), 
-    validityEndDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59), 
+    validityStartDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0),
+    validityEndDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59),
     usersUsedCount: 138,
-    pointsAwarded: POINTS_CHECKIN + 2, 
+    pointsAwarded: POINTS_CHECKIN + 2,
     pointsForCheckin: POINTS_CHECKIN + 2,
     pointsForShare: POINTS_SHARE_OFFER,
     pointsForComment: POINTS_COMMENT_OFFER,
@@ -349,14 +349,15 @@ export const mockOffers: Offer[] = [
     isPresentialOnly: false,
     isUnlimited: false,
     quantity: 50,
+    terms: 'Válido apenas para sabores selecionados. Taxa de entrega não inclusa. Não cumulativo.'
   },
-  { 
-    id: 'offer-barber-2', 
+  {
+    id: 'offer-barber-2',
     offerType: 'padrao',
-    title: '💇‍♂️ Corte Masculino + Barba Modelada', 
+    title: '💇‍♂️ Corte Masculino + Barba Modelada',
     description: 'Renove seu visual com corte de cabelo moderno e barba modelada por nossos especialistas.',
     fullDescription: 'Dê um trato completo no visual na Barbearia Premium. Nossos barbeiros são especialistas em cortes modernos e tradicionais, além de modelagem de barba com toalha quente e produtos de alta qualidade. Ambiente climatizado, som ambiente e um café expresso cortesia para você relaxar enquanto cuidamos do seu estilo.',
-    merchantName: 'Barbearia Premium', 
+    merchantName: 'Barbearia Premium',
     merchantId: 'barbeariaPremiumMerchant',
     createdBy: 'barbeariaPremiumMerchant',
     merchantIsVerified: false,
@@ -364,20 +365,20 @@ export const mockOffers: Offer[] = [
     'data-ai-hint': 'barber shop',
     galleryImages: ['https://placehold.co/800x450.png?text=Corte+Estilo', 'https://placehold.co/800x450.png?text=Barbeiro+Trabalhando'],
     galleryImageHints: ['haircut style', 'barber working'],
-    originalPrice: 70.00, 
-    discountedPrice: 45.00, 
+    originalPrice: 70.00,
+    discountedPrice: 45.00,
     discountType: 'finalValue',
     discountPercentage: Math.round(((70-45)/70)*100),
-    distance: '1.2km', 
-    category: 'Serviços', 
-    rating: 4.9, 
-    reviews: 95, 
-    timeRemaining: 'Encerra em 2 dias', 
+    distance: '1.2km',
+    category: 'Serviços',
+    rating: 4.9,
+    reviews: 95,
+    timeRemaining: 'Encerra em 2 dias',
     tags: ['#Barbearia', '#EstiloMasculino', '#Beleza'],
     latitude: -3.1022,
     longitude: -59.9810,
-    validityStartDate: new Date(now.getTime() - oneDay * 2), 
-    validityEndDate: new Date(now.getTime() + oneDay * 2), 
+    validityStartDate: new Date(now.getTime() - oneDay * 2),
+    validityEndDate: new Date(now.getTime() + oneDay * 2),
     usersUsedCount: 72,
     pointsAwarded: POINTS_CHECKIN,
     pointsForCheckin: POINTS_CHECKIN,
@@ -386,14 +387,15 @@ export const mockOffers: Offer[] = [
     createdAt: new Date(now.getTime() - oneDay * 10),
     updatedAt: new Date(now.getTime() - oneDay * 2),
     isPresentialOnly: true,
+    terms: 'Agendamento recomendado. Tolerância de 10 minutos de atraso.'
   },
-  { 
-    id: 'offer-sports-3', 
+  {
+    id: 'offer-sports-3',
     offerType: 'cupom_qr',
-    title: '👟 Tênis Corrida ProBoost X - Cupom Exclusivo!', 
+    title: '👟 Tênis Corrida ProBoost X - Cupom Exclusivo!',
     description: 'Performance e conforto com o ProBoost X. Cupom QR para desconto especial na loja!',
     fullDescription: 'Supere seus limites com o Tênis Corrida ProBoost X. Desenvolvido para corredores exigentes, oferece máximo amortecimento, responsividade e estabilidade. Cabedal em mesh respirável, solado de alta durabilidade e design moderno. Ideal para treinos diários e provas. Apresente o QR Code no caixa para validar seu desconto exclusivo.',
-    merchantName: 'Atleta Shop', 
+    merchantName: 'Atleta Shop',
     merchantId: 'atletaShopMerchant',
     createdBy: 'atletaShopMerchant',
     merchantIsVerified: true,
@@ -401,20 +403,20 @@ export const mockOffers: Offer[] = [
     'data-ai-hint': 'sport shoes',
     galleryImages: ['https://placehold.co/800x450.png?text=Tenis+Detalhe', 'https://placehold.co/800x450.png?text=Sola+Tenis', 'https://placehold.co/800x450.png?text=Pessoa+Correndo'],
     galleryImageHints: ['running shoe', 'shoe sole detail', 'person running'],
-    originalPrice: 450.00, 
-    discountedPrice: 299.90, 
+    originalPrice: 450.00,
+    discountedPrice: 299.90,
     discountType: 'finalValue',
     discountPercentage: Math.round(((450-299.90)/450)*100),
-    distance: '2.5km', 
-    category: 'Compras', 
-    rating: 4.5, 
-    reviews: 230, 
-    timeRemaining: 'Válido por 1 semana', 
+    distance: '2.5km',
+    category: 'Compras',
+    rating: 4.5,
+    reviews: 230,
+    timeRemaining: 'Válido por 1 semana',
     tags: ['#Esporte', '#Corrida', '#CupomQR', '#Desconto'],
     latitude: -3.0850,
     longitude: -60.0170,
-    validityStartDate: new Date(now.getTime() - oneDay * 1), 
-    validityEndDate: new Date(now.getTime() + oneDay * 7), 
+    validityStartDate: new Date(now.getTime() - oneDay * 1),
+    validityEndDate: new Date(now.getTime() + oneDay * 7),
     usersUsedCount: 95,
     pointsAwarded: POINTS_CHECKIN,
     pointsForCheckin: POINTS_CHECKIN,
@@ -423,14 +425,15 @@ export const mockOffers: Offer[] = [
     visibility: 'destaque',
     createdAt: new Date(now.getTime() - oneDay * 15),
     updatedAt: new Date(now.getTime() - oneDay * 1),
+    terms: 'Válido para modelos selecionados. Apresentar QR Code no caixa.'
   },
-  { 
-    id: 'offer-bar-4', 
+  {
+    id: 'offer-bar-4',
     offerType: 'combo',
-    title: '🍻 Combo Happy Hour: 2 Chopps + Porção', 
+    title: '🍻 Combo Happy Hour: 2 Chopps + Porção',
     description: 'Relaxe após o trabalho: 2 chopps artesanais (300ml) + porção de batata frita especial.',
     fullDescription: 'O Happy Hour perfeito te espera! Desfrute de 2 canecas de chopp artesanal (Pilsen ou IPA, 300ml cada) acompanhadas de uma generosa porção de batatas fritas crocantes com nosso molho especial da casa. Ideal para compartilhar e botar o papo em dia.',
-    merchantName: 'Boteco do Mestre', 
+    merchantName: 'Boteco do Mestre',
     merchantId: 'botecoMestreMerchant',
     createdBy: 'botecoMestreMerchant',
     merchantIsVerified: false,
@@ -439,20 +442,20 @@ export const mockOffers: Offer[] = [
     galleryImages: ['https://placehold.co/800x450.png?text=Chopp+Duplo', 'https://placehold.co/800x450.png?text=Porcao+Batata'],
     galleryImageHints: ['draft beer glass', 'fries portion'],
     originalPrice: 55.00, // Estimativa do valor original dos itens separados
-    discountedPrice: 39.90, 
+    discountedPrice: 39.90,
     discountType: 'finalValue',
     discountPercentage: Math.round(((55-39.90)/55)*100),
     comboItem1: "2 Chopps Artesanais (300ml cada)",
     comboItem2: "1 Porção de Batata Frita Especial",
-    distance: '800m', 
-    category: 'Alimentação', 
-    rating: 4.3, 
-    reviews: 78, 
-    timeRemaining: 'Válido todos os dias 17h-20h', 
+    distance: '800m',
+    category: 'Alimentação',
+    rating: 4.3,
+    reviews: 78,
+    timeRemaining: 'Válido todos os dias 17h-20h',
     tags: ['#Bar', '#HappyHour', '#Combo', '#Petiscos'],
     latitude: -3.1105,
     longitude: -60.0056,
-    validityStartDate: new Date(now.getFullYear(), now.getMonth(), 1), 
+    validityStartDate: new Date(now.getFullYear(), now.getMonth(), 1),
     validityEndDate: new Date(now.getFullYear(), now.getMonth() + 1, 0), // Fim do mês corrente
     usersUsedCount: 150,
     pointsAwarded: POINTS_CHECKIN,
@@ -461,6 +464,7 @@ export const mockOffers: Offer[] = [
     visibility: 'normal',
     createdAt: new Date(now.getTime() - oneDay * 20),
     updatedAt: new Date(now.getTime() - oneDay * 3),
+    terms: 'Válido de segunda a sexta, das 17h às 20h, exceto feriados. Consumo no local.'
   },
   {
     id: 'offer-checkin-5',
@@ -490,6 +494,7 @@ export const mockOffers: Offer[] = [
     distance: '1.5km',
     latitude: -3.0987,
     longitude: -60.0012,
+    terms: 'Válido após 3 check-ins registrados no app. Recompensa sujeita à disponibilidade do dia.'
   },
 ];
 
@@ -499,7 +504,7 @@ export const mockSweepstakes: Sweepstake[] = [
   { id: 'sw3', title: 'Um Ano de Pizza Grátis', description: 'Imagine: uma pizza grande por mês, por um ano inteiro! Participe com 200 pontos.', imageUrl: 'https://placehold.co/600x300.png?text=Pizza+Ano', 'data-ai-hint': 'pizza stack', pointsToEnter: 200, endDate: new Date(now.getTime() + oneDay * 30) },
 ];
 
-export const categories: Category[] = [ 
+export const categories: Category[] = [
   { name: 'Alimentação', icon: 'Utensils' },
   { name: 'Serviços', icon: 'Wrench' },
   { name: 'Compras', icon: 'ShoppingCart' },
@@ -521,12 +526,12 @@ export const getMockMerchantById = (id: string): { id: string, name: string, ima
         return {
             id: offerFromMerchant.merchantId,
             name: offerFromMerchant.merchantName,
-            imageUrl: `https://placehold.co/64x64.png?text=${offerFromMerchant.merchantName.substring(0,1)}`, 
+            imageUrl: `https://placehold.co/64x64.png?text=${offerFromMerchant.merchantName.substring(0,1)}`,
             'data-ai-hint': 'store logo',
             isVerified: offerFromMerchant.merchantIsVerified
         };
     }
-    
+
     // Fallback for specific known merchants not in current mockOffers for some reason
     if (id === 'pizzariaSaborosaMerchant') return {id, name: 'Pizzaria Saborosa', isVerified: true, 'data-ai-hint': 'pizza place', imageUrl: 'https://placehold.co/64x64.png?text=PS'};
     if (id === 'atletaShopMerchant') return {id, name: 'Atleta Shop', isVerified: true, 'data-ai-hint': 'sport store', imageUrl: 'https://placehold.co/64x64.png?text=AS'};
@@ -555,6 +560,7 @@ export const adminModules = [
   { id: 'offers', title: 'Aprovação de Ofertas', icon: PackageCheck, description: 'Revise, aprove ou rejeite ofertas pendentes.' },
   { id: 'analytics', title: 'Analytics Global', icon: BarChart3, description: 'Visualize gráficos de desempenho e tendências da plataforma.' },
   { id: 'categories', title: 'Gestão de Categorias', icon: Filter, description: 'Crie, edite e organize categorias de ofertas.' },
+  { id: 'media', title: 'Gestão de Mídia', icon: ImageIconLucide, description: 'Gerencie imagens e outros ativos de mídia da plataforma.' },
   { id: 'reports', title: 'Banco de Relatórios', icon: FileText, description: 'Gere e baixe relatórios detalhados.' },
   { id: 'settings', title: 'Configurações Gerais', icon: Settings2, description: 'Ajuste as configurações da plataforma Ofertivo.' },
   { id: 'sweepstakes', title: 'Gestão de Sorteios', icon: Gift, description: 'Monitore e crie sorteios para engajamento.' },
@@ -562,5 +568,3 @@ export const adminModules = [
   { id: 'finance', title: 'Financeiro e Assinaturas', icon: CreditCard, description: 'Controle pagamentos, assinaturas e receita.' },
   { id: 'support', title: 'Central de Suporte', icon: HelpCircle, description: 'Gerencie tickets e forneça suporte aos usuários.' },
 ];
-
-    
