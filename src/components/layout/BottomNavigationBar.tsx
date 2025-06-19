@@ -1,8 +1,9 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, MapPin, Award, User, Rocket } from 'lucide-react'; // Added Rocket as a placeholder
+import { Home, MapPin, Award, User } from 'lucide-react'; 
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -21,19 +22,19 @@ const BottomNavigationBar = () => {
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <Link href={item.href} key={item.href} legacyBehavior>
-              <a
-                className={cn(
-                  'flex flex-col items-center justify-center text-center px-2 py-1 rounded-md transition-colors duration-200 ease-in-out',
-                  isActive
-                    ? 'text-primary font-semibold'
-                    : 'text-muted-foreground hover:text-primary'
-                )}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                <item.icon className={cn('h-6 w-6 mb-0.5', isActive ? 'stroke-[2.5px]' : '')} />
-                <span className="text-xs font-medium">{item.label}</span>
-              </a>
+            <Link 
+              href={item.href} 
+              key={item.href}
+              className={cn(
+                'flex flex-col items-center justify-center text-center px-2 py-1 rounded-md transition-colors duration-200 ease-in-out',
+                isActive
+                  ? 'text-primary font-semibold'
+                  : 'text-muted-foreground hover:text-primary'
+              )}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <item.icon className={cn('h-6 w-6 mb-0.5', isActive ? 'stroke-[2.5px]' : '')} />
+              <span className="text-xs font-medium">{item.label}</span>
             </Link>
           );
         })}
