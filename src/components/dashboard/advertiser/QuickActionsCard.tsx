@@ -1,10 +1,22 @@
 
+'use client';
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Gift, ShoppingBag, Users, BarChartHorizontalBig } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 const QuickActionsCard: React.FC = () => {
+  const { toast } = useToast();
+
+  const handleActionClick = (actionName: string) => {
+    toast({
+      title: `Ação: ${actionName}`,
+      description: "Funcionalidade em breve.",
+    });
+  };
+
   return (
     <Card className="shadow-lg h-full">
       <CardHeader>
@@ -15,16 +27,31 @@ const QuickActionsCard: React.FC = () => {
         <CardDescription>Atalhos para as funcionalidades mais usadas.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Button className="w-full bg-primary hover:bg-primary/90">
+        <Button 
+          className="w-full bg-primary hover:bg-primary/90" 
+          onClick={() => handleActionClick('Criar Nova Oferta')}
+        >
           <PlusCircle className="mr-2 h-5 w-5" /> Criar Nova Oferta
         </Button>
-        <Button variant="secondary" className="w-full">
+        <Button 
+          variant="secondary" 
+          className="w-full" 
+          onClick={() => handleActionClick('Criar Sorteio')}
+        >
           <Gift className="mr-2 h-5 w-5" /> Criar Sorteio
         </Button>
-        <Button variant="outline" className="w-full">
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={() => handleActionClick('Gerenciar Ofertas')}
+        >
           <ShoppingBag className="mr-2 h-5 w-5" /> Gerenciar Ofertas
         </Button>
-        <Button variant="outline" className="w-full">
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={() => handleActionClick('Ver CRM de Leads')}
+        >
           <Users className="mr-2 h-5 w-5" /> Ver CRM de Leads
         </Button>
       </CardContent>
