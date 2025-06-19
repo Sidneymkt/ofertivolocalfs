@@ -7,18 +7,29 @@ import PerformanceChartPlaceholder from '@/components/dashboard/advertiser/Perfo
 import QuickActionsCard from '@/components/dashboard/advertiser/QuickActionsCard';
 import PublishedOffersSection, { type PublishedOfferSummary } from '@/components/dashboard/advertiser/PublishedOffersSection';
 import GenericDashboardSection from '@/components/dashboard/advertiser/GenericDashboardSection';
-import { mockAdvertiserUser } from '@/types'; // Assuming business name is part of user or a separate profile
-import { BarChart2, Eye, MousePointerClick, CheckCircle, Users, Coins, TrendingUp, ShoppingBag, Settings, Bell, Gift, ListFilter, FileText, DollarSign } from 'lucide-react';
+import { mockAdvertiserUser } from '@/types'; 
+import { BarChart2, Eye, MousePointerClick, CheckCircle, Users, Coins, TrendingUp, ShoppingBag, Settings, Bell, Gift, ListFilter, FileText, DollarSign, AlertCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress'; // Added for points progress
 
 // Mock data - in a real app, this would come from an API
-const advertiserName = mockAdvertiserUser.businessName || "Meu Negócio"; // Fallback if businessName is not in mockUser
+const advertiserName = mockAdvertiserUser.businessName || "Meu Negócio"; 
+
+// Simulated advertiser plan data
+const advertiserPlan = {
+  name: "Plano Pro",
+  monthlyPointsLimit: 1000,
+  pointsDistributedThisMonth: 650, // Example
+};
+
+const pointsUsagePercentage = (advertiserPlan.pointsDistributedThisMonth / advertiserPlan.monthlyPointsLimit) * 100;
+
 
 const metrics: AdvertiserMetricItem[] = [
   { title: 'Visualizações do Perfil', value: '1.2K', icon: Eye, trend: '+15%' },
   { title: 'Cliques em Ofertas', value: '850', icon: MousePointerClick, trend: '+8%' },
   { title: 'Check-ins Validados', value: '120', icon: CheckCircle, trend: '+5%' },
   { title: 'Seguidores', value: '350', icon: Users, trend: '+20' },
-  { title: 'Pontos Distribuídos', value: '25K', icon: Coins, trend: '' },
+  { title: 'Pontos Distribuídos (Mês)', value: `${advertiserPlan.pointsDistributedThisMonth} / ${advertiserPlan.monthlyPointsLimit}`, icon: Coins, description: `Plano: ${advertiserPlan.name}` },
   { title: 'ROI Estimado (Mês)', value: 'R$ 1.500', icon: TrendingUp, trend: '+10%' },
 ];
 
@@ -40,6 +51,25 @@ export default function AdvertiserDashboardPage() {
 
       <AdvertiserMetricsGrid metrics={metrics} />
 
+      {/* Advertiser Points Plan Usage Section */}
+      <GenericDashboardSection 
+        title="Uso de Pontos do Plano Mensal" 
+        icon={Coins}
+        description={`Você distribuiu ${advertiserPlan.pointsDistributedThisMonth} de ${advertiserPlan.monthlyPointsLimit} pontos este mês.`}
+      >
+        <Progress value={pointsUsagePercentage} className="h-4 [&>div]:bg-gradient-to-r [&>div]:from-primary [&>div]:to-blue-400" />
+        {pointsUsagePercentage > 85 && (
+            <div className="mt-3 p-3 bg-destructive/10 border border-destructive/30 rounded-md text-sm flex items-center gap-2">
+                <AlertCircle className="text-destructive h-5 w-5"/>
+                <p className="text-destructive font-medium">Atenção: Seu limite de pontos do plano está prestes a acabar! Considere um upgrade para continuar recompensando seus clientes.</p>
+            </div>
+        )}
+        <p className="text-xs text-muted-foreground mt-2 text-right">
+            {advertiserPlan.monthlyPointsLimit - advertiserPlan.pointsDistributedThisMonth} pontos restantes.
+        </p>
+      </GenericDashboardSection>
+
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <PerformanceChartPlaceholder />
@@ -56,10 +86,10 @@ export default function AdvertiserDashboardPage() {
       </GenericDashboardSection>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <GenericDashboardSection title="CRM de Leads" icon={ListFilter} description="Acompanhe usuários que interagiram com suas ofertas.">
-          <p className="text-muted-foreground text-center py-10">Funcionalidade de CRM de Leads em breve.</p>
+        <GenericDashboardSection title="CRM de Leads e Engajamento" icon={ListFilter} description="Acompanhe usuários que interagiram e ranking de seguidores.">
+          <p className="text-muted-foreground text-center py-10">Funcionalidade de CRM de Leads e ranking em breve.</p>
         </GenericDashboardSection>
-        <GenericDashboardSection title="CRM Financeiro" icon={DollarSign} description="Gerencie seu plano, créditos e pagamentos.">
+        <GenericDashboardSection title="CRM Financeiro e Planos" icon={DollarSign} description="Gerencie seu plano, créditos, pagamentos e ROI.">
            <p className="text-muted-foreground text-center py-10">Funcionalidade de CRM Financeiro em breve.</p>
         </GenericDashboardSection>
       </div>
@@ -76,14 +106,17 @@ export default function AdvertiserDashboardPage() {
         <p className="text-muted-foreground text-center py-10">Central de notificações em breve.</p>
       </GenericDashboardSection>
 
-      <GenericDashboardSection title="Dicas Inteligentes" icon={TrendingUp} description="Sugestões para otimizar suas ofertas.">
+      <GenericDashboardSection title="Dicas Inteligentes" icon={TrendingUp} description="Sugestões para otimizar suas ofertas e distribuição de pontos.">
         <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground p-4">
           <li>Experimente criar uma oferta "compre 1 leve 2" para atrair mais clientes.</li>
           <li>Adicione fotos de alta qualidade para aumentar o apelo visual das suas ofertas.</li>
           <li>Responda aos comentários dos usuários para construir um bom relacionamento.</li>
+          <li>Considere aumentar o número de pontos para check-ins em ofertas de menor movimento para incentivar o uso.</li>
         </ul>
       </GenericDashboardSection>
 
     </div>
   );
 }
+
+    
