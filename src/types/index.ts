@@ -1,3 +1,4 @@
+
 export interface Comment {
   id: string;
   userId: string;
@@ -44,6 +45,7 @@ export interface User {
   avatarUrl?: string;
   points: number;
   favoriteOffers?: string[]; // Array of offer IDs
+  followedMerchants?: string[]; // Array of merchant IDs
   checkInHistory?: CheckIn[];
   // For determining if the user is an advertiser and owns an offer
   isAdvertiser?: boolean; 
@@ -74,6 +76,7 @@ export const mockUser: User = {
   avatarUrl: 'https://placehold.co/100x100.png',
   points: 1250,
   favoriteOffers: ['1', '3'],
+  followedMerchants: ['pizzariaSaborosaMerchant', 'atletaShopMerchant'], // Example: following two merchants
   checkInHistory: [
     { id: 'chk1', offerId: '2', offerTitle: 'Corte de Cabelo + Barba', timestamp: new Date(Date.now() - 86400000 * 2), pointsEarned: 50 },
     { id: 'chk2', offerId: '4', offerTitle: 'Happy Hour Dose Dupla Chopp', timestamp: new Date(Date.now() - 86400000 * 5), pointsEarned: 30 },

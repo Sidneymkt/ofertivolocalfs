@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Offer, mockOffers, mockUser, mockAdvertiserUser } from '@/types'; // Assuming mockUser can represent current logged-in user
+import { Offer, mockOffers, mockUser, mockAdvertiserUser } from '@/types';
 import OfferImageGallery from '@/components/offers/OfferImageGallery';
 import OfferInfoSection from '@/components/offers/OfferInfoSection';
 import OfferActionsSection from '@/components/offers/OfferActionsSection';
@@ -25,9 +25,7 @@ const getOfferById = (id: string): Promise<Offer | undefined> => {
 };
 
 // Simulate determining current user type (for advertiser panel)
-// In a real app, this would come from an auth context
 const getCurrentUser = () => {
-  // Toggle this to test advertiser view
   const isCurrentUserAdvertiser = false; 
   return isCurrentUserAdvertiser ? mockAdvertiserUser : mockUser;
 }
@@ -39,35 +37,34 @@ export default function OfferDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Hooks for isFavorited and isFollowing moved to the top
-  const [isFavorited, setIsFavorited] = useState(false); // Initialized to false
-  const [isFollowing, setIsFollowing] = useState(false); // Placeholder
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isFollowingMerchant, setIsFollowingMerchant] = useState(false); // Renamed from isFollowing
 
-  const currentUser = getCurrentUser(); // Simulated current user
-  // isOwner calculation is safe with offer? even if offer is null initially
+  const currentUser = getCurrentUser(); 
   const isOwner = currentUser.isAdvertiser && currentUser.advertiserProfileId === offer?.merchantId;
-
 
   useEffect(() => {
     if (offerId) {
       setLoading(true);
+      setError(null); // Clear previous error before new fetch
       getOfferById(offerId)
         .then(data => {
           if (data) {
             setOffer(data);
-            // Update isFavorited state after offer data is fetched
-            setIsFavorited(mockUser.favoriteOffers?.includes(data.id) ?? false);
+            setIsFavorited(currentUser.favoriteOffers?.includes(data.id) ?? false);
+            setIsFollowingMerchant(currentUser.followedMerchants?.includes(data.merchantId) ?? false);
           } else {
             setError('Oferta não encontrada.');
           }
-          setLoading(false);
         })
         .catch(() => {
           setError('Erro ao carregar a oferta.');
+        })
+        .finally(() => {
           setLoading(false);
         });
     }
-  }, [offerId]);
+  }, [offerId]); // currentUser is stable based on mock data, so not needed as dependency here
 
   if (loading) {
     return (
@@ -93,7 +90,7 @@ export default function OfferDetailPage() {
   }
 
   const toggleFavorite = () => setIsFavorited(!isFavorited);
-  const toggleFollow = () => setIsFollowing(!isFollowing);
+  const toggleFollow = () => setIsFollowingMerchant(!isFollowingMerchant); // Updated to use renamed state setter
 
 
   return (
@@ -105,9 +102,9 @@ export default function OfferDetailPage() {
       <OfferActionsSection 
         offerId={offer.id}
         isFavorited={isFavorited}
-        isFollowingMerchant={isFollowing}
+        isFollowingMerchant={isFollowingMerchant} // Passed renamed state
         onToggleFavorite={toggleFavorite}
-        onToggleFollow={toggleFollow}
+        onToggleFollow={toggleFollow} // Passes the renamed toggle function
         onCommentClick={() => document.getElementById('comment-section')?.scrollIntoView({ behavior: 'smooth' })}
       />
 
