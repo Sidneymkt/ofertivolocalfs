@@ -4,7 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Edit3, Copy, Trash2, Star, Eye, MousePointerClick, ListChecks, AlertTriangle, ClockIcon, Hourglass } from 'lucide-react';
+import { 
+  Edit3, 
+  Copy, 
+  Trash2, 
+  Star, 
+  Eye, 
+  MousePointerClick, 
+  ListChecks, 
+  AlertTriangle, 
+  ClockIcon, 
+  Hourglass,
+  CheckCircle // Added CheckCircle
+} from 'lucide-react';
 import Image from 'next/image'; 
 import type { PublishedOfferSummary } from '@/types';
 
@@ -15,7 +27,7 @@ interface PublishedOffersSectionProps {
 const StatusBadge: React.FC<{ status: PublishedOfferSummary['status'] }> = ({ status }) => {
   let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
   let text = status.charAt(0).toUpperCase() + status.slice(1);
-  let Icon = null;
+  let Icon: React.ElementType | null = null;
 
   switch (status) {
     case 'active':
