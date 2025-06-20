@@ -12,7 +12,92 @@ import { Input } from '@/components/ui/input';
 import { Search as SearchIcon, MapPin, Loader2 } from 'lucide-react';
 import RecommendedOffersList from '@/components/offers/RecommendedOffersList';
 import { getAllOffers } from '@/lib/firebase/services/offerService';
-import { getAllMerchants } from '@/lib/firebase/services/userService'; // Assuming this service exists or will be created
+import { getAllMerchants } from '@/lib/firebase/services/userService';
+import { Timestamp } from 'firebase/firestore'; // Import Timestamp
+
+// Temporary mock data for offers
+const mockPageOffers: Offer[] = [
+  {
+    id: 'mock-offer-1',
+    title: 'Pizza Grande Especial (Exemplo)',
+    description: 'Deliciosa pizza grande com 3 ingredientes à sua escolha e borda recheada.',
+    merchantName: 'Pizzaria Fantasia',
+    merchantId: 'mock-merchant-1',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'pizza food delicious',
+    category: 'Alimentação',
+    discountedPrice: 39.90,
+    originalPrice: 59.90,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 7))),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'padrao',
+    visibility: 'destaque',
+    status: 'active',
+    pointsAwarded: 10,
+    createdBy: 'mock-merchant-1',
+    merchantIsVerified: true,
+    usersUsedCount: 155,
+    rating: 4.7,
+    reviews: 30,
+    galleryImages: ['https://placehold.co/800x450.png'],
+    galleryImageHints: ['pizza restaurant'],
+    tags: ['#pizza', '#familia', '#promocao']
+  },
+  {
+    id: 'mock-offer-2',
+    title: 'Corte de Cabelo Moderno (Exemplo)',
+    description: 'Renove seu visual com um corte moderno e estiloso + lavagem especial.',
+    merchantName: 'Barbearia Estilo Único',
+    merchantId: 'mock-merchant-2',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'haircut barber salon',
+    category: 'Serviços',
+    discountedPrice: 45.00,
+    originalPrice: 60.00,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 10))),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'exclusiva_app',
+    visibility: 'normal',
+    status: 'active',
+    pointsAwarded: 15,
+    createdBy: 'mock-merchant-2',
+    merchantIsVerified: false,
+    usersUsedCount: 78,
+    rating: 4.9,
+    reviews: 22,
+    tags: ['#beleza', '#masculino', '#corte']
+  },
+  {
+    id: 'mock-offer-3',
+    title: 'Combo Lanche da Tarde (Exemplo)',
+    description: 'Um delicioso sanduíche natural + suco de laranja 300ml.',
+    merchantName: 'Cantina Sabor & Saúde',
+    merchantId: 'mock-merchant-3',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'sandwich juice healthy',
+    category: 'Alimentação',
+    discountedPrice: 19.90,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 3))),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'combo',
+    visibility: 'normal',
+    status: 'active',
+    pointsAwarded: 5,
+    createdBy: 'mock-merchant-3',
+    merchantIsVerified: true,
+    usersUsedCount: 210,
+    rating: 4.3,
+    reviews: 15,
+    tags: ['#lanche', '#saudavel']
+  }
+];
+
 
 export default function FeedPage() {
   const [allOffers, setAllOffers] = useState<Offer[]>([]);
@@ -25,11 +110,11 @@ export default function FeedPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const offers = await getAllOffers();
-        setAllOffers(offers);
+        // Temporarily use mock offers
+        console.log("Usando dados mock para ofertas na home feed.");
+        setAllOffers(mockPageOffers);
         
-        // Simulate fetching featured merchants (e.g., first 5 advertisers)
-        // In a real app, this might be a specific query or curated list
+        // Continue trying to fetch real merchants
         const merchants = await getAllMerchants();
         setFeaturedMerchants(merchants.slice(0,10).map(m => ({
           id: m.id,
@@ -40,8 +125,8 @@ export default function FeedPage() {
         })));
 
       } catch (error) {
-        console.error("Error fetching data for feed:", error);
-        // Handle error display if necessary
+        console.error("Error fetching merchant data for feed:", error);
+        // If merchant fetch fails, featuredMerchants will remain empty, which is acceptable.
       }
       setLoading(false);
     };
@@ -52,7 +137,11 @@ export default function FeedPage() {
     // Simulate featured: e.g., offers with visibility 'destaque' or most recent with images
     return allOffers
       .filter(offer => offer.visibility === 'destaque' || (offer.galleryImages && offer.galleryImages.length > 0))
-      .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a,b) => {
+        const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
+        const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
+        return dateB - dateA;
+      })
       .slice(0, 4);
   }, [allOffers]);
 
@@ -80,7 +169,11 @@ export default function FeedPage() {
 
   const recentOffers = useMemo(() => {
     return [...filteredOffers]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a, b) => {
+        const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
+        const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
+        return dateB - dateA;
+      })
       .slice(0, 6);
   }, [filteredOffers]);
 
@@ -97,7 +190,7 @@ export default function FeedPage() {
     setSelectedCategory(categoryName);
   };
 
-  if (loading) {
+  if (loading && allOffers.length === 0) { // Show loader only if mock data hasn't been set yet or if allOffers is still genuinely empty from a fast mock set
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -169,7 +262,7 @@ export default function FeedPage() {
        {recentOffers.length === 0 && !searchTerm && selectedCategory && (
          <p className="text-center text-muted-foreground py-6 px-4 md:px-0">Nenhuma oferta recente encontrada na categoria "{selectedCategory}".</p>
        )}
-       {allOffers.length === 0 && !searchTerm && !selectedCategory && (
+       {allOffers.length === 0 && !loading && !searchTerm && !selectedCategory && ( // Check loading state here
          <p className="text-center text-muted-foreground py-10 px-4 md:px-0 text-lg">
             Nenhuma oferta disponível no momento. <br/> Volte mais tarde!
         </p>
@@ -177,3 +270,5 @@ export default function FeedPage() {
     </div>
   );
 }
+
+    
