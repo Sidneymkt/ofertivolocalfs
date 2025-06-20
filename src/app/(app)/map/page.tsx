@@ -1,12 +1,13 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react'; // Added useMemo
 import InteractiveMapPlaceholder from '@/components/map/InteractiveMapPlaceholder';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ListFilter } from 'lucide-react';
 import OfferCard from '@/components/offers/OfferCard';
+import RecommendedOffersList from '@/components/offers/RecommendedOffersList'; // Import RecommendedOffersList
 import { mockOffers, categories } from '@/types';
 import CategoryPills from '@/components/offers/CategoryPills';
 import {
@@ -20,7 +21,13 @@ import {
 import AdvancedFiltersSheet from '@/components/map/AdvancedFiltersSheet';
 
 export default function MapPage() {
-  const nearbyOffers = mockOffers.slice(0, 5);
+  const nearbyOffers = useMemo(() => mockOffers.slice(0, 5), []);
+  // Create a distinct list for recommended offers on the map page
+  const recommendedOffersOnMap = useMemo(() => {
+    const nearbyOfferIds = new Set(nearbyOffers.map(o => o.id));
+    return mockOffers.filter(offer => !nearbyOfferIds.has(offer.id)).slice(0, 8); // Get up to 8 distinct offers
+  }, [nearbyOffers]);
+
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isFiltersSheetOpen, setIsFiltersSheetOpen] = useState(false);
 
@@ -49,7 +56,7 @@ export default function MapPage() {
         <InteractiveMapPlaceholder />
       </div>
 
-      {/* Filter Bar Section - MOVED HERE */}
+      {/* Filter Bar Section */}
       <div className="shrink-0 p-3 border-t bg-background">
         <div className="flex items-center gap-2">
           <div className="flex-grow">
@@ -85,7 +92,7 @@ export default function MapPage() {
         </div>
       </div>
 
-      {/* Horizontal Scrollable Offer List Section */}
+      {/* Horizontal Scrollable Nearby Offer List Section */}
       <div className="shrink-0 py-3 bg-background border-t">
         <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas no Mapa</h3>
         <ScrollArea className="w-full whitespace-nowrap">
@@ -99,6 +106,14 @@ export default function MapPage() {
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </div>
+
+      {/* New Recommended Offers Section */}
+      {recommendedOffersOnMap.length > 0 && (
+        <div className="shrink-0 py-3 bg-background border-t">
+          <h3 className="text-md font-semibold px-4 mb-2">Mais Sugestões para Você</h3>
+          <RecommendedOffersList offers={recommendedOffersOnMap} />
+        </div>
+      )}
     </div>
   );
 }
