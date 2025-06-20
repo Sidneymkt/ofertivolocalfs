@@ -17,7 +17,12 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from "@/hooks/use-toast";
 import { categories as businessCategories } from '@/types';
-import { User, Briefcase, Building as BuildingIconLucide, Mail, Lock, Phone, MapPin, Link2, FileText, List, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { User, Briefcase, Building as BuildingIconLucide, Mail, Lock, Phone, MapPin, Link2, FileText, List, Eye, EyeOff, CheckCircle, Loader2 as SpinnerIcon } from 'lucide-react';
+import { auth, db } from '@/lib/firebase/firebaseConfig';
+import { createUserWithEmailAndPassword, type User as FirebaseUser } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import type { User as AppUser } from '@/types';
+import { POINTS_SIGNUP_WELCOME, USER_LEVELS } from '@/types';
 
 const advertiserSignupSchema = z.object({
   responsibleName: z.string().min(3, { message: 'Nome do responsável deve ter pelo menos 3 caracteres.' }),
@@ -39,7 +44,6 @@ const advertiserSignupSchema = z.object({
 
 type AdvertiserSignupFormValues = z.infer<typeof advertiserSignupSchema>;
 
-// Helper to get Lucide icon component by name
 const getIconComponent = (iconName?: string): React.ElementType => {
   if (!iconName) return List; 
   const icons: { [key: string]: React.ElementType } = {
@@ -60,6 +64,7 @@ export default function AdvertiserSignupPage() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<AdvertiserSignupFormValues>({
     resolver: zodResolver(advertiserSignupSchema),
@@ -79,13 +84,73 @@ export default function AdvertiserSignupPage() {
     },
   });
 
-  const onSubmit: SubmitHandler<AdvertiserSignupFormValues> = (data) => {
-    console.log('Advertiser signup data:', data);
-    toast({
-      title: "Cadastro de anunciante realizado com sucesso!",
-      description: "Seu negócio agora faz parte do Ofertivo! Redirecionando para o painel...",
-    });
-    router.push('/dashboard/advertiser'); 
+  const onSubmit: SubmitHandler<AdvertiserSignupFormValues> = async (data) => {
+    setIsSubmitting(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const firebaseUser = userCredential.user;
+
+      // For advertisers, we'll store their business info directly in their user profile document
+      // Or, you might have a separate 'businesses' collection linked by user.uid
+      const newAdvertiserProfile: AppUser = {
+        id: firebaseUser.uid,
+        name: data.responsibleName, // User's actual name
+        email: data.email,
+        isAdvertiser: true,
+        advertiserProfileId: firebaseUser.uid, // Link to self or a dedicated business profile ID
+        businessName: data.businessName,
+        // cnpjOrCpf: data.cnpjOrCpf, // Consider if this should be stored, and how securely
+        businessAddress: data.fullAddress,
+        // businessCity: data.city, // If you add city to form
+        businessWhatsapp: data.commercialWhatsapp,
+        businessDescription: data.businessDescription,
+        // socialLink: data.socialLink, // If you add this field to AppUser type
+        advertiserStatus: 'pending_verification', // Or 'active' if auto-approved
+        advertiserPlan: 'trial', // Default plan
+        
+        // Standard user fields, can be minimal for advertiser-only accounts
+        points: POINTS_SIGNUP_WELCOME, 
+        level: USER_LEVELS.INICIANTE.name,
+        currentXp: 0,
+        xpToNextLevel: USER_LEVELS.INICIANTE.nextLevelXp,
+        joinDate: serverTimestamp() as unknown as Date,
+        isProfileComplete: false, // Business profile completion status
+        responsibleName: data.responsibleName,
+        // Store business category
+        // businessCategory: data.businessCategory, // Add this field to AppUser if needed
+
+        // Placeholders for avatar/logo, can be updated later
+        avatarUrl: `https://placehold.co/100x100.png?text=${data.responsibleName.substring(0,1).toUpperCase()}`,
+        avatarHint: 'person avatar',
+        businessLogoUrl: `https://placehold.co/100x100.png?text=${data.businessName.substring(0,1).toUpperCase()}`,
+        businessLogoHint: 'store logo',
+      };
+
+      await setDoc(doc(db, "users", firebaseUser.uid), newAdvertiserProfile);
+
+      toast({
+        title: "Cadastro de anunciante realizado com sucesso!",
+        description: `${data.businessName} agora faz parte do Ofertivo! Redirecionando...`,
+      });
+      router.push('/dashboard/advertiser'); 
+    } catch (error: any) {
+      console.error("Advertiser signup error:", error);
+      let errorMessage = "Ocorreu um erro ao tentar cadastrar seu negócio.";
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "Este e-mail já está cadastrado.";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "O formato do e-mail é inválido.";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "A senha é muito fraca. Tente uma mais forte.";
+      }
+      toast({
+        variant: "destructive",
+        title: "Erro no Cadastro",
+        description: errorMessage,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
@@ -319,8 +384,8 @@ export default function AdvertiserSignupPage() {
                 <CheckCircle className="mr-2 h-4 w-4 text-secondary" /> Solicitar Verificação do Perfil
               </Button>
 
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Cadastrando...' : 'Cadastrar e Criar Primeira Oferta'}
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+                {isSubmitting ? <SpinnerIcon className="animate-spin" /> : 'Cadastrar e Criar Primeira Oferta'}
               </Button>
             </form>
           </Form>

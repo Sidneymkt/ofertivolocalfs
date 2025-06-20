@@ -14,7 +14,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from "@/hooks/use-toast";
-import { User, Mail, Lock, Phone, MapPin, Building, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, Phone, MapPin, Building, Eye, EyeOff, Loader2 as SpinnerIcon } from 'lucide-react';
+import { auth, db } from '@/lib/firebase/firebaseConfig';
+import { createUserWithEmailAndPassword, type User as FirebaseUser } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import type { User as AppUser } from '@/types';
+import { POINTS_SIGNUP_WELCOME, USER_LEVELS } from '@/types';
 
 const userSignupSchema = z.object({
   fullName: z.string().min(3, { message: 'Nome completo deve ter pelo menos 3 caracteres.' }),
@@ -37,6 +42,7 @@ export default function UserSignupPage() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<UserSignupFormValues>({
     resolver: zodResolver(userSignupSchema),
@@ -52,14 +58,57 @@ export default function UserSignupPage() {
     },
   });
 
-  const onSubmit: SubmitHandler<UserSignupFormValues> = (data) => {
-    console.log('User signup data:', data);
-    toast({
-      title: "Cadastro realizado com sucesso!",
-      description: "Bem-vindo(a) ao Ofertivo! Você ganhou +10 pontos!",
-    });
-    // Aqui você adicionaria a lógica para conceder os pontos e salvar o usuário.
-    router.push('/'); // Redireciona para o feed
+  const onSubmit: SubmitHandler<UserSignupFormValues> = async (data) => {
+    setIsSubmitting(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const firebaseUser = userCredential.user;
+
+      const newUserProfile: AppUser = {
+        id: firebaseUser.uid,
+        name: data.fullName,
+        email: data.email,
+        whatsapp: data.whatsapp || undefined,
+        address: data.address,
+        city: data.city,
+        points: POINTS_SIGNUP_WELCOME,
+        level: USER_LEVELS.INICIANTE.name,
+        currentXp: 0,
+        xpToNextLevel: USER_LEVELS.INICIANTE.nextLevelXp,
+        joinDate: serverTimestamp() as unknown as Date, // Firestore will convert this
+        isAdvertiser: false,
+        status: 'active',
+        isProfileComplete: false, // Can be updated later
+        // Initialize other optional fields as needed
+        avatarUrl: `https://placehold.co/100x100.png?text=${data.fullName.substring(0,1).toUpperCase()}`,
+        avatarHint: 'person avatar',
+      };
+
+      await setDoc(doc(db, "users", firebaseUser.uid), newUserProfile);
+
+      toast({
+        title: "Cadastro realizado com sucesso!",
+        description: `Bem-vindo(a) ao Ofertivo, ${data.fullName}! Você ganhou ${POINTS_SIGNUP_WELCOME} pontos!`,
+      });
+      router.push('/'); 
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      let errorMessage = "Ocorreu um erro ao tentar se cadastrar.";
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "Este e-mail já está cadastrado.";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "O formato do e-mail é inválido.";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "A senha é muito fraca. Tente uma mais forte.";
+      }
+      toast({
+        variant: "destructive",
+        title: "Erro no Cadastro",
+        description: errorMessage,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
@@ -216,8 +265,8 @@ export default function UserSignupPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Cadastrando...' : 'Cadastrar e Começar'}
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+                {isSubmitting ? <SpinnerIcon className="animate-spin" /> : 'Cadastrar e Começar'}
               </Button>
             </form>
           </Form>

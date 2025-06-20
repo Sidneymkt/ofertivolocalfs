@@ -14,7 +14,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, LogIn, Eye, EyeOff, Loader2 as SpinnerIcon } from 'lucide-react';
+import { auth } from '@/lib/firebase/firebaseConfig';
+import { signInWithEmailAndPassword, type User as FirebaseUser } from 'firebase/auth';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
@@ -30,6 +32,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<UserType>('user');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -39,16 +42,36 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit: SubmitHandler<LoginFormValues> = (data) => {
-    console.log(`Login ${activeTab} data:`, data);
-    toast({
-      title: "Login realizado com sucesso!",
-      description: `Bem-vindo(a) de volta! Redirecionando...`,
-    });
-    if (activeTab === 'user') {
-      router.push('/'); // Feed para usuário
-    } else {
-      router.push('/dashboard/advertiser'); // Painel para anunciante
+  const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
+    setIsSubmitting(true);
+    try {
+      await signInWithEmailAndPassword(auth, data.email, data.password);
+      toast({
+        title: "Login realizado com sucesso!",
+        description: `Bem-vindo(a) de volta! Redirecionando...`,
+      });
+      // TODO: Store user session globally (e.g., React Context, Zustand, Redux)
+      if (activeTab === 'user') {
+        router.push('/'); // Feed para usuário
+      } else {
+        // Here, you might want to check if the user actually IS an advertiser from Firestore
+        router.push('/dashboard/advertiser'); // Painel para anunciante
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      let errorMessage = "Ocorreu um erro ao tentar fazer login.";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        errorMessage = "E-mail ou senha inválidos.";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "O formato do e-mail é inválido.";
+      }
+      toast({
+        variant: "destructive",
+        title: "Erro no Login",
+        description: errorMessage,
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -105,8 +128,8 @@ export default function LoginPage() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Entrando...' : 'Entrar'}
+        <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+          {isSubmitting ? <SpinnerIcon className="animate-spin" /> : 'Entrar'}
         </Button>
       </form>
     </Form>
