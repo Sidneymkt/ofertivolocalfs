@@ -3,13 +3,12 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronRight, HelpCircle, LogOut, ShieldCheck, Gift } from 'lucide-react'; // Removed History
+import { ChevronRight, HelpCircle, LogOut, ShieldCheck, Gift } from 'lucide-react'; 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 
 const actionItems = [
-  // { label: 'Histórico de Check-ins', icon: History, href: '/profile/history' }, // Removed
   { label: 'Central de Ajuda', icon: HelpCircle, href: '/help' },
   { label: 'Termos e Privacidade', icon: ShieldCheck, href: '/terms' },
 ];
@@ -48,12 +47,14 @@ const ProfileActions = () => {
             </li>
           ))}
           <li>
-            <Button variant="ghost" className="w-full justify-between h-12 px-3 group text-green-600 hover:bg-green-500/10 hover:text-green-700">
-              <div className="flex items-center gap-3">
-                <Gift className="w-5 h-5 transition-colors" />
-                <span>Convidar Amigos (Ganhe Pontos!)</span>
-              </div>
-              <ChevronRight className="w-5 h-5 transition-colors" />
+            <Button variant="ghost" className="w-full justify-between h-12 px-3 group text-green-600 hover:bg-green-500/10 hover:text-green-700" asChild>
+              <Link href="/invite">
+                <div className="flex items-center gap-3">
+                  <Gift className="w-5 h-5 transition-colors" />
+                  <span>Convidar Amigos (Ganhe Pontos!)</span>
+                </div>
+                <ChevronRight className="w-5 h-5 transition-colors" />
+              </Link>
             </Button>
           </li>
            <li>
@@ -76,4 +77,3 @@ const ProfileActions = () => {
 };
 
 export default ProfileActions;
-
