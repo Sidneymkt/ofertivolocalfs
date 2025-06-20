@@ -5,7 +5,7 @@ import React, { useState } from 'react'; // Added useState
 import InteractiveMapPlaceholder from '@/components/map/InteractiveMapPlaceholder';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { ListFilter, ChevronDown } from 'lucide-react'; // Removed Leaf, Coffee, Beef, CakeSlice
+import { ListFilter } from 'lucide-react'; // Removed Leaf, Coffee, Beef, CakeSlice, ChevronDown
 import OfferCard from '@/components/offers/OfferCard'; 
 import { mockOffers, categories } from '@/types'; // Import mockOffers and categories
 import CategoryPills from '@/components/offers/CategoryPills'; // Import CategoryPills
@@ -43,13 +43,8 @@ export default function MapPage() {
       </div>
 
       {/* Bottom Sheet / Filter Section */}
-      <div className="bg-accent text-accent-foreground p-4 shadow-t-xl rounded-t-2xl mt-auto shrink-0">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-lg font-semibold font-headline">Manaus Offers</h3>
-          <Button variant="ghost" size="sm" className="text-accent-foreground hover:bg-accent/80">
-            De <ChevronDown size={16} className="ml-1" />
-          </Button>
-        </div>
+      <div className="p-4 mt-auto shrink-0"> {/* Removed bg-accent, text-accent-foreground, shadow-t-xl, rounded-t-2xl */}
+        {/* Removed "Manaus Offers" title and "De" button div */}
 
         {/* CategoryPills component replacing the old buttons */}
         <div className="mb-3"> {/* Add margin-bottom for spacing */}
@@ -64,7 +59,7 @@ export default function MapPage() {
         <div className="flex justify-center">
           <Button
             variant="outline"
-            className="flex items-center justify-center h-12 w-full rounded-lg bg-accent/20 hover:bg-accent/40 border-accent-foreground/30 text-sm"
+            className="flex items-center justify-center h-12 w-full rounded-lg bg-card hover:bg-muted border-border text-sm" // Adjusted styling for a more standard look
           >
             <ListFilter size={20} className="mr-2" />
             Ver Todos os Filtros
