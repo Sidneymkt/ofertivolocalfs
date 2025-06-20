@@ -49,7 +49,15 @@ const FeaturedOfferCard: React.FC<FeaturedOfferCardProps> = ({ offer }) => {
               variant="default" 
               size="sm" 
               className="bg-accent hover:bg-accent/90 text-accent-foreground text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4 shrink-0"
-              onClick={(e) => e.stopPropagation()} // Prevent Link navigation if button itself is clicked, let Link handle outer click
+              onClick={(e) => {
+                e.preventDefault(); // Evita a navegação do Link externo se o botão tiver uma ação própria
+                e.stopPropagation(); // Impede que o evento de clique no botão se propague para o Link
+                // Se o botão "Guia" DEVE navegar, então o Link externo é suficiente e este onClick pode ser removido
+                // ou redirecionar para a mesma rota programaticamente se necessário.
+                // Por ora, vamos assumir que o clique no card inteiro navega.
+                // Se precisar que o botão tenha uma ação específica E o card navegue, precisaria de mais lógica.
+                // router.push(`/offer/${offer.id}`); // Exemplo se quisesse navegação programática
+              }}
             >
               Guia
             </Button>

@@ -6,7 +6,7 @@ import type { Offer } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tag, Navigation, Star } from 'lucide-react';
-import Link from 'next/link'; // Added missing import
+import Link from 'next/link';
 
 interface OfferCardProps {
   offer: Offer;
