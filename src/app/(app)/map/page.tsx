@@ -1,28 +1,59 @@
-import InteractiveMapPlaceholder from '@/components/map/InteractiveMapPlaceholder';
-import OfferList from '@/components/offers/OfferList';
-import { mockOffers } from '@/types';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import OfferCard from '@/components/offers/OfferCard';
 
+'use client';
+
+import React from 'react';
+import InteractiveMapPlaceholder from '@/components/map/InteractiveMapPlaceholder';
+import { Button } from '@/components/ui/button';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Leaf, Coffee, Beef, CakeSlice, ListFilter, ChevronDown } from 'lucide-react';
+
+// Mock categories for the filter bar, similar to the prototype
+const mapCategories = [
+  { name: 'Natureza', icon: Leaf, 'data-ai-hint': 'leaf nature' },
+  { name: 'Cafés', icon: Coffee, 'data-ai-hint': 'coffee bean' },
+  { name: 'Carnes', icon: Beef, 'data-ai-hint': 'meat steak' },
+  { name: 'Padarias', icon: CakeSlice, 'data-ai-hint': 'bread pastry' },
+];
 
 export default function MapPage() {
-  const nearbyOffers = mockOffers.slice(0, 2); // Show a couple of offers as "nearby"
-
   return (
-    <div className="space-y-6">
-      <InteractiveMapPlaceholder />
-      
-      <div className="mt-8">
-        <h3 className="text-xl font-headline font-semibold mb-3">Ofertas Próximas de Você</h3>
-        {nearbyOffers.length > 0 ? (
-           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {nearbyOffers.map(offer => (
-              <OfferCard key={offer.id} offer={offer} />
+    <div className="flex flex-col h-[calc(100vh_-_8rem)]"> {/* Adjust height considering header and bottom nav */}
+      <div className="flex-grow relative">
+        <InteractiveMapPlaceholder />
+        {/* Potentially add overlay buttons for map interaction here if needed */}
+      </div>
+
+      {/* Bottom Sheet / Filter Section - Styled like the prototype */}
+      <div className="bg-accent text-accent-foreground p-4 shadow-t-xl rounded-t-2xl mt-auto shrink-0">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-lg font-semibold font-headline">Manaus Offers</h3>
+          <Button variant="ghost" size="sm" className="text-accent-foreground hover:bg-accent/80">
+            De <ChevronDown size={16} className="ml-1" />
+          </Button>
+        </div>
+
+        <ScrollArea className="w-full whitespace-nowrap">
+          <div className="flex space-x-3 pb-2.5">
+            {mapCategories.map((category) => (
+              <Button
+                key={category.name}
+                variant="outline"
+                className="flex flex-col items-center justify-center h-20 w-20 rounded-lg bg-accent/20 hover:bg-accent/40 border-accent-foreground/30"
+              >
+                <category.icon size={28} className="mb-1" />
+                <span className="text-xs text-center">{category.name}</span>
+              </Button>
             ))}
+             <Button
+                variant="outline"
+                className="flex flex-col items-center justify-center h-20 w-20 rounded-lg bg-accent/20 hover:bg-accent/40 border-accent-foreground/30"
+              >
+                <ListFilter size={28} className="mb-1" />
+                <span className="text-xs text-center">Todos Filtros</span>
+              </Button>
           </div>
-        ) : (
-          <p className="text-muted-foreground">Nenhuma oferta encontrada nas proximidades.</p>
-        )}
+          <ScrollBar orientation="horizontal" className="invisible" />
+        </ScrollArea>
       </div>
     </div>
   );
