@@ -6,15 +6,17 @@ import type { Offer } from '@/types';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Navigation, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface FeaturedOfferCardProps {
   offer: Offer;
+  className?: string; // Allow passing className for width control in lists
 }
 
-const FeaturedOfferCard: React.FC<FeaturedOfferCardProps> = ({ offer }) => {
+const FeaturedOfferCard: React.FC<FeaturedOfferCardProps> = ({ offer, className }) => {
   return (
-    <Link href={`/offer/${offer.id}`} className="block group">
-      <div className="relative aspect-[16/9] sm:aspect-[2/1] md:aspect-[2.5/1] lg:aspect-[3/1] w-full rounded-xl overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+    <Link href={`/offer/${offer.id}`} className={cn("block group", className)}>
+      <div className="relative aspect-[16/9] sm:aspect-video md:aspect-[16/8] lg:aspect-[16/7] w-full rounded-xl overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300 h-full">
         <Image
           src={offer.galleryImages && offer.galleryImages.length > 0 ? offer.galleryImages[0] : offer.imageUrl}
           alt={`Featured offer: ${offer.title}`}
@@ -23,13 +25,13 @@ const FeaturedOfferCard: React.FC<FeaturedOfferCardProps> = ({ offer }) => {
           className="transition-transform duration-300 group-hover:scale-105"
           data-ai-hint={offer.galleryImageHints && offer.galleryImageHints.length > 0 ? offer.galleryImageHints[0] : offer['data-ai-hint'] as string || "featured food restaurant"}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-4 md:p-6 flex flex-col justify-end">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold font-headline text-white leading-tight mb-1 line-clamp-2 group-hover:text-primary-foreground/90">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3 md:p-4 flex flex-col justify-end">
+          <h2 className="text-base sm:text-lg md:text-xl font-bold font-headline text-white leading-tight mb-1 line-clamp-2 group-hover:text-primary-foreground/90">
             {offer.title}
           </h2>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm text-neutral-300 group-hover:text-neutral-100 line-clamp-1">{offer.merchantName}</p>
+              <p className="text-xs text-neutral-300 group-hover:text-neutral-100 line-clamp-1">{offer.merchantName}</p>
               <div className="flex items-center text-xs text-neutral-300 gap-1.5">
                 {offer.distance && (
                   <div className="flex items-center gap-0.5">
@@ -48,15 +50,11 @@ const FeaturedOfferCard: React.FC<FeaturedOfferCardProps> = ({ offer }) => {
             <Button 
               variant="default" 
               size="sm" 
-              className="bg-accent hover:bg-accent/90 text-accent-foreground text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4 shrink-0"
+              className="bg-accent hover:bg-accent/90 text-accent-foreground text-xs sm:text-sm h-8 px-3 shrink-0"
               onClick={(e) => {
-                e.preventDefault(); // Evita a navegação do Link externo se o botão tiver uma ação própria
-                e.stopPropagation(); // Impede que o evento de clique no botão se propague para o Link
-                // Se o botão "Guia" DEVE navegar, então o Link externo é suficiente e este onClick pode ser removido
-                // ou redirecionar para a mesma rota programaticamente se necessário.
-                // Por ora, vamos assumir que o clique no card inteiro navega.
-                // Se precisar que o botão tenha uma ação específica E o card navegue, precisaria de mais lógica.
-                // router.push(`/offer/${offer.id}`); // Exemplo se quisesse navegação programática
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                // Navigation is handled by the parent Link
               }}
             >
               Guia
