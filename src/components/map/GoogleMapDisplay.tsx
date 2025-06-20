@@ -28,25 +28,27 @@ interface GoogleMapDisplayProps {
 const mapContainerStyle = {
   width: '100%',
   height: '100%',
-  borderRadius: '0.5rem', // Kept for consistency if map is in a rounded container
+  borderRadius: '0.5rem',
 };
 
-const getMarkerIcon = (distance: number | null): google.maps.Icon => {
+const getMarkerIcon = (distance: number | null): google.maps.Icon | undefined => {
+  // Defensive check: Ensure Google Maps API objects are available
+  if (!window.google || !window.google.maps || !window.google.maps.Size || !window.google.maps.Point) {
+    console.warn('Google Maps API objects (Size/Point) not fully initialized for creating custom marker icon. Default marker may be used.');
+    return undefined; // Fallback to default marker if API objects aren't ready
+  }
+
   let color = 'hsl(211, 100%, 50%)'; // Default: Primary Blue
   let animationClass = '';
-  // let zIndex = 1; // zIndex will be managed in memoizedMarkers directly
 
   if (distance !== null) {
     if (distance < 1) { // Very close: < 1km
       color = 'hsl(130, 65%, 50%)'; // Vibrant Green
       animationClass = 'marker-pulse-animation';
-      // zIndex = 3; 
     } else if (distance < 5) { // Close: 1km - 5km
       color = 'hsl(45, 100%, 51%)'; // Accent Yellow/Orange
-      // zIndex = 2;
     } else { // Far: > 5km
       color = 'hsl(0, 84%, 60%)'; // Destructive Red
-      // zIndex = 1;
     }
   }
 
@@ -70,8 +72,8 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: apiKey || "", // API key must be a string
-    libraries: ['marker'], // Specify libraries needed
+    googleMapsApiKey: apiKey || "",
+    libraries: ['marker'], 
   });
 
   const handleMarkerClick = useCallback((marker: MapMarker) => {
@@ -87,11 +89,11 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
   };
   
   const memoizedMarkers = useMemo(() => {
-    if (!isLoaded) return []; // Don't compute markers if API not loaded
+    if (!isLoaded) return [];
 
     return markers.map(marker => {
       const distance = mapCenter ? calculateDistance(mapCenter.lat, mapCenter.lng, marker.lat, marker.lng) : null;
-      const icon = getMarkerIcon(distance); // Safe to call now
+      const icon = getMarkerIcon(distance); 
       let zIndex = 1;
        if (distance !== null) {
         if (distance < 1) zIndex = 1003; 
@@ -101,14 +103,14 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
       if (selectedMarker && selectedMarker.id === marker.id) {
         zIndex = 1005; 
       }
-      return { ...marker, icon, zIndex };
+      return { ...marker, icon: icon, zIndex }; // icon can be undefined here
     });
-  }, [markers, mapCenter, selectedMarker, isLoaded]); // Added isLoaded
+  }, [markers, mapCenter, selectedMarker, isLoaded]); 
 
   if (loadError) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-muted border rounded-md p-4 text-center">
-        <p className="text-destructive">Error loading Google Maps: {loadError.message}</p>
+        <p className="text-destructive">Error loading Google Maps: {loadError.message}. Verifique a chave da API e as configurações no Google Cloud Console.</p>
       </div>
     );
   }
@@ -152,7 +154,7 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
               position={{ lat: marker.lat, lng: marker.lng }}
               onClick={() => handleMarkerClick(marker)}
               title={marker.title}
-              icon={marker.icon} // Icon is now safely created
+              icon={marker.icon || undefined} // Use default marker if custom icon is undefined
               zIndex={marker.zIndex}
             />
           )
