@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,22 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import type { Sweepstake, SweepstakeParticipant, SweepstakeWinner } from '@/types';
-import { mockSweepstakes, getMockSweepstakeById, mockAdvertiserUser } from '@/types';
-import { ArrowLeft, CalendarDays, CheckCircle, Coins, Gift, Loader2, Settings, Ticket, Trophy, Users, AlertTriangle, ExternalLink, Share2 } from 'lucide-react';
+import type { Sweepstake, SweepstakeParticipant, SweepstakeWinner, User as AppUser } from '@/types';
+import { 
+  getSweepstake as fetchSweepstakeDetails, 
+  getSweepstakeParticipants, 
+  getSweepstakeWinners, 
+  addWinnersToSweepstake,
+  updateSweepstake 
+} from '@/lib/firebase/services/sweepstakeService';
+import { auth } from '@/lib/firebase/firebaseConfig';
+import { getUserProfile } from '@/lib/firebase/services/userService';
+import { ArrowLeft, CalendarDays, CheckCircle, Coins, Gift, Loader2, Settings, Ticket, Trophy, Users, AlertTriangle, ExternalLink, Share2, FileText } from 'lucide-react';
 import Image from 'next/image';
 import { format, isPast, isFuture } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
+
 
 const SweepstakeStatusBadge: React.FC<{ status: Sweepstake['status'] }> = ({ status }) => {
   let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
@@ -52,76 +62,114 @@ export default function ManageSweepstakePage() {
   const sweepstakeId = params.id as string;
 
   const [sweepstake, setSweepstake] = useState<Sweepstake | null>(null);
+  const [participants, setParticipants] = useState<SweepstakeParticipant[]>([]);
+  const [winners, setWinners] = useState<SweepstakeWinner[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [drawnWinners, setDrawnWinners] = useState<SweepstakeWinner[]>([]);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
 
-  useEffect(() => {
+  const loadSweepstakeData = useCallback(async () => {
+    setIsLoading(true);
     if (sweepstakeId) {
-      // Simulate fetching sweepstake details
-      const foundSweepstake = getMockSweepstakeById(sweepstakeId);
-      if (foundSweepstake) {
-        setSweepstake(foundSweepstake);
-        if (foundSweepstake.isDrawn && foundSweepstake.winners) {
-          setDrawnWinners(foundSweepstake.winners);
+      const userAuth = auth.currentUser;
+      if (userAuth) {
+        const userProfile = await getUserProfile(userAuth.uid);
+        setCurrentUser(userProfile);
+        if (!(userProfile && userProfile.isAdvertiser)) {
+          toast({ variant: 'destructive', title: 'Acesso Negado' });
+          router.push('/dashboard/advertiser');
+          return;
         }
       } else {
-        toast({ variant: 'destructive', title: 'Sorteio não encontrado' });
-        router.push('/dashboard/advertiser'); // Redirect if not found
+        router.push('/login'); // Should not happen if layout protects route
+        return;
       }
-      setIsLoading(false);
+
+      const foundSweepstake = await fetchSweepstakeDetails(sweepstakeId);
+      if (foundSweepstake && foundSweepstake.createdBy === userAuth.uid) {
+        setSweepstake(foundSweepstake);
+        const fetchedParticipants = await getSweepstakeParticipants(sweepstakeId);
+        setParticipants(fetchedParticipants);
+        if (foundSweepstake.status === 'drawing_complete') {
+          const fetchedWinners = await getSweepstakeWinners(sweepstakeId);
+          setWinners(fetchedWinners);
+        }
+      } else {
+        toast({ variant: 'destructive', title: 'Sorteio não encontrado ou não pertence a você' });
+        router.push('/dashboard/advertiser'); 
+      }
     }
+    setIsLoading(false);
   }, [sweepstakeId, router, toast]);
+  
+  useEffect(() => {
+    loadSweepstakeData();
+  }, [loadSweepstakeData]);
+
 
   const handleDrawSweepstake = async () => {
-    if (!sweepstake || !sweepstake.participants || sweepstake.participants.length === 0) {
+    if (!sweepstake || participants.length === 0) {
       toast({ variant: 'destructive', title: 'Sem participantes', description: 'Não há participantes para realizar o sorteio.' });
       return;
     }
-    if (sweepstake.isDrawn) {
+    if (sweepstake.status === 'drawing_complete') {
       toast({ title: 'Sorteio já realizado', description: 'Este sorteio já foi finalizado.' });
       return;
     }
-    if (isFuture(new Date(sweepstake.endDate))) {
-        toast({ variant: 'destructive', title: 'Sorteio ainda ativo', description: 'Aguarde a data de término para realizar o sorteio.'});
+    const endDate = sweepstake.endDate instanceof Timestamp ? sweepstake.endDate.toDate() : new Date(sweepstake.endDate);
+    if (isFuture(endDate) && sweepstake.status !== 'ended') { // Allow draw if manually ended early
+        toast({ variant: 'destructive', title: 'Sorteio ainda ativo', description: 'Aguarde a data de término para realizar o sorteio, ou finalize-o manualmente.'});
         return;
     }
 
     setIsDrawing(true);
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate draw time
+    await new Promise(resolve => setTimeout(resolve, 1500)); 
 
-    const participantsList = [...sweepstake.participants];
-    const winners: SweepstakeWinner[] = [];
+    const participantsList = [...participants];
+    const drawnWinnersList: SweepstakeWinner[] = [];
     const numWinnersToDraw = Math.min(sweepstake.numberOfWinners, participantsList.length);
 
     for (let i = 0; i < numWinnersToDraw; i++) {
       if (participantsList.length === 0) break;
       const randomIndex = Math.floor(Math.random() * participantsList.length);
-      const winner = participantsList.splice(randomIndex, 1)[0];
-      winners.push({ userId: winner.id, userName: winner.name, avatarUrl: winner.avatarUrl, avatarHint: winner.avatarHint });
+      const winnerData = participantsList.splice(randomIndex, 1)[0];
+      drawnWinnersList.push({ userId: winnerData.id, userName: winnerData.name, avatarUrl: winnerData.avatarUrl, avatarHint: winnerData.avatarHint });
     }
     
-    setDrawnWinners(winners);
-    setSweepstake(prev => prev ? ({ ...prev, isDrawn: true, status: 'drawing_complete', winners, drawDate: new Date() }) : null);
-    setIsDrawing(false);
-
-    toast({
-      title: 'Sorteio Realizado!',
-      description: `${winners.length} ganhador(es) selecionado(s).`,
-      duration: 7000,
-    });
+    try {
+      await addWinnersToSweepstake(sweepstake.id!, drawnWinnersList);
+      setWinners(drawnWinnersList);
+      setSweepstake(prev => prev ? ({ ...prev, status: 'drawing_complete', isDrawn: true, drawDate: Timestamp.now() }) : null);
+      toast({ title: 'Sorteio Realizado!', description: `${drawnWinnersList.length} ganhador(es) selecionado(s).`, duration: 7000 });
+    } catch(error) {
+        console.error("Error drawing sweepstake: ", error);
+        toast({variant: 'destructive', title: "Erro ao sortear", description: "Tente novamente."});
+    } finally {
+        setIsDrawing(false);
+    }
   };
   
   const handleShareResults = () => {
     // Placeholder for sharing functionality
     toast({ title: "Compartilhar Resultados", description: "Funcionalidade de compartilhamento em breve."});
   }
+  
+  const handleEndSweepstakeEarly = async () => {
+    if (!sweepstake || sweepstake.status !== 'active') return;
+    try {
+        await updateSweepstake(sweepstake.id!, { status: 'ended', endDate: Timestamp.now() });
+        setSweepstake(prev => prev ? {...prev, status: 'ended', endDate: Timestamp.now()} : null);
+        toast({title: "Sorteio Encerrado", description: "O sorteio foi encerrado manualmente."});
+    } catch (error) {
+        toast({title: "Erro", description: "Não foi possível encerrar o sorteio.", variant: "destructive"});
+    }
+  }
 
-  if (isLoading) {
+
+  if (isLoading || !currentUser) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-3 text-muted-foreground">Carregando detalhes do sorteio...</p>
       </div>
     );
   }
@@ -137,7 +185,16 @@ export default function ManageSweepstakePage() {
     );
   }
   
-  const canDraw = !sweepstake.isDrawn && isPast(new Date(sweepstake.endDate));
+  const endDate = sweepstake.endDate instanceof Timestamp ? sweepstake.endDate.toDate() : new Date(sweepstake.endDate);
+  const canDraw = (sweepstake.status === 'ended' || isPast(endDate)) && sweepstake.status !== 'drawing_complete' && sweepstake.status !== 'upcoming' && sweepstake.status !== 'cancelled';
+  const canEndEarly = sweepstake.status === 'active' && isFuture(endDate);
+
+  const formattedDate = (dateInput: Date | Timestamp | undefined) => {
+    if (!dateInput) return "Data Indisponível";
+    const date = dateInput instanceof Timestamp ? dateInput.toDate() : new Date(dateInput);
+    return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+  };
+
 
   return (
     <div className="space-y-8 p-4 md:p-6 lg:p-8 selection:bg-primary selection:text-primary-foreground">
@@ -157,7 +214,6 @@ export default function ManageSweepstakePage() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Coluna de Detalhes e Ações */}
         <div className="lg:col-span-1 space-y-6">
           <Card className="shadow-lg">
             <CardHeader>
@@ -177,10 +233,10 @@ export default function ManageSweepstakePage() {
               <CardTitle className="flex items-center gap-2"><CalendarDays size={20} className="text-primary" /> Datas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
-              <p><strong>Início:</strong> {format(new Date(sweepstake.startDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-              <p><strong>Término (Sorteio):</strong> {format(new Date(sweepstake.endDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-              {sweepstake.isDrawn && sweepstake.drawDate && (
-                <p className="text-green-600 font-semibold"><strong>Sorteado em:</strong> {format(new Date(sweepstake.drawDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+              <p><strong>Início:</strong> {formattedDate(sweepstake.startDate)}</p>
+              <p><strong>Término (Sorteio):</strong> {formattedDate(sweepstake.endDate)}</p>
+              {sweepstake.status === 'drawing_complete' && sweepstake.drawDate && (
+                <p className="text-green-600 font-semibold"><strong>Sorteado em:</strong> {formattedDate(sweepstake.drawDate)}</p>
               )}
             </CardContent>
           </Card>
@@ -189,32 +245,27 @@ export default function ManageSweepstakePage() {
                 <CardTitle className="flex items-center gap-2"><Settings size={20} className="text-primary" /> Ações do Sorteio</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                 {sweepstake.status === 'active' && isFuture(new Date(sweepstake.endDate)) && (
-                    <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-md text-sm text-blue-700">
-                        Este sorteio está ativo e aceitando participantes.
-                    </div>
-                )}
-                {sweepstake.status === 'upcoming' && (
-                     <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-md text-sm text-yellow-700">
-                        Este sorteio começará em {format(new Date(sweepstake.startDate), "dd/MM/yyyy", { locale: ptBR })}.
-                    </div>
+                 {sweepstake.status === 'active' && isFuture(endDate) && (
+                    <Button variant="outline" className="w-full border-orange-500 text-orange-600 hover:bg-orange-500/10" onClick={handleEndSweepstakeEarly}>
+                       <CheckCircle size={16} className="mr-2"/> Encerrar Sorteio Manualmente
+                    </Button>
                 )}
                 
                 <Button 
                   onClick={handleDrawSweepstake} 
-                  disabled={!canDraw || isDrawing || sweepstake.isDrawn}
+                  disabled={!canDraw || isDrawing || sweepstake.status === 'drawing_complete'}
                   className="w-full bg-primary hover:bg-primary/90"
                 >
                   {isDrawing && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                  {isDrawing ? 'Sorteando...' : sweepstake.isDrawn ? 'Sorteio Realizado' : 'Realizar Sorteio Agora'}
+                  {isDrawing ? 'Sorteando...' : sweepstake.status === 'drawing_complete' ? 'Sorteio Realizado' : 'Realizar Sorteio Agora'}
                 </Button>
-                {!canDraw && !sweepstake.isDrawn && isFuture(new Date(sweepstake.endDate)) && (
-                    <p className="text-xs text-muted-foreground text-center">O sorteio poderá ser realizado após {format(new Date(sweepstake.endDate), "dd/MM/yyyy HH:mm", { locale: ptBR })}.</p>
+                {!canDraw && sweepstake.status === 'active' && isFuture(endDate) && (
+                    <p className="text-xs text-muted-foreground text-center">O sorteio poderá ser realizado após {formattedDate(endDate)}.</p>
                 )}
-                 <Button variant="outline" className="w-full" onClick={() => alert("Editar detalhes do sorteio (funcionalidade em breve)")}>
+                <Button variant="outline" className="w-full" onClick={() => router.push(`/dashboard/advertiser/create-sweepstake?editId=${sweepstake.id}`)}>
                     Editar Detalhes
                 </Button>
-                {sweepstake.isDrawn && (
+                {sweepstake.status === 'drawing_complete' && (
                     <Button variant="secondary" className="w-full" onClick={handleShareResults}>
                        <Share2 size={16} className="mr-2"/> Compartilhar Resultados
                     </Button>
@@ -223,9 +274,8 @@ export default function ManageSweepstakePage() {
             </Card>
         </div>
 
-        {/* Coluna de Participantes e Ganhadores */}
         <div className="lg:col-span-2 space-y-6">
-          {drawnWinners.length > 0 && (
+          {winners.length > 0 && (
             <Card className="shadow-xl border-2 border-green-500 bg-green-500/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl text-green-700"><Trophy size={24} /> Ganhador(es) do Sorteio!</CardTitle>
@@ -233,7 +283,7 @@ export default function ManageSweepstakePage() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {drawnWinners.map(winner => (
+                  {winners.map(winner => (
                     <li key={winner.userId} className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg">
                       <Avatar className="h-12 w-12 border-2 border-green-400">
                         <AvatarImage src={winner.avatarUrl} alt={winner.userName} data-ai-hint={winner.avatarHint || 'person avatar'}/>
@@ -243,7 +293,7 @@ export default function ManageSweepstakePage() {
                         <p className="font-bold text-lg text-green-800">{winner.userName}</p>
                         <p className="text-xs text-green-600">ID: {winner.userId}</p>
                       </div>
-                       <Button size="sm" variant="ghost" className="ml-auto text-green-700 hover:bg-green-500/20">
+                       <Button size="sm" variant="ghost" className="ml-auto text-green-700 hover:bg-green-500/20" onClick={() => alert(`Contactar ${winner.userName}`)}>
                           Contactar <ExternalLink size={14} className="ml-1.5"/>
                        </Button>
                     </li>
@@ -255,14 +305,14 @@ export default function ManageSweepstakePage() {
 
           <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Users size={20} className="text-primary" /> Participantes Inscritos ({sweepstake.participants?.length || 0})</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Users size={20} className="text-primary" /> Participantes Inscritos ({participants.length || 0})</CardTitle>
               <CardDescription>
                 {sweepstake.maxParticipants ? `Máximo de ${sweepstake.maxParticipants} participantes.` : 'Participação ilimitada.'}
                 {sweepstake.pointsToEnter > 0 && ` Custo: ${sweepstake.pointsToEnter} pontos por entrada.`}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {sweepstake.participants && sweepstake.participants.length > 0 ? (
+              {participants.length > 0 ? (
                 <div className="max-h-[400px] overflow-y-auto pr-2">
                   <Table>
                     <TableHeader>
@@ -274,7 +324,7 @@ export default function ManageSweepstakePage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sweepstake.participants.map(participant => (
+                      {participants.map(participant => (
                         <TableRow key={participant.id}>
                           <TableCell className="hidden sm:table-cell">
                             <Avatar className="h-8 w-8">
@@ -284,7 +334,7 @@ export default function ManageSweepstakePage() {
                           </TableCell>
                           <TableCell className="font-medium text-sm max-w-[150px] truncate">{participant.name}</TableCell>
                           <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-                            {format(new Date(participant.entryDate), 'dd/MM/yy HH:mm', { locale: ptBR })}
+                            {formattedDate(participant.entryDate)}
                           </TableCell>
                           <TableCell className="text-right">
                             <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => alert(`Ver perfil de ${participant.name}`)}>
@@ -300,9 +350,9 @@ export default function ManageSweepstakePage() {
                 <p className="text-center text-muted-foreground py-6">Nenhum participante inscrito até o momento.</p>
               )}
             </CardContent>
-             {sweepstake.participants && sweepstake.participants.length > 0 && (
+             {participants.length > 0 && (
                 <CardFooter>
-                    <p className="text-xs text-muted-foreground">Total de {sweepstake.participants.length} entradas no sorteio.</p>
+                    <p className="text-xs text-muted-foreground">Total de {participants.length} entradas no sorteio.</p>
                 </CardFooter>
             )}
           </Card>
@@ -322,6 +372,3 @@ export default function ManageSweepstakePage() {
     </div>
   );
 }
-
-
-    

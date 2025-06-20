@@ -1,0 +1,84 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users: Publicly readable for profiles, only owner can write/update.
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if request.auth != null; // Anyone authenticated can create a user profile (usually upon signup)
+      allow update: if request.auth != null && request.auth.uid == userId; // Only the user can update their own profile
+      allow delete: if false; // Generally, don't allow client-side deletion of user profiles
+    }
+
+    // Offers: Publicly readable. Only authenticated advertisers can create/update their own offers.
+    match /offers/{offerId} {
+      allow read: if true;
+      allow create: if request.auth != null 
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdvertiser == true
+                    && request.resource.data.merchantId == request.auth.uid;
+      allow update: if request.auth != null 
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdvertiser == true
+                    && resource.data.merchantId == request.auth.uid; // Ensure only the owner merchant can update
+      allow delete: if request.auth != null 
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdvertiser == true
+                    && resource.data.merchantId == request.auth.uid;
+
+      // Comments subcollection for offers
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid; // Authenticated users can comment, ensure userId matches
+        allow update: if request.auth != null && request.resource.data.userId == request.auth.uid; // Owner of comment can update
+        allow delete: if request.auth != null && request.resource.data.userId == request.auth.uid; // Owner of comment can delete
+      }
+    }
+
+    // Sweepstakes: Publicly readable. Only authenticated advertisers can create/update their own sweepstakes.
+    match /sweepstakes/{sweepstakeId} {
+      allow read: if true;
+      allow create: if request.auth != null 
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdvertiser == true
+                    && request.resource.data.createdBy == request.auth.uid;
+      allow update: if request.auth != null 
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdvertiser == true
+                    && resource.data.createdBy == request.auth.uid; // Only the creator advertiser can update (e.g., draw winners)
+      allow delete: if request.auth != null 
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdvertiser == true
+                    && resource.data.createdBy == request.auth.uid;
+
+      // Participants subcollection for sweepstakes
+      match /participants/{participantId} {
+        allow read: if resource.data.userId == request.auth.uid || get(/databases/$(database)/documents/sweepstakes/$(sweepstakeId)).data.createdBy == request.auth.uid; // Participant or sweepstake owner can read
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid; // User can add themselves as participant
+        allow delete: if false; // Participants usually cannot remove themselves or others directly
+      }
+      
+      // Winners subcollection for sweepstakes
+      match /winners/{winnerId} {
+        allow read: if true; // Winners are public
+        allow create: if request.auth != null 
+                      && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdvertiser == true
+                      && get(/databases/$(database)/documents/sweepstakes/$(sweepstakeId)).data.createdBy == request.auth.uid; // Only sweepstake owner can add winners
+        allow delete: if false; 
+      }
+    }
+    
+    // CheckIns: Users can create their own check-ins. Merchants might need read access for their offers.
+    match /checkIns/{checkInId} {
+      allow read: if request.auth != null && (request.auth.uid == resource.data.userId || request.auth.uid == resource.data.merchantId);
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // UserInteractions (for favorites, follows etc. - if these become separate collections)
+    // Example for user favorites as a subcollection under users:
+    // match /users/{userId}/favoriteOffers/{offerId} {
+    //   allow read, write: if request.auth != null && request.auth.uid == userId;
+    // }
+    // match /users/{userId}/followedMerchants/{merchantId} {
+    //   allow read, write: if request.auth != null && request.auth.uid == userId;
+    // }
+  }
+}

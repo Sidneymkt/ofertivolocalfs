@@ -18,20 +18,25 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from "@/hooks/use-toast";
-import { categories, offerTypes, type OfferTypeId, type Offer, mockAdvertiserUser } from '@/types';
+import { categories, offerTypes, type OfferTypeId, type Offer, type User as AppUser, serverTimestamp } from '@/types';
 import { 
   CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIconLucide, 
   AlertCircle, CheckCircle, Info, QrCode as QrCodeIconLucide, Smartphone, UserCheck, CheckCheck as CheckCheckIcon, Package as PackageIcon, LocateFixed, Building as BuildingIcon,
   Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon, FileText, Star as StarIcon, ArrowLeft
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { generateOfferContent, type GenerateOfferContentInput } from '@/ai/flows/generate-offer-content-flow';
 import { generateOfferTerms, type GenerateOfferTermsInput } from '@/ai/flows/generate-offer-terms-flow';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { auth } from '@/lib/firebase/firebaseConfig';
+import { getUserProfile } from '@/lib/firebase/services/userService';
+import { createOffer, getOffer, updateOffer } from '@/lib/firebase/services/offerService';
+import { Timestamp } from 'firebase/firestore';
+
 
 const DynamicClientQRCode = dynamic(() => import('@/components/common/ClientQRCode'), {
   ssr: false,
@@ -50,7 +55,7 @@ const offerFormSchemaBase = z.object({
   ),
   title: z.string().min(5, "O título deve ter pelo menos 5 caracteres.").max(100, "Título muito longo."),
   description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres.").max(380, "Descrição não pode exceder 380 caracteres."),
-  images: z.custom<File[]>().array().min(1, "Pelo menos uma imagem é obrigatória.").max(6, "Máximo de 6 imagens.").optional(),
+  images: z.custom<File[]>().array().max(6, "Máximo de 6 imagens.").optional(), // Image required only on create
   category: z.string({ required_error: "Categoria é obrigatória." }),
   validityStartDate: z.date({ required_error: "Data de início é obrigatória." }).nullable(),
   validityEndDate: z.date({ required_error: "Data de fim é obrigatória." }).nullable(),
@@ -69,7 +74,7 @@ const offerFormSchemaBase = z.object({
   ),
   discountedPrice: z.preprocess(
     (val) => (String(val).trim() === "" ? undefined : parseFloat(String(val).replace(',', '.'))), 
-    z.number({ invalid_type_error: "Deve ser um número" }).positive("Deve ser um valor positivo").optional() 
+    z.number({ invalid_type_error: "Deve ser um número" }).positive("Deve ser um valor positivo") // Required if originalPrice is set
   ),
   
   quantity: z.preprocess(
@@ -86,7 +91,7 @@ const offerFormSchemaBase = z.object({
     (val) => (String(val).trim() === "" ? 0 : parseInt(String(val), 10)),
     z.number().int().min(0).optional().default(0)
   ),
-  pointsForRating: z.preprocess( // Renamed from pointsForComment
+  pointsForRating: z.preprocess(
     (val) => (String(val).trim() === "" ? 0 : parseInt(String(val), 10)),
     z.number().int().min(0).optional().default(0)
   ),
@@ -107,11 +112,8 @@ const offerFormSchemaBase = z.object({
 });
 
 const offerFormSchema = offerFormSchemaBase.refine(data => {
-  if (data.discountedPrice === undefined && data.discountType === 'finalValue' && data.originalPrice !== undefined) {
-    return false; 
-  }
-  if (data.discountType === 'finalValue' && data.discountedPrice === undefined && data.originalPrice !== undefined) {
-     return false;
+  if (data.originalPrice && data.discountedPrice === undefined && data.discountType === 'finalValue') {
+     return false; // Discounted price must be set if original price and finalValue type
   }
   return true;
 }, {
@@ -126,7 +128,7 @@ const offerFormSchema = offerFormSchemaBase.refine(data => {
   message: "Preço promocional deve ser menor que o preço original.",
   path: ["discountedPrice"],
 }).refine(data => {
-  if (!data.validityStartDate || !data.validityEndDate) return true; // Skip if dates are not set
+  if (!data.validityStartDate || !data.validityEndDate) return true;
   return data.validityEndDate >= data.validityStartDate;
 }, {
   message: "Data de fim deve ser igual ou posterior à data de início.",
@@ -173,15 +175,19 @@ const getIconForOfferType = (typeId: OfferTypeId | undefined): React.ElementType
 export default function CreateOfferPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editOfferId = searchParams.get('editId');
+
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]); // For new uploads
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]); // For edit mode
+
   const [isLoadingAIContent, setIsLoadingAIContent] = useState(false);
   const [isLoadingAITerms, setIsLoadingAITerms] = useState(false);
   const [isClientRender, setIsClientRender] = useState(false);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
 
-  useEffect(() => {
-    setIsClientRender(true);
-  }, []);
 
   const form = useForm<OfferFormValues>({
     resolver: zodResolver(offerFormSchema),
@@ -191,20 +197,20 @@ export default function CreateOfferPage() {
       description: '',
       images: [],
       category: undefined,
-      validityStartDate: undefined, // Initialized as undefined
-      validityEndDate: undefined,   // Initialized as undefined
+      validityStartDate: new Date(),
+      validityEndDate: new Date(Date.now() + 7 * 86400000),
       terms: '',
       visibility: "normal",
       tags: '',
       discountType: "finalValue",
       originalPrice: undefined,
       discountPercentage: undefined,
-      discountedPrice: undefined,
+      discountedPrice: undefined, // Will be set based on originalPrice or discountPercentage
       quantity: undefined,
       isUnlimited: false,
       pointsForCheckin: 0,
       pointsForShare: 0,
-      pointsForRating: 0, // Renamed from pointsForComment
+      pointsForRating: 0,
       isRedeemableWithPoints: false,
       isPresentialOnly: false,
       timeLimit: '',
@@ -218,20 +224,42 @@ export default function CreateOfferPage() {
     },
   });
 
-  const { watch, setValue, getValues, trigger, control } = form;
+  const { watch, setValue, getValues, trigger, control, reset } = form;
 
   useEffect(() => {
-    // Set default dates only on the client after mount to avoid hydration mismatch
-    const today = new Date();
-    const sevenDaysLater = new Date(Date.now() + 7 * 86400000);
-
-    if (getValues("validityStartDate") === undefined) { // Check if still undefined (not set by user)
-      setValue("validityStartDate", today, { shouldValidate: true });
-    }
-    if (getValues("validityEndDate") === undefined) { // Check if still undefined
-      setValue("validityEndDate", sevenDaysLater, { shouldValidate: true });
-    }
-  }, [setValue, getValues]);
+    setIsClientRender(true);
+    const unsubscribe = auth.onAuthStateChanged(async (userAuth) => {
+      if (userAuth) {
+        const userProfile = await getUserProfile(userAuth.uid);
+        if (userProfile && userProfile.isAdvertiser) {
+          setCurrentUser(userProfile);
+          if (editOfferId) {
+            // Edit mode
+            const offerToEdit = await getOffer(editOfferId);
+            if (offerToEdit && offerToEdit.merchantId === userAuth.uid) {
+              reset({
+                ...offerToEdit,
+                validityStartDate: offerToEdit.validityStartDate instanceof Timestamp ? offerToEdit.validityStartDate.toDate() : new Date(offerToEdit.validityStartDate),
+                validityEndDate: offerToEdit.validityEndDate instanceof Timestamp ? offerToEdit.validityEndDate.toDate() : new Date(offerToEdit.validityEndDate),
+                images: [], // Files are handled separately
+              });
+              setExistingImageUrls(offerToEdit.galleryImages || (offerToEdit.imageUrl ? [offerToEdit.imageUrl] : []));
+            } else {
+              toast({ title: "Erro", description: "Oferta não encontrada ou não pertence a você.", variant: "destructive" });
+              router.push('/dashboard/advertiser');
+            }
+          }
+        } else {
+          toast({ title: "Acesso Negado", description: "Você precisa ser um anunciante para acessar esta página.", variant: "destructive" });
+          router.push('/');
+        }
+      } else {
+        router.push('/login');
+      }
+      setPageLoading(false);
+    });
+     return () => unsubscribe();
+  }, [editOfferId, reset, router, toast]);
 
 
   const isUnlimited = watch("isUnlimited");
@@ -288,18 +316,20 @@ export default function CreateOfferPage() {
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
-      const newFiles = filesArray.slice(0, 6 - selectedFiles.length);
+      // Allow up to 6 images total (new + existing for edit mode)
+      const currentTotalImages = (editOfferId ? existingImageUrls.length : 0) + selectedFiles.length;
+      const newFiles = filesArray.slice(0, 6 - currentTotalImages);
       
       const newSelectedFiles = [...selectedFiles, ...newFiles];
       setSelectedFiles(newSelectedFiles);
-      form.setValue("images", newSelectedFiles, { shouldValidate: true });
+      form.setValue("images", newSelectedFiles, { shouldValidate: true }); // Update form state if RHF needs the File[]
 
       const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setImagePreviews(prev => [...prev, ...newPreviews].slice(0, 6));
+      setImagePreviews(prev => [...prev, ...newPreviews].slice(0, 6 - (editOfferId ? existingImageUrls.length : 0) ));
     }
   };
 
-  const removeImage = (index: number) => {
+  const removeNewImagePreview = (index: number) => {
     const newSelectedFiles = selectedFiles.filter((_, i) => i !== index);
     setSelectedFiles(newSelectedFiles);
     form.setValue("images", newSelectedFiles, { shouldValidate: true });
@@ -309,59 +339,70 @@ export default function CreateOfferPage() {
     URL.revokeObjectURL(imagePreviews[index]); 
   };
 
-  const onSubmit: SubmitHandler<OfferFormValues> = (data) => {
-    // Ensure dates are not null before creating the offer object
+  const removeExistingImage = (index: number) => {
+    const newExistingImageUrls = existingImageUrls.filter((_, i) => i !== index);
+    setExistingImageUrls(newExistingImageUrls);
+    // You might need to mark this image for deletion on the backend if it's an edit.
+  };
+
+
+  const onSubmit: SubmitHandler<OfferFormValues> = async (data) => {
+    if (!currentUser || !currentUser.businessName || !currentUser.id) {
+      toast({ title: "Erro", description: "Anunciante não identificado. Faça login novamente.", variant: "destructive" });
+      return;
+    }
     if (!data.validityStartDate || !data.validityEndDate) {
-        toast({
-            variant: "destructive",
-            title: "Datas Inválidas",
-            description: "As datas de início e fim da validade são obrigatórias.",
-        });
+        toast({ variant: "destructive", title: "Datas Inválidas", description: "As datas de início e fim da validade são obrigatórias." });
         return;
     }
-
-    const imageFileNames = selectedFiles.map(file => file.name);
-    const galleryImageHints = imageFileNames.map((_, index) => `${data.title.split(" ")[0]} ${data.category}`.toLowerCase().slice(0,20)); 
-
-    const newOffer: Offer = {
-      id: `offer-${Date.now()}-${Math.random().toString(36).substring(2,7)}`, 
-      ...data,
-      validityStartDate: data.validityStartDate, // Already a Date object
-      validityEndDate: data.validityEndDate,     // Already a Date object
-      status: 'awaiting_approval', 
-      createdBy: mockAdvertiserUser.advertiserProfileId || 'unknown_advertiser',
-      merchantId: mockAdvertiserUser.advertiserProfileId || 'unknown_advertiser',
-      merchantName: mockAdvertiserUser.businessName || 'Nome do Anunciante',
-      merchantIsVerified: mockAdvertiserUser.isProfileComplete, 
-      imageUrl: imagePreviews[0] || 'https://placehold.co/600x300.png?text=Oferta', 
-      'data-ai-hint': `${data.title.split(" ")[0]} ${data.category}`.toLowerCase().slice(0,20),
-      galleryImages: imagePreviews,
-      galleryImageHints: galleryImageHints,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      originalPrice: data.originalPrice,
-      discountPercentage: data.discountPercentage,
-      discountedPrice: data.discountedPrice || 0, 
-      timeLimit: data.timeLimit,
-      isForNewUsersOnly: data.isForNewUsersOnly,
-      minCheckins: data.minCheckins,
-      checkinReward: data.checkinReward,
-      comboItem1: data.comboItem1,
-      comboItem2: data.comboItem2,
-      comboItem3: data.comboItem3,
-      targetNeighborhood: data.targetNeighborhood,
-      pointsAwarded: (data.pointsForCheckin || 0) + (data.pointsForShare || 0) + (data.pointsForRating || 0) || 5, 
-      pointsForRating: data.pointsForRating,
-    };
-
-    console.log('Simulating saving offer to Firestore:', newOffer);
+    // TODO: Implement actual image upload to Firebase Storage here
+    // For now, will use placeholders or existing URLs
+    let finalImageUrls: string[] = [...existingImageUrls];
+    if (selectedFiles.length > 0) {
+      // Simulate upload and get URLs - replace with actual upload logic
+      const uploadedUrls = selectedFiles.map(file => `https://placehold.co/800x450.png?text=${file.name.substring(0,10)}`);
+      finalImageUrls = [...finalImageUrls, ...uploadedUrls].slice(0, 6);
+    }
     
-    toast({
-      title: "Oferta Enviada para Aprovação!",
-      description: `Sua oferta "${newOffer.title}" foi cadastrada e está aguardando moderação.`,
-      variant: "default",
-      duration: 7000,
-    });
+    if (finalImageUrls.length === 0 && !editOfferId) { // Require image on create
+       form.setError("images", { type: "manual", message: "Pelo menos uma imagem é obrigatória." });
+       toast({ variant: "destructive", title: "Imagem faltando", description: "Adicione ao menos uma imagem para a oferta."});
+       return;
+    }
+
+
+    const offerPayload: Omit<Offer, 'id' | 'createdAt' | 'updatedAt' | 'comments'> = {
+      ...data,
+      validityStartDate: Timestamp.fromDate(data.validityStartDate),
+      validityEndDate: Timestamp.fromDate(data.validityEndDate),
+      merchantId: currentUser.id,
+      merchantName: currentUser.businessName,
+      merchantIsVerified: currentUser.advertiserStatus === 'active', // Example logic
+      imageUrl: finalImageUrls[0] || 'https://placehold.co/600x300.png?text=Oferta', 
+      'data-ai-hint': `${data.title.split(" ")[0]} ${data.category}`.toLowerCase().slice(0,20),
+      galleryImages: finalImageUrls,
+      galleryImageHints: finalImageUrls.map(() => `${data.title.split(" ")[0]} ${data.category}`.toLowerCase().slice(0,20)),
+      createdBy: currentUser.id,
+      // originalPrice, discountedPrice, discountPercentage are already in 'data'
+      status: 'pending_approval', // Default for new/edited offers
+      pointsAwarded: (data.pointsForCheckin || 0) + (data.pointsForShare || 0) + (data.pointsForRating || 0) || 5,
+    };
+    
+    form.clearErrors("images"); // Clear image error if it was set
+
+    try {
+      if (editOfferId) {
+        await updateOffer(editOfferId, offerPayload);
+        toast({ title: "Oferta Atualizada!", description: `Sua oferta "${data.title}" foi atualizada e está aguardando moderação.` });
+      } else {
+        await createOffer(offerPayload);
+        toast({ title: "Oferta Criada!", description: `Sua oferta "${data.title}" foi cadastrada e está aguardando moderação.` });
+      }
+      router.push('/dashboard/advertiser'); // Redirect to dashboard or offer list
+    } catch (error: any) {
+      console.error("Error saving offer:", error);
+      toast({ variant: "destructive", title: "Erro ao Salvar Oferta", description: error.message || "Não foi possível salvar a oferta." });
+    }
   };
 
   const handleGenerateContentWithAI = async () => {
@@ -469,6 +510,7 @@ export default function CreateOfferPage() {
 
   const handleSaveDraft = () => {
     const data = form.getValues();
+    // TODO: Implement actual draft saving logic
     console.log('Saving draft:', data);
     toast({
       title: "Rascunho Salvo (Simulado)!",
@@ -617,6 +659,15 @@ export default function CreateOfferPage() {
     }
   };
 
+  if (pageLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+
   return (
     <div className="space-y-8 p-4 md:p-6 lg:p-8 selection:bg-primary selection:text-primary-foreground">
       <div className="flex items-center gap-4 mb-8">
@@ -626,9 +677,11 @@ export default function CreateOfferPage() {
         </Button>
         <header className="flex-grow">
           <h1 className="text-2xl md:text-3xl font-headline font-bold text-foreground">
-            Criar Nova Oferta
+             {editOfferId ? 'Editar Oferta' : 'Criar Nova Oferta'}
           </h1>
-          <p className="text-muted-foreground">Preencha os detalhes abaixo para cadastrar sua promoção.</p>
+          <p className="text-muted-foreground">
+            {editOfferId ? 'Modifique os detalhes da sua oferta.' : 'Preencha os detalhes abaixo para cadastrar sua promoção.'}
+          </p>
         </header>
       </div>
 
@@ -648,7 +701,7 @@ export default function CreateOfferPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel htmlFor="offerType">Selecione o Tipo de Oferta</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger id="offerType">
                           <div className="flex items-center gap-2">
@@ -741,10 +794,10 @@ export default function CreateOfferPage() {
             <CardContent>
               <FormField
                 control={form.control}
-                name="images"
+                name="images" // This field in RHF might just be for triggering validation
                 render={({ field }) => ( 
                   <FormItem>
-                    <FormLabel htmlFor="images-upload" className={cn("flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/70", imagePreviews.length >= 6 && "cursor-not-allowed opacity-60")}>
+                    <FormLabel htmlFor="images-upload" className={cn("flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/70", (existingImageUrls.length + imagePreviews.length) >= 6 && "cursor-not-allowed opacity-60")}>
                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <UploadCloud className="w-10 h-10 mb-3 text-muted-foreground" />
                           <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Clique para enviar</span> ou arraste e solte</p>
@@ -758,28 +811,29 @@ export default function CreateOfferPage() {
                           multiple 
                           accept="image/png, image/jpeg, image/webp"
                           onChange={handleImageChange}
-                          disabled={imagePreviews.length >= 6}
+                          disabled={(existingImageUrls.length + imagePreviews.length) >= 6}
                         />
                       </FormControl>
                     </FormLabel>
-                    <FormMessage />
+                    <FormMessage /> 
                   </FormItem>
                 )}
               />
-              {imagePreviews.length > 0 && (
+              {(existingImageUrls.length > 0 || imagePreviews.length > 0) && (
                 <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {existingImageUrls.map((url, index) => (
+                    <div key={`existing-${index}`} className="relative aspect-video group"> 
+                      <Image src={url} alt={`Imagem existente ${index + 1}`} layout="fill" objectFit="cover" className="rounded-md" />
+                      <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeExistingImage(index)}>
+                        <X size={14} /> <span className="sr-only">Remover imagem existente</span>
+                      </Button>
+                    </div>
+                  ))}
                   {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-video group"> 
+                    <div key={`new-${index}`} className="relative aspect-video group"> 
                       <Image src={preview} alt={`Preview ${index + 1}`} layout="fill" objectFit="cover" className="rounded-md" />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => removeImage(index)}
-                      >
-                        <X size={14} />
-                        <span className="sr-only">Remover imagem</span>
+                      <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeNewImagePreview(index)}>
+                        <X size={14} /> <span className="sr-only">Remover nova imagem</span>
                       </Button>
                     </div>
                   ))}
@@ -810,7 +864,7 @@ export default function CreateOfferPage() {
                             setValue("discountPercentage", undefined, {shouldValidate: true}); 
                           }
                         }}
-                        defaultValue={field.value} className="flex flex-col sm:flex-row gap-4 sm:gap-8">
+                        value={field.value} className="flex flex-col sm:flex-row gap-4 sm:gap-8">
                         <FormItem className="flex items-center space-x-3 space-y-0">
                           <FormControl><RadioGroupItem value="finalValue" id="finalValue" /></FormControl>
                           <FormLabel htmlFor="finalValue" className="font-normal">Definir Preço Final Promocional</FormLabel>
@@ -1002,7 +1056,7 @@ export default function CreateOfferPage() {
                 <FormField control={form.control} name="category" render={({ field }) => (
                     <FormItem>
                         <FormLabel htmlFor="category">Categoria da Oferta</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger id="category"><SelectValue placeholder="Selecione uma categoria" /></SelectTrigger></FormControl>
                         <SelectContent>{categories.map(cat => (<SelectItem key={cat.name} value={cat.name}>{cat.name}</SelectItem>))}</SelectContent>
                         </Select>
@@ -1014,7 +1068,7 @@ export default function CreateOfferPage() {
                     <FormItem className="space-y-3">
                       <FormLabel>Visibilidade da Oferta</FormLabel>
                       <FormControl>
-                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex flex-col space-y-1">
+                        <RadioGroup onValueChange={field.onChange} value={field.value} className="flex flex-col space-y-1">
                           <FormItem className="flex items-center space-x-3 space-y-0">
                             <FormControl><RadioGroupItem value="normal" id="vis-normal"/></FormControl>
                             <FormLabel htmlFor="vis-normal" className="font-normal">Pública (Normal)</FormLabel>
@@ -1109,7 +1163,7 @@ export default function CreateOfferPage() {
                         <Save className="mr-2 h-4 w-4" /> Salvar como Rascunho
                     </Button>
                     <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting || isLoadingAIContent || isLoadingAITerms}>
-                        {form.formState.isSubmitting ? <><SpinnerIcon className="mr-2 h-4 w-4 animate-spin" /> Publicando...</> : <><Send className="mr-2 h-4 w-4" /> Publicar Oferta</>}
+                        {form.formState.isSubmitting ? <><SpinnerIcon className="mr-2 h-4 w-4 animate-spin" /> {editOfferId ? 'Atualizando...' : 'Publicando...'}</> : <><Send className="mr-2 h-4 w-4" /> {editOfferId ? 'Atualizar Oferta' : 'Publicar Oferta'}</>}
                     </Button>
                 </div>
                  <p className="text-xs text-muted-foreground text-center">Ao publicar, sua oferta poderá passar por uma breve moderação.</p>
@@ -1121,4 +1175,3 @@ export default function CreateOfferPage() {
     </div>
   );
 }
-

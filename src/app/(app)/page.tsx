@@ -3,32 +3,61 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import OfferList from '@/components/offers/OfferList';
-import { mockOffers, categories, mockFeaturedMerchants, type Offer } from '@/types';
+import { categories } from '@/types'; // Keep static categories
+import type { Offer, Category, User } from '@/types'; // Import User for featured merchants
 import FeaturedOffersList from '@/components/offers/FeaturedOffersList';
 import CategoryPills from '@/components/offers/CategoryPills';
 import FeaturedMerchantsList from '@/components/merchants/FeaturedMerchantsList';
 import { Input } from '@/components/ui/input';
-import { Search as SearchIcon, MapPin } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Loader2 } from 'lucide-react';
 import RecommendedOffersList from '@/components/offers/RecommendedOffersList';
-// Removed GoogleMapDisplay import and related hooks/state from here
+import { getAllOffers } from '@/lib/firebase/services/offerService';
+import { getAllMerchants } from '@/lib/firebase/services/userService'; // Assuming this service exists or will be created
 
 export default function FeedPage() {
+  const [allOffers, setAllOffers] = useState<Offer[]>([]);
+  const [featuredMerchants, setFeaturedMerchants] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
-  // Map related state and useEffect removed from here
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const offers = await getAllOffers();
+        setAllOffers(offers);
+        
+        // Simulate fetching featured merchants (e.g., first 5 advertisers)
+        // In a real app, this might be a specific query or curated list
+        const merchants = await getAllMerchants();
+        setFeaturedMerchants(merchants.slice(0,10).map(m => ({
+          id: m.id,
+          name: m.businessName || m.name,
+          logoUrl: m.businessLogoUrl || 'https://placehold.co/100x100.png?text=Logo',
+          'data-ai-hint': m.businessLogoHint || 'store logo',
+          category: m.businessCategory
+        })));
 
-  const featuredOffers = useMemo(() => {
-    return [
-      mockOffers.find(offer => offer.id === 'offer-pizza-1'),
-      mockOffers.find(offer => offer.id === 'offer-barber-2'),
-      mockOffers.find(offer => offer.id === 'offer-sports-3'),
-      mockOffers.find(offer => offer.id === 'offer-bar-4'),
-    ].filter(Boolean) as typeof mockOffers;
+      } catch (error) {
+        console.error("Error fetching data for feed:", error);
+        // Handle error display if necessary
+      }
+      setLoading(false);
+    };
+    fetchData();
   }, []);
 
+  const featuredOffers = useMemo(() => {
+    // Simulate featured: e.g., offers with visibility 'destaque' or most recent with images
+    return allOffers
+      .filter(offer => offer.visibility === 'destaque' || (offer.galleryImages && offer.galleryImages.length > 0))
+      .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 4);
+  }, [allOffers]);
+
   const filteredOffers = useMemo(() => {
-    let offers = [...mockOffers];
+    let offers = [...allOffers];
 
     if (selectedCategory) {
       offers = offers.filter(offer => offer.category.toLowerCase() === selectedCategory.toLowerCase());
@@ -39,15 +68,15 @@ export default function FeedPage() {
       offers = offers.filter(offer =>
         offer.title.toLowerCase().includes(lowerSearchTerm) ||
         offer.description.toLowerCase().includes(lowerSearchTerm) ||
-        offer.merchantName.toLowerCase().includes(lowerSearchTerm) ||
+        (offer.merchantName && offer.merchantName.toLowerCase().includes(lowerSearchTerm)) ||
         offer.tags?.some(tag => tag.toLowerCase().includes(lowerSearchTerm))
       );
     }
     const featuredOfferIds = featuredOffers.map(fo => fo.id);
-    offers = offers.filter(offer => !featuredOfferIds.includes(offer.id));
+    offers = offers.filter(offer => !featuredOfferIds.includes(offer.id!));
 
     return offers;
-  }, [searchTerm, selectedCategory, featuredOffers]);
+  }, [searchTerm, selectedCategory, allOffers, featuredOffers]);
 
   const recentOffers = useMemo(() => {
     return [...filteredOffers]
@@ -57,21 +86,27 @@ export default function FeedPage() {
 
   const recommendedOffers = useMemo(() => {
     const recentAndFeaturedIds = new Set([...recentOffers.map(ro => ro.id), ...featuredOffers.map(fo => fo.id)]);
-    return mockOffers
-      .filter(offer => !recentAndFeaturedIds.has(offer.id))
-      .sort(() => 0.5 - Math.random())
+    return allOffers
+      .filter(offer => !recentAndFeaturedIds.has(offer.id!))
+      .sort(() => 0.5 - Math.random()) // Simple shuffle for recommendation
       .slice(0, 8);
-  }, [recentOffers, featuredOffers]);
+  }, [allOffers, recentOffers, featuredOffers]);
 
 
   const handleSelectCategory = (categoryName: string) => {
     setSelectedCategory(categoryName);
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 md:space-y-8 pb-4">
-      {/* Map Section removed from here */}
-
       {featuredOffers.length > 0 && (
         <section className="space-y-3">
            <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Destaques Imperdíveis</h2>
@@ -93,7 +128,7 @@ export default function FeedPage() {
       </div>
 
       <CategoryPills
-        categories={categories}
+        categories={categories} // Static categories from types/index.ts
         selectedCategory={selectedCategory}
         onSelectCategory={handleSelectCategory}
       />
@@ -105,10 +140,19 @@ export default function FeedPage() {
         </section>
       )}
 
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Comerciantes em Destaque</h2>
-        <FeaturedMerchantsList merchants={mockFeaturedMerchants} />
-      </section>
+      {featuredMerchants.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Comerciantes em Destaque</h2>
+          <FeaturedMerchantsList merchants={featuredMerchants.map(m => ({
+            id: m.id!,
+            name: m.businessName || m.name,
+            logoUrl: m.businessLogoUrl || `https://placehold.co/100x100.png?text=${(m.businessName || m.name).substring(0,1)}`,
+            'data-ai-hint': m.businessLogoHint || 'store logo',
+            category: m.businessCategory
+           }))} />
+        </section>
+      )}
+
 
       {recentOffers.length > 0 && (
         <section className="space-y-3">
@@ -125,12 +169,9 @@ export default function FeedPage() {
        {recentOffers.length === 0 && !searchTerm && selectedCategory && (
          <p className="text-center text-muted-foreground py-6 px-4 md:px-0">Nenhuma oferta recente encontrada na categoria "{selectedCategory}".</p>
        )}
-
-
-       {/* This logic might need adjustment if recommendedOffers are always present */}
-       {filteredOffers.length === 0 && !featuredOffers.some(fo => fo.category.toLowerCase() === selectedCategory.toLowerCase() || searchTerm.trim() === '') && (
-        <p className="text-center text-muted-foreground py-10 px-4 md:px-0 text-lg">
-            Nenhuma oferta encontrada com os filtros aplicados. <br/> Tente ajustar sua busca ou categoria.
+       {allOffers.length === 0 && !searchTerm && !selectedCategory && (
+         <p className="text-center text-muted-foreground py-10 px-4 md:px-0 text-lg">
+            Nenhuma oferta disponível no momento. <br/> Volte mais tarde!
         </p>
        )}
     </div>

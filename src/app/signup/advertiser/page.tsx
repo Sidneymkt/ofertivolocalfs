@@ -16,13 +16,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from "@/hooks/use-toast";
-import { categories as businessCategories } from '@/types';
+import { categories as businessCategories, serverTimestamp } from '@/types';
 import { User, Briefcase, Building as BuildingIconLucide, Mail, Lock, Phone, MapPin, Link2, FileText, List, Eye, EyeOff, CheckCircle, Loader2 as SpinnerIcon } from 'lucide-react';
-import { auth, db } from '@/lib/firebase/firebaseConfig';
-import { createUserWithEmailAndPassword, type User as FirebaseUser } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth } from '@/lib/firebase/firebaseConfig';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserProfile } from '@/lib/firebase/services/userService';
 import type { User as AppUser } from '@/types';
-import { POINTS_SIGNUP_WELCOME, USER_LEVELS } from '@/types';
+import { POINTS_SIGNUP_WELCOME, USER_LEVELS, ADVERTISER_PLAN_DETAILS } from '@/types';
 
 const advertiserSignupSchema = z.object({
   responsibleName: z.string().min(3, { message: 'Nome do responsável deve ter pelo menos 3 caracteres.' }),
@@ -90,43 +90,37 @@ export default function AdvertiserSignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const firebaseUser = userCredential.user;
 
-      // For advertisers, we'll store their business info directly in their user profile document
-      // Or, you might have a separate 'businesses' collection linked by user.uid
-      const newAdvertiserProfile: AppUser = {
-        id: firebaseUser.uid,
-        name: data.responsibleName, // User's actual name
+      const newAdvertiserProfileData: Omit<AppUser, 'id' | 'joinDate'> & { joinDate?: any } = {
+        name: data.responsibleName, 
         email: data.email,
+        
         isAdvertiser: true,
-        advertiserProfileId: firebaseUser.uid, // Link to self or a dedicated business profile ID
+        advertiserProfileId: firebaseUser.uid, 
         businessName: data.businessName,
-        // cnpjOrCpf: data.cnpjOrCpf, // Consider if this should be stored, and how securely
         businessAddress: data.fullAddress,
-        // businessCity: data.city, // If you add city to form
         businessWhatsapp: data.commercialWhatsapp,
         businessDescription: data.businessDescription,
-        // socialLink: data.socialLink, // If you add this field to AppUser type
-        advertiserStatus: 'pending_verification', // Or 'active' if auto-approved
-        advertiserPlan: 'trial', // Default plan
+        businessCategory: data.businessCategory,
+        advertiserStatus: 'pending_verification', 
+        advertiserPlan: 'trial', 
         
-        // Standard user fields, can be minimal for advertiser-only accounts
         points: POINTS_SIGNUP_WELCOME, 
         level: USER_LEVELS.INICIANTE.name,
         currentXp: 0,
         xpToNextLevel: USER_LEVELS.INICIANTE.nextLevelXp,
-        joinDate: serverTimestamp() as unknown as Date,
-        isProfileComplete: false, // Business profile completion status
+        joinDate: serverTimestamp(),
+        isProfileComplete: false, 
         responsibleName: data.responsibleName,
-        // Store business category
-        // businessCategory: data.businessCategory, // Add this field to AppUser if needed
-
-        // Placeholders for avatar/logo, can be updated later
+        
         avatarUrl: `https://placehold.co/100x100.png?text=${data.responsibleName.substring(0,1).toUpperCase()}`,
         avatarHint: 'person avatar',
         businessLogoUrl: `https://placehold.co/100x100.png?text=${data.businessName.substring(0,1).toUpperCase()}`,
         businessLogoHint: 'store logo',
+        favoriteOffers: [],
+        followedMerchants: [],
       };
 
-      await setDoc(doc(db, "users", firebaseUser.uid), newAdvertiserProfile);
+      await createUserProfile(firebaseUser.uid, newAdvertiserProfileData);
 
       toast({
         title: "Cadastro de anunciante realizado com sucesso!",

@@ -15,11 +15,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from "@/hooks/use-toast";
 import { User, Mail, Lock, Phone, MapPin, Building, Eye, EyeOff, Loader2 as SpinnerIcon } from 'lucide-react';
-import { auth, db } from '@/lib/firebase/firebaseConfig';
-import { createUserWithEmailAndPassword, type User as FirebaseUser } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth } from '@/lib/firebase/firebaseConfig';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserProfile } from '@/lib/firebase/services/userService';
 import type { User as AppUser } from '@/types';
-import { POINTS_SIGNUP_WELCOME, USER_LEVELS } from '@/types';
+import { POINTS_SIGNUP_WELCOME, USER_LEVELS, serverTimestamp } from '@/types';
 
 const userSignupSchema = z.object({
   fullName: z.string().min(3, { message: 'Nome completo deve ter pelo menos 3 caracteres.' }),
@@ -64,8 +64,7 @@ export default function UserSignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const firebaseUser = userCredential.user;
 
-      const newUserProfile: AppUser = {
-        id: firebaseUser.uid,
+      const newUserProfileData: Omit<AppUser, 'id' | 'joinDate'> & { joinDate?: any } = {
         name: data.fullName,
         email: data.email,
         whatsapp: data.whatsapp || undefined,
@@ -75,16 +74,17 @@ export default function UserSignupPage() {
         level: USER_LEVELS.INICIANTE.name,
         currentXp: 0,
         xpToNextLevel: USER_LEVELS.INICIANTE.nextLevelXp,
-        joinDate: serverTimestamp() as unknown as Date, // Firestore will convert this
+        joinDate: serverTimestamp(), 
         isAdvertiser: false,
         status: 'active',
-        isProfileComplete: false, // Can be updated later
-        // Initialize other optional fields as needed
+        isProfileComplete: false, 
         avatarUrl: `https://placehold.co/100x100.png?text=${data.fullName.substring(0,1).toUpperCase()}`,
         avatarHint: 'person avatar',
+        favoriteOffers: [],
+        followedMerchants: [],
       };
 
-      await setDoc(doc(db, "users", firebaseUser.uid), newUserProfile);
+      await createUserProfile(firebaseUser.uid, newUserProfileData);
 
       toast({
         title: "Cadastro realizado com sucesso!",

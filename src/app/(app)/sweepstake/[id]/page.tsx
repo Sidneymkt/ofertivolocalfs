@@ -9,11 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from "@/hooks/use-toast";
-import type { Sweepstake } from '@/types';
-import { getMockSweepstakeById } from '@/types'; // Using the specific getter
-import { ArrowLeft, CalendarDays, CheckCircle, Coins, Gift, Loader2, Users, Ticket, Info, ExternalLink, FileText, AlertTriangle, Share2 } from 'lucide-react';
+import type { Sweepstake, User as AppUser } from '@/types';
+import { getSweepstake as fetchSweepstakeDetails, getSweepstakeWinners, addParticipantToSweepstake } from '@/lib/firebase/services/sweepstakeService';
+import { getUserProfile, updateUserProfile } from '@/lib/firebase/services/userService';
+import { auth } from '@/lib/firebase/firebaseConfig';
+import { ArrowLeft, CalendarDays, CheckCircle, Coins, Gift, Loader2, Users, Ticket, Info, ExternalLink, FileText, AlertTriangle, Share2, Trophy } from 'lucide-react';
 import { format, isPast, isFuture } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
 
 const SweepstakeStatusBadge: React.FC<{ status: Sweepstake['status'] }> = ({ status }) => {
   let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
@@ -28,7 +31,7 @@ const SweepstakeStatusBadge: React.FC<{ status: Sweepstake['status'] }> = ({ sta
     case 'ended':
       variant = 'outline'; text = 'Encerrado'; IconComponent = CheckCircle; break;
     case 'drawing_complete':
-      variant = 'default'; text = 'Sorteado'; IconComponent = Gift; break;
+      variant = 'default'; text = 'Sorteado'; IconComponent = Trophy; break;
     case 'cancelled':
       variant = 'destructive'; text = 'Cancelado'; IconComponent = AlertTriangle; break;
     default:
@@ -50,32 +53,73 @@ export default function SweepstakeDetailPage() {
   const sweepstakeId = params.id as string;
 
   const [sweepstake, setSweepstake] = useState<Sweepstake | null>(null);
+  const [winners, setWinners] = useState<import('@/types').SweepstakeWinner[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
 
   useEffect(() => {
-    if (sweepstakeId) {
-      const foundSweepstake = getMockSweepstakeById(sweepstakeId);
-      if (foundSweepstake) {
-        setSweepstake(foundSweepstake);
-      } else {
-        toast({ variant: 'destructive', title: 'Sorteio não encontrado' });
-        router.push('/rewards'); // Redirect if not found
+    const loadData = async () => {
+      setIsLoading(true);
+      if (sweepstakeId) {
+        const userAuth = auth.currentUser;
+        if(userAuth) {
+            const userProfile = await getUserProfile(userAuth.uid);
+            setCurrentUser(userProfile);
+        }
+
+        const foundSweepstake = await fetchSweepstakeDetails(sweepstakeId);
+        if (foundSweepstake) {
+          setSweepstake(foundSweepstake);
+          if (foundSweepstake.status === 'drawing_complete') {
+            const fetchedWinners = await getSweepstakeWinners(sweepstakeId);
+            setWinners(fetchedWinners);
+          }
+        } else {
+          toast({ variant: 'destructive', title: 'Sorteio não encontrado' });
+          router.push('/rewards'); 
+        }
       }
       setIsLoading(false);
-    }
+    };
+    loadData();
   }, [sweepstakeId, router, toast]);
 
-  const handleParticipate = (e: React.MouseEvent, currentSweepstake: Sweepstake) => {
-    e.stopPropagation(); // Prevent click from bubbling to the parent Link, if any
+  const handleParticipate = async (e: React.MouseEvent, currentSweepstake: Sweepstake) => {
+    e.stopPropagation(); 
+    if (!currentUser) {
+      toast({ title: "Login Necessário", description: "Faça login para participar.", variant: "destructive" });
+      return;
+    }
+    if (currentUser.points < currentSweepstake.pointsToEnter) {
+      toast({ title: "Pontos Insuficientes", description: `Você precisa de ${currentSweepstake.pointsToEnter} pontos.`, variant: "destructive" });
+      return;
+    }
     const now = new Date();
-    if (isPast(new Date(currentSweepstake.endDate))) {
-      toast({ title: "Sorteio Encerrado", description: `O sorteio "${currentSweepstake.title}" já foi finalizado.`, variant: "default" });
-    } else if (isFuture(new Date(currentSweepstake.startDate))) {
-       toast({ title: "Sorteio em Breve", description: `O sorteio "${currentSweepstake.title}" ainda não começou. Aguarde!`, variant: "default" });
+    const endDate = currentSweepstake.endDate instanceof Timestamp ? currentSweepstake.endDate.toDate() : new Date(currentSweepstake.endDate);
+    const startDate = currentSweepstake.startDate instanceof Timestamp ? currentSweepstake.startDate.toDate() : new Date(currentSweepstake.startDate);
+
+    if (isPast(endDate)) {
+      toast({ title: "Sorteio Encerrado", description: `O sorteio "${currentSweepstake.title}" já foi finalizado.`});
+    } else if (isFuture(startDate)) {
+       toast({ title: "Sorteio em Breve", description: `O sorteio "${currentSweepstake.title}" ainda não começou.`});
     } else if (currentSweepstake.status === 'active') {
-      toast({ title: "Participação Registrada!", description: `Você participou do sorteio "${currentSweepstake.title}". ${currentSweepstake.pointsToEnter} pontos foram deduzidos (simulado). Boa sorte!`, variant: "default" });
+      try {
+        const newPoints = currentUser.points - currentSweepstake.pointsToEnter;
+        await updateUserProfile(currentUser.id, { points: newPoints });
+        setCurrentUser(prev => prev ? {...prev, points: newPoints} : null);
+
+        await addParticipantToSweepstake(currentSweepstake.id!, {
+          userId: currentUser.id,
+          name: currentUser.name,
+          avatarUrl: currentUser.avatarUrl,
+          avatarHint: currentUser.avatarHint,
+        });
+        toast({ title: "Participação Registrada!", description: `Você participou do sorteio "${currentSweepstake.title}". Boa sorte!` });
+      } catch (error) {
+        toast({ title: "Erro ao Participar", variant: "destructive", description: "Tente novamente."});
+      }
     } else {
-       toast({ title: `Status: ${currentSweepstake.status}`, description: `Não é possível participar do sorteio "${currentSweepstake.title}" neste momento.`, variant: "default" });
+       toast({ title: `Status: ${currentSweepstake.status}`, description: `Não é possível participar do sorteio "${currentSweepstake.title}" neste momento.`});
     }
   };
   
@@ -114,6 +158,12 @@ export default function SweepstakeDetailPage() {
       </div>
     );
   }
+  
+  const formattedDate = (dateInput: Date | Timestamp | undefined) => {
+    if (!dateInput) return "Data Indisponível";
+    const date = dateInput instanceof Timestamp ? dateInput.toDate() : new Date(dateInput);
+    return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+  };
 
   return (
     <div className="space-y-6 pb-8">
@@ -165,8 +215,8 @@ export default function SweepstakeDetailPage() {
           </div>
           
           <div className="space-y-1 text-sm">
-             <p className="flex items-center gap-1.5"><CalendarDays size={15} className="text-muted-foreground"/> <strong>Início:</strong> {format(new Date(sweepstake.startDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-             <p className="flex items-center gap-1.5"><CalendarDays size={15} className="text-muted-foreground"/> <strong>Término:</strong> {format(new Date(sweepstake.endDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+             <p className="flex items-center gap-1.5"><CalendarDays size={15} className="text-muted-foreground"/> <strong>Início:</strong> {formattedDate(sweepstake.startDate)}</p>
+             <p className="flex items-center gap-1.5"><CalendarDays size={15} className="text-muted-foreground"/> <strong>Término:</strong> {formattedDate(sweepstake.endDate)}</p>
           </div>
 
           {sweepstake.rules && (
@@ -176,15 +226,14 @@ export default function SweepstakeDetailPage() {
             </div>
           )}
 
-          {sweepstake.status === 'drawing_complete' && sweepstake.winners && sweepstake.winners.length > 0 && (
+          {sweepstake.status === 'drawing_complete' && winners.length > 0 && (
             <div className="space-y-3 pt-4 border-t">
-                <h3 className="font-semibold text-lg flex items-center gap-2 text-green-600"><Gift size={20}/> Ganhador(es) do Sorteio!</h3>
+                <h3 className="font-semibold text-lg flex items-center gap-2 text-green-600"><Trophy size={20}/> Ganhador(es) do Sorteio!</h3>
                 <ul className="space-y-2">
-                {sweepstake.winners.map(winner => (
+                {winners.map(winner => (
                     <li key={winner.userId} className="flex items-center gap-3 p-2 bg-green-500/10 rounded-md">
                     <Image src={winner.avatarUrl || `https://placehold.co/40x40.png?text=${winner.userName.substring(0,1)}`} alt={winner.userName} width={40} height={40} className="rounded-full" data-ai-hint={winner.avatarHint || 'person avatar'}/>
                     <span className="font-medium text-green-700">{winner.userName}</span>
-                    {/* Add contact button if applicable */}
                     </li>
                 ))}
                 </ul>
@@ -196,7 +245,7 @@ export default function SweepstakeDetailPage() {
           <Button 
             className="w-full sm:flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-base py-3"
             onClick={(e) => handleParticipate(e, sweepstake)}
-            disabled={sweepstake.status === 'ended' || sweepstake.status === 'drawing_complete' || sweepstake.status === 'cancelled' || sweepstake.status === 'upcoming'}
+            disabled={sweepstake.status === 'ended' || sweepstake.status === 'drawing_complete' || sweepstake.status === 'cancelled' || sweepstake.status === 'upcoming' || !currentUser}
           >
             <Ticket className="w-5 h-5 mr-2" />
             {sweepstake.status === 'active' ? 'Participar Agora' : 
@@ -208,9 +257,6 @@ export default function SweepstakeDetailPage() {
           </Button>
         </CardFooter>
       </Card>
-
-      {/* You can add a section for "Outros Sorteios" here if desired */}
-
     </div>
   );
 }

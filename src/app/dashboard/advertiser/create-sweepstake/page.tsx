@@ -14,7 +14,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from "@/hooks/use-toast";
-import { mockAdvertiserUser, type Sweepstake } from '@/types'; // Assuming mockAdvertiserUser is available
+import type { Sweepstake, User as AppUser } from '@/types'; 
 import { 
   CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIconLucide, 
   AlertCircle, CheckCircle, Info, QrCode as QrCodeIconLucide, Smartphone, UserCheck, CheckCheck as CheckCheckIcon, Package as PackageIcon, LocateFixed, Building as BuildingIcon,
@@ -25,7 +25,11 @@ import { ptBR } from 'date-fns/locale';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { auth } from '@/lib/firebase/firebaseConfig';
+import { getUserProfile } from '@/lib/firebase/services/userService';
+import { createSweepstake, getSweepstake, updateSweepstake } from '@/lib/firebase/services/sweepstakeService';
+import { Timestamp } from 'firebase/firestore';
 
 const sweepstakeFormSchema = z.object({
   title: z.string().min(5, "Título do sorteio deve ter pelo menos 5 caracteres.").max(100, "Título muito longo."),
@@ -33,7 +37,7 @@ const sweepstakeFormSchema = z.object({
   prizeDetails: z.string().min(5, "Detalhes do prêmio devem ter pelo menos 5 caracteres.").max(300, "Detalhes do prêmio muito longos."),
   image: z.custom<File | null>((val) => val === null || val instanceof File, {
     message: "Por favor, envie um arquivo de imagem.",
-  }).refine(file => file !== null, { message: "Imagem é obrigatória." }),
+  }).optional(), // Image is optional on edit if one already exists
   startDate: z.date({ required_error: "Data de início é obrigatória." }),
   endDate: z.date({ required_error: "Data de fim é obrigatória." }),
   pointsToEnter: z.preprocess(
@@ -64,9 +68,15 @@ type SweepstakeFormValues = z.infer<typeof sweepstakeFormSchema>;
 export default function CreateSweepstakePage() {
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editSweepstakeId = searchParams.get('editId');
+
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
 
   const form = useForm<SweepstakeFormValues>({
     resolver: zodResolver(sweepstakeFormSchema),
@@ -76,7 +86,7 @@ export default function CreateSweepstakePage() {
       prizeDetails: '',
       image: null,
       startDate: new Date(),
-      endDate: new Date(Date.now() + 7 * 86400000), // 7 days from now
+      endDate: new Date(Date.now() + 7 * 86400000), 
       pointsToEnter: 10,
       numberOfWinners: 1,
       maxParticipants: undefined,
@@ -84,17 +94,52 @@ export default function CreateSweepstakePage() {
     },
   });
 
-  const { watch, setValue, getValues, trigger, control } = form;
+  const { watch, setValue, getValues, trigger, control, reset } = form;
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (userAuth) => {
+      if (userAuth) {
+        const userProfile = await getUserProfile(userAuth.uid);
+        if (userProfile && userProfile.isAdvertiser) {
+          setCurrentUser(userProfile);
+          if (editSweepstakeId) {
+            const sweepstakeToEdit = await getSweepstake(editSweepstakeId);
+            if (sweepstakeToEdit && sweepstakeToEdit.createdBy === userAuth.uid) {
+              reset({
+                ...sweepstakeToEdit,
+                startDate: sweepstakeToEdit.startDate instanceof Timestamp ? sweepstakeToEdit.startDate.toDate() : new Date(sweepstakeToEdit.startDate),
+                endDate: sweepstakeToEdit.endDate instanceof Timestamp ? sweepstakeToEdit.endDate.toDate() : new Date(sweepstakeToEdit.endDate),
+                image: null, // File input is handled separately
+              });
+              setExistingImageUrl(sweepstakeToEdit.imageUrl);
+              setImagePreview(sweepstakeToEdit.imageUrl); // Show existing image
+            } else {
+              toast({ title: "Erro", description: "Sorteio não encontrado ou não pertence a você.", variant: "destructive" });
+              router.push('/dashboard/advertiser');
+            }
+          }
+        } else {
+          toast({ title: "Acesso Negado", description: "Você precisa ser um anunciante.", variant: "destructive" });
+          router.push('/');
+        }
+      } else {
+        router.push('/login');
+      }
+      setPageLoading(false);
+    });
+    return () => unsubscribe();
+  }, [editSweepstakeId, reset, router, toast]);
+
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-      setSelectedFile(file);
+      setSelectedFile(file); // Store the file for upload
       form.setValue("image", file, { shouldValidate: true });
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setImagePreview(reader.result as string); // For local preview
       };
       reader.readAsDataURL(file);
     }
@@ -102,43 +147,78 @@ export default function CreateSweepstakePage() {
 
   const removeImage = () => {
     setSelectedFile(null);
-    setImagePreview(null);
+    setImagePreview(editSweepstakeId ? existingImageUrl : null); // Revert to existing or null
     form.setValue("image", null, { shouldValidate: true });
     if (imageInputRef.current) {
-      imageInputRef.current.value = ""; // Reset file input
+      imageInputRef.current.value = ""; 
     }
   };
 
-  const onSubmit: SubmitHandler<SweepstakeFormValues> = (data) => {
-    const newSweepstakeData = {
-      ...data,
-      id: `sweepstake-${Date.now()}`,
-      imageUrl: imagePreview || 'https://placehold.co/600x300.png?text=Sorteio', // Placeholder if no image
-      'data-ai-hint': data.title.substring(0, 20).toLowerCase() + ' prize', // Example hint
-      // In a real app, upload 'selectedFile' and use the returned URL for imageUrl
-    };
+  const onSubmit: SubmitHandler<SweepstakeFormValues> = async (data) => {
+     if (!currentUser || !currentUser.id) {
+      toast({ title: "Erro", description: "Anunciante não identificado.", variant: "destructive" });
+      return;
+    }
+    if (!editSweepstakeId && !selectedFile) { // Require image on create
+        form.setError("image", { type: "manual", message: "Imagem é obrigatória." });
+        toast({ variant: "destructive", title: "Imagem faltando", description: "Adicione uma imagem para o sorteio."});
+        return;
+    }
+    form.clearErrors("image");
 
-    console.log('Simulating saving sweepstake to Firestore:', newSweepstakeData);
+    // TODO: Implement actual image upload to Firebase Storage
+    // For now, if a new file is selected, use a placeholder. Otherwise, keep existingImageUrl.
+    let finalImageUrl = existingImageUrl;
+    if (selectedFile) {
+      finalImageUrl = `https://placehold.co/600x300.png?text=${selectedFile.name.substring(0,10)}`; // Placeholder for new upload
+    }
+    if (!finalImageUrl){ // Fallback if no image at all
+        finalImageUrl = 'https://placehold.co/600x300.png?text=Sorteio';
+    }
+
+
+    const sweepstakePayload: Omit<Sweepstake, 'id' | 'status' | 'isDrawn' | 'drawDate' | 'participantCount'> = {
+      ...data,
+      startDate: Timestamp.fromDate(data.startDate),
+      endDate: Timestamp.fromDate(data.endDate),
+      imageUrl: finalImageUrl,
+      'data-ai-hint': data.title.substring(0, 20).toLowerCase() + ' prize',
+      createdBy: currentUser.id,
+    };
     
-    toast({
-      title: "Sorteio Criado com Sucesso (Simulado)!",
-      description: `Seu sorteio "${newSweepstakeData.title}" foi cadastrado.`,
-      variant: "default",
-      duration: 7000,
-    });
-    // form.reset(); // Optionally reset form
-    // setImagePreview(null);
-    // setSelectedFile(null);
+    try {
+      if (editSweepstakeId) {
+        await updateSweepstake(editSweepstakeId, sweepstakePayload);
+        toast({ title: "Sorteio Atualizado!", description: `O sorteio "${data.title}" foi atualizado.` });
+      } else {
+        await createSweepstake(sweepstakePayload);
+        toast({ title: "Sorteio Criado!", description: `Seu sorteio "${data.title}" foi cadastrado.` });
+      }
+      router.push('/dashboard/advertiser');
+    } catch (error: any) {
+      console.error("Error saving sweepstake:", error);
+      toast({ variant: "destructive", title: "Erro ao Salvar Sorteio", description: error.message || "Não foi possível salvar o sorteio." });
+    }
   };
   
   const handleSaveDraft = () => {
     const data = form.getValues();
+    // TODO: Implement actual draft saving logic
     console.log('Saving sweepstake draft:', data);
     toast({
       title: "Rascunho Salvo (Simulado)!",
       description: "Seu sorteio foi salvo como rascunho.",
     });
   };
+
+  if (pageLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
 
   return (
     <div className="space-y-8 p-4 md:p-6 lg:p-8 selection:bg-primary selection:text-primary-foreground">
@@ -150,9 +230,11 @@ export default function CreateSweepstakePage() {
         <header className="flex-grow">
           <h1 className="text-2xl md:text-3xl font-headline font-bold text-foreground flex items-center gap-3">
             <Trophy className="h-8 w-8 text-primary" />
-            Criar Novo Sorteio
+            {editSweepstakeId ? 'Editar Sorteio' : 'Criar Novo Sorteio'}
           </h1>
-          <p className="text-muted-foreground">Preencha os detalhes abaixo para configurar seu sorteio.</p>
+          <p className="text-muted-foreground">
+            {editSweepstakeId ? 'Modifique os detalhes do seu sorteio.' : 'Preencha os detalhes abaixo para configurar seu sorteio.'}
+          </p>
         </header>
       </div>
 
@@ -197,7 +279,7 @@ export default function CreateSweepstakePage() {
                 name="image"
                 render={({ field }) => ( 
                   <FormItem>
-                    <FormLabel htmlFor="image-upload">Imagem Principal do Sorteio</FormLabel>
+                    <FormLabel htmlFor="image-upload">Imagem Principal do Sorteio {editSweepstakeId ? '(Opcional se já existir)' : ''}</FormLabel>
                     <FormControl>
                        <Input 
                           id="image-upload" 
@@ -210,7 +292,7 @@ export default function CreateSweepstakePage() {
                     </FormControl>
                     <Button type="button" variant="outline" onClick={() => imageInputRef.current?.click()} className="w-full">
                         <UploadCloud className="mr-2 h-4 w-4" /> 
-                        {selectedFile ? `Alterar Imagem (${selectedFile.name.substring(0,20)}...)` : "Selecionar Imagem"}
+                        {selectedFile ? `Alterar Imagem (${selectedFile.name.substring(0,20)}...)` : (imagePreview ? "Alterar Imagem Existente" : "Selecionar Imagem")}
                     </Button>
                     <FormMessage />
                   </FormItem>
@@ -394,7 +476,7 @@ export default function CreateSweepstakePage() {
                         <Save className="mr-2 h-4 w-4" /> Salvar como Rascunho
                     </Button>
                     <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting ? <><SpinnerIcon className="mr-2 h-4 w-4 animate-spin" /> Publicando...</> : <><Send className="mr-2 h-4 w-4" /> Publicar Sorteio</>}
+                        {form.formState.isSubmitting ? <><SpinnerIcon className="mr-2 h-4 w-4 animate-spin" /> {editSweepstakeId ? 'Atualizando...' : 'Publicando...'}</> : <><Send className="mr-2 h-4 w-4" /> {editSweepstakeId ? 'Atualizar Sorteio' : 'Publicar Sorteio'}</>}
                     </Button>
                 </div>
                  <p className="text-xs text-muted-foreground text-center">Ao publicar, seu sorteio ficará visível para os usuários elegíveis.</p>

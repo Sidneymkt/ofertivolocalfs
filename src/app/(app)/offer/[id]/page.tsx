@@ -1,10 +1,9 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import type { Offer } from '@/types'; 
-import { mockOffers, mockUser, mockAdvertiserUser } from '@/types'; 
+import type { Offer, User as AppUser, Comment } from '@/types'; 
 import OfferImageGallery from '@/components/offers/OfferImageGallery';
 import OfferInfoSection from '@/components/offers/OfferInfoSection';
 import OfferActionsSection from '@/components/offers/OfferActionsSection';
@@ -15,59 +14,143 @@ import { Button } from '@/components/ui/button';
 import { Edit, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-
-// Simulate fetching an offer
-const getOfferById = (id: string): Promise<Offer | undefined> => {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(mockOffers.find(offer => offer.id === id));
-    }, 300);
-  });
-};
-
-// Simulate determining current user type (for advertiser panel)
-const getCurrentUser = () => {
-  // const isCurrentUserAdvertiser = true; 
-  const isCurrentUserAdvertiser = false; 
-  return isCurrentUserAdvertiser ? mockAdvertiserUser : mockUser;
-}
+import { getOffer as fetchOffer, getOfferComments, addCommentToOffer as postComment } from '@/lib/firebase/services/offerService';
+import { getUserProfile, addFavoriteOffer, removeFavoriteOffer, followMerchant, unfollowMerchant } from '@/lib/firebase/services/userService';
+import { auth } from '@/lib/firebase/firebaseConfig';
+import { useToast } from "@/hooks/use-toast";
+import { serverTimestamp, POINTS_RATE_OFFER_OR_MERCHANT } from '@/types';
 
 export default function OfferDetailPage() {
   const params = useParams();
+  const { toast } = useToast();
   const offerId = params.id as string;
+  
   const [offer, setOffer] = useState<Offer | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isFollowingMerchant, setIsFollowingMerchant] = useState(false);
 
-  const currentUser = getCurrentUser(); 
-  const isOwner = !!offer && currentUser.isAdvertiser && currentUser.advertiserProfileId === offer.merchantId;
+  const isOwner = !!offer && currentUser?.isAdvertiser && currentUser.id === offer.merchantId;
 
-
-  useEffect(() => {
+  const loadOfferData = useCallback(async () => {
     if (offerId) {
       setLoading(true);
-      setError(null); 
-      getOfferById(offerId)
-        .then(data => {
-          if (data) {
-            setOffer(data);
-            setIsFavorited(currentUser.favoriteOffers?.includes(data.id) ?? false);
-            setIsFollowingMerchant(currentUser.followedMerchants?.includes(data.merchantId) ?? false);
-          } else {
-            setError('Oferta não encontrada.');
-          }
-        })
-        .catch(() => {
-          setError('Erro ao carregar a oferta.');
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      setError(null);
+      try {
+        const offerData = await fetchOffer(offerId);
+        if (offerData) {
+          setOffer(offerData);
+          const offerComments = await getOfferComments(offerId);
+          setComments(offerComments);
+        } else {
+          setError('Oferta não encontrada.');
+        }
+      } catch (e) {
+        console.error("Error loading offer data:", e);
+        setError('Erro ao carregar a oferta.');
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [offerId, currentUser.favoriteOffers, currentUser.followedMerchants, currentUser.id]); // Added currentUser.id
+  }, [offerId]);
+
+  useEffect(() => {
+    loadOfferData();
+  }, [loadOfferData]);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const userProfile = await getUserProfile(user.uid);
+        setCurrentUser(userProfile);
+        if (userProfile && offer) {
+          setIsFavorited(userProfile.favoriteOffers?.includes(offer.id!) ?? false);
+          setIsFollowingMerchant(userProfile.followedMerchants?.includes(offer.merchantId) ?? false);
+        }
+      } else {
+        setCurrentUser(null);
+        setIsFavorited(false);
+        setIsFollowingMerchant(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [offer]);
+
+
+  const toggleFavorite = async () => {
+    if (!currentUser || !offer?.id) {
+      toast({ title: "Ação Requer Login", description: "Faça login para favoritar ofertas.", variant: "destructive" });
+      return;
+    }
+    try {
+      if (isFavorited) {
+        await removeFavoriteOffer(currentUser.id, offer.id);
+      } else {
+        await addFavoriteOffer(currentUser.id, offer.id);
+      }
+      setIsFavorited(!isFavorited);
+      toast({
+        title: !isFavorited ? "Adicionado aos Favoritos!" : "Removido dos Favoritos",
+      });
+    } catch (e) {
+      toast({ title: "Erro", description: "Não foi possível atualizar favoritos.", variant: "destructive" });
+    }
+  };
+
+  const toggleFollow = async () => {
+    if (!currentUser || !offer?.merchantId) {
+       toast({ title: "Ação Requer Login", description: "Faça login para seguir comerciantes.", variant: "destructive" });
+      return;
+    }
+    try {
+      if (isFollowingMerchant) {
+        await unfollowMerchant(currentUser.id, offer.merchantId);
+      } else {
+        await followMerchant(currentUser.id, offer.merchantId);
+      }
+      setIsFollowingMerchant(!isFollowingMerchant);
+       toast({
+        title: !isFollowingMerchant ? "Seguindo Anunciante!" : "Deixou de Seguir",
+      });
+    } catch (e) {
+      toast({ title: "Erro", description: "Não foi possível atualizar o status de seguir.", variant: "destructive" });
+    }
+  };
+
+  const handlePostComment = async (commentText: string, rating: number) => {
+    if (!currentUser || !offer?.id) {
+      toast({ title: "Ação Requer Login", description: "Faça login para comentar.", variant: "destructive" });
+      return false;
+    }
+    try {
+      const commentData: Omit<Comment, 'id' | 'timestamp'> = {
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userAvatarUrl: currentUser.avatarUrl,
+        userAvatarHint: currentUser.avatarHint,
+        rating,
+        text: commentText,
+        offerId: offer.id,
+        offerTitle: offer.title, // Denormalized
+        pointsEarned: POINTS_RATE_OFFER_OR_MERCHANT, // Example
+      };
+      await postComment(offer.id, commentData);
+      // Refresh comments
+      const updatedComments = await getOfferComments(offer.id);
+      setComments(updatedComments);
+      // TODO: Update user points (this should ideally be a backend operation or transaction)
+      toast({ title: "Comentário Enviado!", description: "Obrigado pela sua avaliação." });
+      return true;
+    } catch (e) {
+      toast({ title: "Erro ao Comentar", description: "Não foi possível enviar seu comentário.", variant: "destructive" });
+      return false;
+    }
+  };
+
 
   if (loading) {
     return (
@@ -92,10 +175,6 @@ export default function OfferDetailPage() {
     return <div className="text-center py-10 text-muted-foreground">Oferta não encontrada.</div>;
   }
 
-  const toggleFavorite = () => setIsFavorited(!isFavorited);
-  const toggleFollow = () => setIsFollowingMerchant(!isFollowingMerchant);
-
-
   return (
     <div className="space-y-6 pb-8">
       <OfferImageGallery 
@@ -107,7 +186,7 @@ export default function OfferDetailPage() {
       <OfferInfoSection offer={offer} />
       
       <OfferActionsSection 
-        offerId={offer.id}
+        offerId={offer.id!}
         isFavorited={isFavorited}
         isFollowingMerchant={isFollowingMerchant}
         onToggleFavorite={toggleFavorite}
@@ -122,12 +201,13 @@ export default function OfferDetailPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-primary/80">Você é o proprietário desta oferta.</p>
-            <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/20">
-              <Edit size={16} className="mr-2" /> Editar Oferta
+            <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/20" asChild>
+              <Link href={`/dashboard/advertiser/create-offer?editId=${offer.id}`}>
+                <Edit size={16} className="mr-2" /> Editar Oferta
+              </Link>
             </Button>
             <div className="text-xs text-muted-foreground">
-              {/* These would come from analytics in a real app */}
-              <p>Visualizações: {offer.usersUsedCount ? offer.usersUsedCount * 5 + 100 : 1024}</p> 
+              <p>Visualizações: {offer.reviews ? offer.reviews * 5 + 100 : 1024}</p> {/* Placeholder analytics */}
               <p>Cliques: {offer.usersUsedCount ? offer.usersUsedCount * 2 + 50 : 320}</p>
               <p>Check-ins: {offer.usersUsedCount || 45}</p>
             </div>
@@ -139,7 +219,7 @@ export default function OfferDetailPage() {
       
       <OfferLocationSection offer={offer} />
       
-      <OfferCommentsSection offer={offer} />
+      <OfferCommentsSection offer={offer} comments={comments} onPostComment={handlePostComment} />
 
     </div>
   );

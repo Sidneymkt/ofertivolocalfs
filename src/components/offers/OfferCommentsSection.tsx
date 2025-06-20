@@ -9,12 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Star, MessageCircle, Send } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Timestamp } from 'firebase/firestore'; // Import Timestamp
 
 interface OfferCommentsSectionProps {
   offer: Offer;
+  comments: Comment[];
+  onPostComment: (commentText: string, rating: number) => Promise<boolean>; // Returns true on success
 }
 
-const StarRating: React.FC<{ rating: number; size?: number; totalStars?: number }> = ({ rating, size = 16, totalStars = 5 }) => {
+const StarRatingDisplay: React.FC<{ rating: number; size?: number; totalStars?: number }> = ({ rating, size = 16, totalStars = 5 }) => {
   return (
     <div className="flex items-center">
       {[...Array(totalStars)].map((_, index) => (
@@ -29,12 +32,12 @@ const StarRating: React.FC<{ rating: number; size?: number; totalStars?: number 
 };
 
 
-const OfferCommentsSection: React.FC<OfferCommentsSectionProps> = ({ offer }) => {
+const OfferCommentsSection: React.FC<OfferCommentsSectionProps> = ({ offer, comments, onPostComment }) => {
   const { toast } = useToast();
   const [newComment, setNewComment] = useState('');
   const [userRating, setUserRating] = useState(0); // For new comment rating
 
-  const handleSubmitComment = (e: React.FormEvent) => {
+  const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || userRating === 0) {
       toast({
@@ -44,14 +47,19 @@ const OfferCommentsSection: React.FC<OfferCommentsSectionProps> = ({ offer }) =>
       });
       return;
     }
-    // Placeholder for submission logic
-    console.log({ comment: newComment, rating: userRating, offerId: offer.id });
-    toast({
-        title: "Comentário Enviado!",
-        description: "Obrigado pela sua avaliação. Ela será publicada em breve.",
-    });
-    setNewComment('');
-    setUserRating(0);
+    
+    const success = await onPostComment(newComment, userRating);
+    if (success) {
+      setNewComment('');
+      setUserRating(0);
+    }
+  };
+
+  const formatCommentTimestamp = (timestamp: Date | Timestamp): string => {
+    if (timestamp instanceof Timestamp) {
+      return new Date(timestamp.toDate()).toLocaleDateString('pt-BR');
+    }
+    return new Date(timestamp).toLocaleDateString('pt-BR');
   };
 
   return (
@@ -60,9 +68,9 @@ const OfferCommentsSection: React.FC<OfferCommentsSectionProps> = ({ offer }) =>
         <CardTitle className="flex items-center text-xl">
           <MessageCircle className="mr-2 text-primary" /> Avaliações e Comentários
         </CardTitle>
-        {offer.rating && offer.reviews ? (
+        {offer.rating && offer.reviews && offer.reviews > 0 ? (
           <div className="flex items-center gap-2">
-            <StarRating rating={offer.rating} size={20}/>
+            <StarRatingDisplay rating={offer.rating} size={20}/>
             <span className="text-muted-foreground text-sm">
               {offer.rating.toFixed(1)} de 5 estrelas ({offer.reviews} avaliações)
             </span>
@@ -72,10 +80,10 @@ const OfferCommentsSection: React.FC<OfferCommentsSectionProps> = ({ offer }) =>
         )}
       </CardHeader>
       <CardContent className="space-y-6">
-        {offer.comments && offer.comments.length > 0 ? (
+        {comments && comments.length > 0 ? (
           <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/20">
-            {offer.comments.map((comment) => (
-              <div key={comment.id} className="flex gap-3 p-3 bg-muted/30 rounded-lg">
+            {comments.map((comment) => (
+              <div key={comment.id || comment.timestamp.toString()} className="flex gap-3 p-3 bg-muted/30 rounded-lg">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={comment.userAvatarUrl} alt={comment.userName} data-ai-hint={comment.userAvatarHint || 'person avatar'} />
                   <AvatarFallback>{comment.userName?.substring(0, 1)}</AvatarFallback>
@@ -84,10 +92,10 @@ const OfferCommentsSection: React.FC<OfferCommentsSectionProps> = ({ offer }) =>
                   <div className="flex justify-between items-center">
                     <h4 className="font-semibold text-sm">{comment.userName}</h4>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(comment.timestamp).toLocaleDateString('pt-BR')}
+                      {formatCommentTimestamp(comment.timestamp)}
                     </span>
                   </div>
-                  <StarRating rating={comment.rating} size={14}/>
+                  <StarRatingDisplay rating={comment.rating} size={14}/>
                   <p className="text-sm text-card-foreground mt-1">{comment.text}</p>
                 </div>
               </div>
