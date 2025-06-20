@@ -9,8 +9,10 @@ import PublishedOffersSection from '@/components/dashboard/advertiser/PublishedO
 import GenericDashboardSection from '@/components/dashboard/advertiser/GenericDashboardSection';
 import AdvertiserProfileSettingsCard from '@/components/dashboard/advertiser/AdvertiserProfileSettingsCard';
 import { mockAdvertiserUser, type AdvertiserMetricItem, type PublishedOfferSummary, ADVERTISER_PLAN_DETAILS } from '@/types'; 
-import { BarChart2, Eye, MousePointerClick, CheckCircle, Users, Coins, TrendingUp, ShoppingBag, Settings, Bell, Gift, ListFilter, FileText, DollarSign, AlertCircle } from 'lucide-react';
+import { BarChart2, Eye, MousePointerClick, CheckCircle, Users, Coins, TrendingUp, ShoppingBag, Settings, Bell, Gift, ListFilter, FileText, DollarSign, AlertCircle, ArrowRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const advertiserName = mockAdvertiserUser.businessName || "Meu Negócio"; 
 
@@ -150,7 +152,11 @@ export default function AdvertiserDashboardPage() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <GenericDashboardSection title="CRM de Leads e Engajamento" icon={ListFilter} description="Acompanhe usuários que interagiram e ranking de seguidores.">
-          <p className="text-muted-foreground text-center py-10">Funcionalidade de CRM de Leads e ranking em breve.</p>
+          <Button asChild variant="outline" className="w-full mt-4">
+            <Link href="/dashboard/advertiser/leads">
+              Gerenciar Leads e Contatos <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </GenericDashboardSection>
         <GenericDashboardSection title="CRM Financeiro e Planos" icon={DollarSign} description="Gerencie seu plano, créditos, pagamentos e ROI.">
            <p className="text-muted-foreground text-center py-10">Funcionalidade de CRM Financeiro em breve.</p>
@@ -158,7 +164,11 @@ export default function AdvertiserDashboardPage() {
       </div>
 
       <GenericDashboardSection title="Sorteios" icon={Gift} description="Crie e gerencie sorteios para engajar seus clientes.">
-         <p className="text-muted-foreground text-center py-10">Gerenciador de Sorteios em breve.</p>
+         <Button asChild variant="outline" className="w-full mt-4">
+            <Link href="/dashboard/advertiser/create-sweepstake">
+              Criar Novo Sorteio <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
       </GenericDashboardSection>
 
       <AdvertiserProfileSettingsCard advertiserUser={mockAdvertiserUser} />
