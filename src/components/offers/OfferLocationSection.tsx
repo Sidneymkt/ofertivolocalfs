@@ -6,23 +6,35 @@ import type { Offer } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation } from 'lucide-react';
-import Image from 'next/image';
+import GoogleMapDisplay from '@/components/map/GoogleMapDisplay'; // Import the interactive map
 
 interface OfferLocationSectionProps {
   offer: Offer;
 }
 
 const OfferLocationSection: React.FC<OfferLocationSectionProps> = ({ offer }) => {
-  const openGoogleMaps = () => {
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+  const openGoogleMapsExternal = () => {
     if (offer.latitude && offer.longitude) {
       const url = `https://www.google.com/maps/search/?api=1&query=${offer.latitude},${offer.longitude}`;
       window.open(url, '_blank');
     } else {
-      // Fallback if no lat/lng, search by merchant name (less accurate)
-      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(offer.merchantName)}`;
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(offer.merchantName + (offer.businessAddress ? ', ' + offer.businessAddress : ''))}`;
       window.open(url, '_blank');
     }
   };
+
+  const mapCenter = offer.latitude && offer.longitude ? { lat: offer.latitude, lng: offer.longitude } : null;
+  const markers = mapCenter ? [{
+    id: offer.id,
+    lat: offer.latitude as number,
+    lng: offer.longitude as number,
+    title: offer.title,
+    offerId: offer.id,
+    imageUrl: offer.imageUrl,
+    'data-ai-hint': offer['data-ai-hint'] || 'offer location',
+  }] : [];
 
   return (
     <Card className="shadow-lg" id="location-section">
@@ -33,23 +45,22 @@ const OfferLocationSection: React.FC<OfferLocationSectionProps> = ({ offer }) =>
         <CardDescription>{offer.merchantName}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="w-full h-60 relative bg-muted rounded-md overflow-hidden border border-border">
-          <Image
-            src="https://placehold.co/600x300.png"
-            alt={`Localização de ${offer.merchantName} placeholder`}
-            layout="fill"
-            objectFit="cover"
-            data-ai-hint="street map"
-          />
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <MapPin 
-              className="h-10 w-10 text-destructive drop-shadow-lg animate-bounce" 
-              fill="currentColor" 
-              style={{ animationDuration: '1.5s' }} // Adjust bounce speed if needed
+        <div className="w-full h-60 md:h-72 relative bg-muted rounded-md overflow-hidden border border-border">
+          {googleMapsApiKey && mapCenter ? (
+            <GoogleMapDisplay
+              apiKey={googleMapsApiKey}
+              mapCenter={mapCenter}
+              zoom={15}
+              markers={markers}
             />
-          </div>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-center p-4">
+              { !googleMapsApiKey && <p className="text-destructive text-sm">Chave da API do Google Maps não configurada.</p> }
+              { googleMapsApiKey && !mapCenter && <p className="text-muted-foreground text-sm">Coordenadas da oferta não disponíveis para exibir o mapa interativo.</p> }
+            </div>
+          )}
         </div>
-        <Button onClick={openGoogleMaps} className="w-full bg-secondary hover:bg-secondary/90">
+        <Button onClick={openGoogleMapsExternal} className="w-full bg-secondary hover:bg-secondary/90">
           <Navigation className="mr-2" /> Ver Rotas no Google Maps
         </Button>
       </CardContent>
