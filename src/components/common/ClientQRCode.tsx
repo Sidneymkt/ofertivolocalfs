@@ -1,10 +1,14 @@
 
 'use client';
 
-import React, { useState, useEffect, type ComponentType } from 'react';
+import React from 'react';
+// Statically import QRCodeSVG. Its client-side nature is handled by the parent's dynamic import of this entire component.
+import { QRCodeSVG } from 'react-qr-code';
 
-// Props for QRCodeSVG from react-qr-code
-interface QRCodeSVGProps extends React.SVGProps<SVGSVGElement> {
+// Props for QRCodeSVG from react-qr-code.
+// It's good practice to define or import the specific props if available,
+// but for this fix, we'll assume the basic props are sufficient or use 'any'.
+interface QRCodeSVGActualProps extends React.SVGProps<SVGSVGElement> {
     value: string;
     size?: number;
     bgColor?: string;
@@ -20,45 +24,29 @@ interface ClientQRCodeProps {
 }
 
 const ClientQRCode: React.FC<ClientQRCodeProps> = ({ value, size, className }) => {
-  // State to hold the dynamically imported component
-  const [QrComponent, setQrComponent] = useState<ComponentType<QRCodeSVGProps> | null>(null);
+  // This component is dynamically imported with ssr:false by its parents.
+  // So, by the time this renders, we should be on the client, and QRCodeSVG should be defined.
 
-  useEffect(() => {
-    // Dynamically import the QRCodeSVG component from react-qr-code
-    // This ensures the import only happens on the client-side
-    import('react-qr-code')
-      .then(module => {
-        let ResolvedComponent: ComponentType<QRCodeSVGProps> | undefined = undefined;
-
-        if (module && typeof module.QRCodeSVG === 'function') {
-          ResolvedComponent = module.QRCodeSVG;
-        } else if (module && module.default && typeof module.default === 'function') {
-          // Try default export if named export 'QRCodeSVG' is not a function
-          ResolvedComponent = module.default as ComponentType<QRCodeSVGProps>;
-        }
-        // You could add more checks here if needed, e.g., for module.default.QRCodeSVG
-
-        if (ResolvedComponent) {
-          setQrComponent(() => ResolvedComponent);
-        } else {
-          // Log an error if QRCodeSVG is not found (for developer debugging)
-          console.error('QRCodeSVG component could not be resolved from react-qr-code module. Module structure:', module);
-        }
-      })
-      .catch(error => {
-        // Log any errors during the dynamic import (for developer debugging)
-        console.error('Error dynamically importing react-qr-code:', error);
-      });
-  }, []); // Empty dependency array ensures this runs once on mount
-
-  // If the component hasn't been loaded yet, render nothing.
-  // The parent component using next/dynamic for ClientQRCode will handle its own loading state.
-  if (!QrComponent) {
-    return null;
+  if (typeof QRCodeSVG !== 'function') {
+    // This indicates a problem with the import or the library itself.
+    console.error('QRCodeSVG is not a function. Check react-qr-code import, installation, and library version. The value of QRCodeSVG is:', QRCodeSVG);
+    // Fallback UI
+    return (
+        <div 
+            className={cn("flex items-center justify-center bg-muted border border-dashed border-destructive rounded-md text-destructive p-2 text-xs text-center", className)} 
+            style={{ width: size, height: size }}
+        >
+            Error: QR Code indisponível.
+        </div>
+    );
   }
+  
+  // Cast to any if specific props are not strictly typed or to bypass potential minor type mismatches.
+  // For a production component, ensuring accurate prop typing is better.
+  const QRComponent = QRCodeSVG as React.ComponentType<QRCodeSVGActualProps>;
 
-  // Render the dynamically imported QRCodeSVG component with the provided props
-  return <QrComponent value={value} size={size} className={className} />;
+  return <QRComponent value={value} size={size} className={className} />;
 };
 
 export default ClientQRCode;
+
