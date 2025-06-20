@@ -1,4 +1,6 @@
 
+'use client';
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,10 +17,13 @@ import {
   AlertTriangle, 
   ClockIcon, 
   Hourglass,
-  CheckCircle // Added CheckCircle
+  CheckCircle 
 } from 'lucide-react';
 import Image from 'next/image'; 
 import type { PublishedOfferSummary } from '@/types';
+import Link from 'next/link';
+import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 interface PublishedOffersSectionProps {
   offers: PublishedOfferSummary[];
@@ -69,6 +74,37 @@ const StatusBadge: React.FC<{ status: PublishedOfferSummary['status'] }> = ({ st
 };
 
 const PublishedOffersSection: React.FC<PublishedOffersSectionProps> = ({ offers }) => {
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleEdit = (offer: PublishedOfferSummary) => {
+    // In a real app, you'd navigate to an edit page pre-filled with offer data.
+    // For now, navigate to create page and show a toast.
+    router.push(`/dashboard/advertiser/create-offer?editId=${offer.id}`);
+    toast({
+      title: "Editar Oferta",
+      description: `Você seria redirecionado para editar a oferta: "${offer.title}". (Funcionalidade de preenchimento pendente).`,
+    });
+  };
+
+  const handleDuplicate = (offer: PublishedOfferSummary) => {
+    toast({
+      title: "Oferta Duplicada (Simulado)",
+      description: `A oferta "${offer.title}" foi duplicada. Você pode editá-la agora.`,
+    });
+    // Potentially, redirect to create-offer page with duplicated data pre-filled.
+  };
+
+  const handleDelete = (offer: PublishedOfferSummary) => {
+    // Add a confirmation dialog here in a real app
+    toast({
+      variant: "destructive",
+      title: "Oferta Excluída (Simulado)",
+      description: `A oferta "${offer.title}" foi excluída.`,
+    });
+    // Add logic to remove the offer from the list or refetch
+  };
+
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -128,13 +164,13 @@ const PublishedOffersSection: React.FC<PublishedOffersSectionProps> = ({ offers 
                         {offer.usersUsedCount || 0}
                     </TableCell>
                     <TableCell className="text-right space-x-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary" title="Editar">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary" title="Editar" onClick={() => handleEdit(offer)}>
                         <Edit3 size={16} />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-secondary" title="Duplicar">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-secondary" title="Duplicar" onClick={() => handleDuplicate(offer)}>
                         <Copy size={16} />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive" title="Excluir">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive" title="Excluir" onClick={() => handleDelete(offer)}>
                         <Trash2 size={16} />
                       </Button>
                     </TableCell>
@@ -150,3 +186,4 @@ const PublishedOffersSection: React.FC<PublishedOffersSectionProps> = ({ offers 
 };
 
 export default PublishedOffersSection;
+
