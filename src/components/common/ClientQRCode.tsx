@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'react-qr-code';
 
 interface ClientQRCodeProps {
@@ -11,10 +11,18 @@ interface ClientQRCodeProps {
 }
 
 const ClientQRCode: React.FC<ClientQRCodeProps> = ({ value, size, className }) => {
-  // Ensure the component only renders on the client where window is available
-  if (typeof window === 'undefined') {
-    return null; // Or a placeholder
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []); // Empty dependency array ensures this runs once on mount
+
+  if (!isMounted) {
+    // You can return a placeholder or null before the component is mounted on the client
+    return null; 
   }
+
+  // Now that isMounted is true, we are sure we're on the client.
   return <QRCodeSVG value={value} size={size} className={className} />;
 };
 
