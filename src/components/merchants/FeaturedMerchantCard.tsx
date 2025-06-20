@@ -14,7 +14,7 @@ interface FeaturedMerchantCardProps {
 
 const FeaturedMerchantCard: React.FC<FeaturedMerchantCardProps> = ({ merchant }) => {
   return (
-    <Link href={`/merchant/${merchant.id}`} className="block group w-36 shrink-0"> {/* Placeholder link */}
+    <Link href={`/merchant/${merchant.id}`} className="block group w-28 sm:w-32 shrink-0"> {/* Decreased width from w-36 */}
       <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 ease-in-out h-full flex flex-col">
         <div className="relative w-full aspect-square">
           <Image
@@ -26,9 +26,9 @@ const FeaturedMerchantCard: React.FC<FeaturedMerchantCardProps> = ({ merchant })
             data-ai-hint={merchant['data-ai-hint']}
           />
         </div>
-        <CardContent className="p-3 flex-grow flex flex-col justify-between">
+        <CardContent className="p-2 sm:p-3 flex-grow flex flex-col justify-between"> {/* Adjusted padding */}
           <div>
-            <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+            <h3 className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight"> {/* Adjusted text size */}
               {merchant.name}
             </h3>
             {merchant.category && (

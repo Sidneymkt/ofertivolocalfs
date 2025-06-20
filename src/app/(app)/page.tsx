@@ -53,7 +53,7 @@ export default function FeedPage() {
   const recentOffers = useMemo(() => {
     return [...filteredOffers]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 4);
+      .slice(0, 6); // Increased from 4 to 6
   }, [filteredOffers]);
   
   const recommendedOffers = useMemo(() => {
