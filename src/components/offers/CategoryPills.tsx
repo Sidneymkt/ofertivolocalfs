@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -52,7 +51,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({ categories, onSelectCateg
           );
         })}
       </div>
-      <ScrollBar orientation="horizontal" className="invisible" />
+      <ScrollBar orientation="horizontal" className="invisible md:visible" />
     </ScrollArea>
   );
 };
