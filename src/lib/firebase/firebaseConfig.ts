@@ -6,34 +6,34 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 // import { getAnalytics, type Analytics } from "firebase/analytics"; // Optional
 
 // --- Firebase Configuration Diagnostics ---
-// This section helps debug issues related to Firebase and Google Maps API key setup.
-// Ensure your .env.local file in the project root has the correct values.
 console.log("-----------------------------------------------------------");
 console.log("[DEBUG] Firebase/Maps Configuration - Values from Environment Variables:");
 console.log("-----------------------------------------------------------");
 
-const apiKeyFromEnv = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+const apiKeyFromEnv = process.env.NEXT_PUBLIC_FIREBASE_API_KEY; // This key is often the same as Google Maps key in simple setups
 const authDomainFromEnv = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
 const projectIdFromEnv = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 const storageBucketFromEnv = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
 const messagingSenderIdFromEnv = process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID;
 const appIdFromEnv = process.env.NEXT_PUBLIC_FIREBASE_APP_ID;
 const measurementIdFromEnv = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
+const googleMapsApiKeyFromEnv = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-console.log("[DEBUG] NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:", apiKeyFromEnv ? `"${apiKeyFromEnv.substring(0, 4)}...${apiKeyFromEnv.substring(apiKeyFromEnv.length - 4)}"`: "MISSING or undefined");
+console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_API_KEY:", apiKeyFromEnv ? `SET (masked)`: "MISSING or undefined");
+console.log("[DEBUG] NEXT_PUBLIC_GOOGLE_MAPS_API_KEY (for map display):", googleMapsApiKeyFromEnv ? `SET (masked)`: "MISSING or undefined (Map feature will fail if this is not set)");
 console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:", authDomainFromEnv || "MISSING or undefined");
 console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_PROJECT_ID:", projectIdFromEnv || "MISSING or undefined");
 console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:", storageBucketFromEnv || "MISSING or undefined");
 console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:", messagingSenderIdFromEnv || "MISSING or undefined");
 console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_APP_ID:", appIdFromEnv || "MISSING or undefined");
-console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:", measurementIdFromEnv || "Not required / undefined");
+console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID (Optional):", measurementIdFromEnv || "Not set or undefined");
 console.log("-----------------------------------------------------------");
 
 
 if (!apiKeyFromEnv) {
   console.error(
-    "CRITICAL: Google Maps API Key (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) is MISSING from .env.local. Map functionality WILL FAIL. " +
-    "Please add it to your .env.local file (e.g., NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_ACTUAL_API_KEY) and restart your Next.js development server."
+    "CRITICAL: Firebase API Key (NEXT_PUBLIC_FIREBASE_API_KEY) is MISSING from .env.local. Firebase services might fail. " +
+    "Please add it to your .env.local file (e.g., NEXT_PUBLIC_FIREBASE_API_KEY=YOUR_ACTUAL_API_KEY) and restart your Next.js development server."
   );
 }
 if (!projectIdFromEnv) {
@@ -45,9 +45,9 @@ if (!projectIdFromEnv) {
 
 
 const firebaseConfig = {
-  apiKey: apiKeyFromEnv, // CRITICAL: This MUST be correctly set in .env.local for Google Maps and Firebase
+  apiKey: apiKeyFromEnv,
   authDomain: authDomainFromEnv,
-  projectId: projectIdFromEnv, // CRITICAL: This MUST be correctly set for Firestore/Auth
+  projectId: projectIdFromEnv,
   storageBucket: storageBucketFromEnv,
   messagingSenderId: messagingSenderIdFromEnv,
   appId: appIdFromEnv,
@@ -72,7 +72,7 @@ if (!getApps().length) {
     console.log("[DEBUG] Firebase App initialized successfully.");
   } catch (error) {
     console.error("[DEBUG] Error initializing Firebase App:", error);
-    console.error("[DEBUG] Review the Firebase config above. Common issues: missing projectId, malformed authDomain.");
+    console.error("[DEBUG] Review the Firebase config above. Common issues: missing projectId, malformed authDomain, or issues with API key if it's also used for Firebase services.");
     // It's often better to let the app try to run so other parts might work,
     // but errors in map/DB components will indicate the specific failure.
     // throw error; // Optionally re-throw to halt execution if Firebase is absolutely critical for startup
@@ -104,3 +104,4 @@ if (app) {
 // }
 
 export { app, auth, db /*, storage, analytics */ };
+
