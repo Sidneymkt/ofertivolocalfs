@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useCallback, useState, useMemo, useEffect } from 'react';
+import React, { useCallback, useState, useMemo, useEffect, useRef } from 'react';
 import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from '@react-google-maps/api';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ interface GoogleMapDisplayProps {
 const mapContainerStyle = {
   width: '100%',
   height: '100%',
-  borderRadius: '0.5rem',
+  borderRadius: '0.5rem', // Ensure this matches or is handled by parent if overflow-hidden
 };
 
 const getMarkerIcon = (
@@ -36,8 +36,8 @@ const getMarkerIcon = (
   isSelected: boolean,
   isMapsApiLoaded: boolean
 ): google.maps.Icon | undefined => {
-  if (!isMapsApiLoaded || !window.google || !window.google.maps) {
-    console.warn('[getMarkerIcon] Google Maps API not fully ready for custom icon creation.');
+  if (!isMapsApiLoaded || !window.google || !window.google.maps || !window.google.maps.Size || !window.google.maps.Point) {
+    // console.warn('[getMarkerIcon] Google Maps API objects (Size/Point) not ready.');
     return undefined; // Fallback to default marker
   }
 
@@ -83,7 +83,7 @@ const getMarkerIcon = (
     };
   } catch (e) {
     console.error("Error creating google.maps.Size/Point for marker icon:", e);
-    return undefined; // Fallback if Size/Point constructors fail (highly unlikely if isMapsApiLoaded is true)
+    return undefined; 
   }
 };
 
@@ -91,18 +91,54 @@ const getMarkerIcon = (
 const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, zoom = 12, markers: initialMarkers }) => {
   const router = useRouter();
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
-  const [currentMapCenter, setCurrentMapCenter] = useState(mapCenter); // For distance calculation
+  // This state will hold the map's current visual center, updated onIdle
+  const [currentVisualCenter, setCurrentVisualCenter] = useState(mapCenter); 
+  const mapRef = React.useRef<google.maps.Map | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey || "",
+    libraries: ['marker'], // Ensure marker library is loaded if using AdvancedMarkerView or complex markers later
   });
-
+  
+  // Effect to update currentVisualCenter when the mapCenter prop from parent changes
   useEffect(() => {
-    setCurrentMapCenter(mapCenter); // Update local center when prop changes
+    // console.log('[GoogleMapDisplay] mapCenter prop changed:', mapCenter);
+    setCurrentVisualCenter(mapCenter);
   }, [mapCenter]);
+
+  const onLoad = React.useCallback(function callback(mapInstance: google.maps.Map) {
+    // console.log('[GoogleMapDisplay] Map loaded.');
+    mapRef.current = mapInstance;
+    // Set initial visual center once map loads
+    const initialCenter = mapInstance.getCenter();
+    if (initialCenter) {
+        setCurrentVisualCenter({ lat: initialCenter.lat(), lng: initialCenter.lng() });
+    }
+  }, []);
+
+  const onUnmount = React.useCallback(function callback() {
+    // console.log('[GoogleMapDisplay] Map unmounted.');
+    mapRef.current = null;
+  }, []);
+
+  const onIdle = useCallback(() => {
+    // console.log('[GoogleMapDisplay] Map idle.');
+    if (mapRef.current && typeof mapRef.current.getCenter === 'function') {
+      const newCenter = mapRef.current.getCenter();
+      if (newCenter) {
+        // console.log('[GoogleMapDisplay] Updating currentVisualCenter onIdle:', { lat: newCenter.lat(), lng: newCenter.lng() });
+        setCurrentVisualCenter({ lat: newCenter.lat(), lng: newCenter.lng() });
+      }
+    }
+  }, []);
+
 
   const handleMarkerClick = useCallback((marker: MapMarker) => {
     setSelectedMarker(marker);
+    // Optionally, pan to the marker smoothly
+    // if (mapRef.current) {
+    //   mapRef.current.panTo({ lat: marker.lat, lng: marker.lng });
+    // }
   }, []);
 
   const handleInfoWindowClose = useCallback(() => {
@@ -112,19 +148,23 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
   const handleViewOffer = (offerId: string) => {
     router.push(`/offer/${offerId}`);
   };
-
+  
   const memoizedMarkers = useMemo(() => {
-    if (!isLoaded || !currentMapCenter) return [];
+    if (!isLoaded || !currentVisualCenter) {
+      // console.log('[GoogleMapDisplay] memoizedMarkers: Not loaded or no currentVisualCenter');
+      return [];
+    }
+    // console.log('[GoogleMapDisplay] memoizedMarkers: Recalculating for', initialMarkers.length, 'markers. currentVisualCenter:', currentVisualCenter);
     return initialMarkers.map(marker => {
-      const distance = calculateDistance(currentMapCenter.lat, currentMapCenter.lng, marker.lat, marker.lng);
+      const distance = calculateDistance(currentVisualCenter.lat, currentVisualCenter.lng, marker.lat, marker.lng);
       const icon = getMarkerIcon(distance, selectedMarker?.id === marker.id, isLoaded);
       return {
         ...marker,
         icon,
-        zIndex: selectedMarker?.id === marker.id ? 1000 : Math.round(100 - distance), // Higher zIndex for closer/selected markers
+        zIndex: selectedMarker?.id === marker.id ? 1000 : Math.round(100 - distance), 
       };
     });
-  }, [initialMarkers, currentMapCenter, selectedMarker, isLoaded]);
+  }, [initialMarkers, currentVisualCenter, selectedMarker, isLoaded]);
 
 
   if (loadError) {
@@ -154,28 +194,24 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
   }
 
   if (!isLoaded) {
+    // console.log('[GoogleMapDisplay] Rendering: API not loaded yet.');
     return (
       <div className="w-full h-full flex items-center justify-center bg-muted border rounded-md p-4 text-center">
         <p className="text-muted-foreground">Carregando Mapa...</p>
       </div>
     );
   }
+  
+  // console.log('[GoogleMapDisplay] Rendering Map. mapCenter:', mapCenter, 'zoom:', zoom, '#markers:', memoizedMarkers.length);
 
   return (
     <GoogleMap
       mapContainerStyle={mapContainerStyle}
-      center={currentMapCenter}
+      center={mapCenter} // Controlled by parent
       zoom={zoom}
-      onCenterChanged={() => {
-        const map = (window as any).googleMapsMapInstance; // Access map instance if needed for getCenter
-        if (map && map.getCenter) {
-          const newCenter = map.getCenter();
-          if (newCenter) {
-            setCurrentMapCenter({ lat: newCenter.lat(), lng: newCenter.lng() });
-          }
-        }
-      }}
-      onLoad={(map) => { (window as any).googleMapsMapInstance = map; }} // Store map instance globally if needed
+      onLoad={onLoad}
+      onUnmount={onUnmount}
+      onIdle={onIdle} // Use onIdle to update currentVisualCenter
       options={{
         streetViewControl: false,
         mapTypeControl: false,
@@ -189,18 +225,18 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
           key={marker.id}
           position={{ lat: marker.lat, lng: marker.lng }}
           title={marker.title}
-          icon={marker.icon}
+          icon={marker.icon} // This can be undefined, MarkerF handles it
           zIndex={marker.zIndex}
           onClick={() => handleMarkerClick(marker)}
         />
       ))}
 
-      {selectedMarker && isLoaded && window.google && window.google.maps && (
+      {selectedMarker && isLoaded && window.google && window.google.maps && window.google.maps.Size && (
         <InfoWindowF
           position={{ lat: selectedMarker.lat, lng: selectedMarker.lng }}
           onCloseClick={handleInfoWindowClose}
           options={{ 
-            pixelOffset: new window.google.maps.Size(0, -42), // Adjusted for new marker height
+            pixelOffset: new window.google.maps.Size(0, -42), 
             disableAutoPan: false,
           }}
         >
@@ -228,3 +264,4 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
 };
 
 export default GoogleMapDisplay;
+
