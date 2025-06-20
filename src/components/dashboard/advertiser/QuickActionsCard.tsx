@@ -4,7 +4,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Gift, Users, BarChartHorizontalBig } from 'lucide-react'; // Removed ShoppingBag
+import { PlusCircle, Gift, Users, BarChartHorizontalBig, KeyRound } from 'lucide-react'; // Removed ShoppingBag, Added KeyRound
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
 
@@ -29,7 +29,7 @@ const QuickActionsCard: React.FC = () => {
         <CardDescription>Atalhos para as funcionalidades mais usadas.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Button 
+        <Button
           asChild
           className="w-full bg-primary hover:bg-primary/90"
         >
@@ -37,19 +37,27 @@ const QuickActionsCard: React.FC = () => {
             <PlusCircle className="mr-2 h-5 w-5" /> Criar Nova Oferta
           </Link>
         </Button>
-        <Button 
+        <Button
           asChild
-          variant="secondary" 
+          variant="secondary"
           className="w-full"
         >
           <Link href="/dashboard/advertiser/create-sweepstake">
             <Gift className="mr-2 h-5 w-5" /> Criar Sorteio
           </Link>
         </Button>
-        {/* O botão "Gerenciar Ofertas" foi removido conforme solicitado */}
-        <Button 
+        <Button
           asChild
-          variant="outline" 
+          variant="outline"
+          className="w-full"
+        >
+          <Link href="/dashboard/advertiser/validate-checkin">
+            <KeyRound className="mr-2 h-5 w-5" /> Validar Check-in
+          </Link>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
           className="w-full"
         >
           <Link href="/dashboard/advertiser/leads">
