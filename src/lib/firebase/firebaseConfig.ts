@@ -17,10 +17,17 @@ const storageBucketFromEnv = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
 const messagingSenderIdFromEnv = process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID;
 const appIdFromEnv = process.env.NEXT_PUBLIC_FIREBASE_APP_ID;
 const measurementIdFromEnv = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
-const googleMapsApiKeyFromEnv = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY; // This is the key for Google Maps
+const googleMapsApiKeyFromEnv = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY; 
 
-console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_API_KEY (for Firebase services):", apiKeyFromEnv ? `SET (masked)`: "MISSING or undefined");
-console.log("[DEBUG] NEXT_PUBLIC_GOOGLE_MAPS_API_KEY (for map display):", googleMapsApiKeyFromEnv ? `SET (masked)`: "MISSING or undefined (Map feature will fail if this is not set for Maps JavaScript API)");
+// Helper to mask keys for logging
+const maskKey = (key: string | undefined) => {
+  if (!key) return "MISSING or undefined";
+  if (key.length < 8) return "SET (too short to mask)";
+  return `SET (${key.substring(0, 4)}...${key.substring(key.length - 4)})`;
+}
+
+console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_API_KEY (for Firebase services):", maskKey(apiKeyFromEnv));
+console.log("[DEBUG] NEXT_PUBLIC_GOOGLE_MAPS_API_KEY (for map display):", maskKey(googleMapsApiKeyFromEnv));
 console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:", authDomainFromEnv || "MISSING or undefined");
 console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_PROJECT_ID:", projectIdFromEnv || "MISSING or undefined");
 console.log("[DEBUG] NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:", storageBucketFromEnv || "MISSING or undefined");
@@ -51,7 +58,7 @@ if (!googleMapsApiKeyFromEnv) {
 
 
 const firebaseConfig = {
-  apiKey: apiKeyFromEnv, // This key might be used by Firebase services
+  apiKey: apiKeyFromEnv, 
   authDomain: authDomainFromEnv,
   projectId: projectIdFromEnv,
   storageBucket: storageBucketFromEnv,
@@ -61,7 +68,7 @@ const firebaseConfig = {
 };
 
 // Log the final config being used (masking API key for safety in logs)
-const configForLogging = { ...firebaseConfig, apiKey: apiKeyFromEnv ? `SET (masked)` : 'MISSING' };
+const configForLogging = { ...firebaseConfig, apiKey: maskKey(apiKeyFromEnv) };
 console.log("[DEBUG] FINAL Firebase Config being used for initialization:", JSON.parse(JSON.stringify(configForLogging)));
 console.log("-----------------------------------------------------------");
 
@@ -79,6 +86,8 @@ if (!getApps().length) {
   } catch (error) {
     console.error("[DEBUG] Error initializing Firebase App:", error);
     console.error("[DEBUG] Review the Firebase config above. Common issues: missing projectId, malformed authDomain, or issues with API key if it's also used for Firebase services.");
+    // @ts-ignore - app might not be defined here if initializeApp fails
+    app = undefined; 
   }
 } else {
   app = getApps()[0];
@@ -95,9 +104,15 @@ if (app) {
   } catch (error) {
     console.error("[DEBUG] Error getting Firebase services (Auth, Firestore):", error);
     console.error("[DEBUG] This usually happens if firebaseConfig.projectId is missing or incorrect, or if Firebase SDKs have issues.");
+    // @ts-ignore - these might not be defined
+    auth = undefined; db = undefined;
   }
 } else {
     console.error("[DEBUG] Firebase App object is not available. Auth and Firestore services cannot be initialized.");
+    // @ts-ignore - these might not be defined
+    auth = undefined; db = undefined;
 }
 
 export { app, auth, db };
+
+    
