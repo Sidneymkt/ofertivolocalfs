@@ -1,13 +1,13 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react'; // Added useMemo
+import React, { useState, useMemo } from 'react'; 
 import InteractiveMapPlaceholder from '@/components/map/InteractiveMapPlaceholder';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ListFilter } from 'lucide-react';
 import OfferCard from '@/components/offers/OfferCard';
-import RecommendedOffersList from '@/components/offers/RecommendedOffersList'; // Import RecommendedOffersList
+import RecommendedOffersList from '@/components/offers/RecommendedOffersList';
 import { mockOffers, categories } from '@/types';
 import CategoryPills from '@/components/offers/CategoryPills';
 import {
@@ -22,10 +22,9 @@ import AdvancedFiltersSheet from '@/components/map/AdvancedFiltersSheet';
 
 export default function MapPage() {
   const nearbyOffers = useMemo(() => mockOffers.slice(0, 5), []);
-  // Create a distinct list for recommended offers on the map page
   const recommendedOffersOnMap = useMemo(() => {
     const nearbyOfferIds = new Set(nearbyOffers.map(o => o.id));
-    return mockOffers.filter(offer => !nearbyOfferIds.has(offer.id)).slice(0, 8); // Get up to 8 distinct offers
+    return mockOffers.filter(offer => !nearbyOfferIds.has(offer.id)).slice(0, 8);
   }, [nearbyOffers]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -38,21 +37,19 @@ export default function MapPage() {
 
   const handleApplyFilters = (filters: any) => {
     console.log('Applying advanced filters:', filters);
-    // Add logic to filter map markers or nearbyOffers based on advanced filters
-    setIsFiltersSheetOpen(false); // Close sheet after applying
+    setIsFiltersSheetOpen(false); 
   };
 
   const handleClearFilters = () => {
     console.log('Clearing advanced filters');
-    // Add logic to reset advanced filters
-    setIsFiltersSheetOpen(false); // Close sheet after clearing
+    setIsFiltersSheetOpen(false);
   };
 
 
   return (
-    <div className="flex flex-col h-[calc(100vh_-_8rem)]"> {/* Adjust height considering header and bottom nav */}
+    <div className="flex flex-col h-full"> {/* Changed to h-full */}
       {/* Map Section */}
-      <div className="flex-grow relative p-1 md:p-2"> {/* Added small padding for visual separation */}
+      <div className="flex-1 relative p-1 md:p-2"> {/* Changed to flex-1 */}
         <InteractiveMapPlaceholder />
       </div>
 
