@@ -49,22 +49,7 @@ export default function MapPage() {
         <InteractiveMapPlaceholder />
       </div>
 
-      {/* Horizontal Scrollable Offer List Section */}
-      <div className="shrink-0 py-3 bg-background border-t">
-        <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas no Mapa</h3>
-        <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex space-x-4 px-4 pb-2.5">
-            {nearbyOffers.map((offer) => (
-              <div key={offer.id} className="w-72 shrink-0">
-                <OfferCard offer={offer} />
-              </div>
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-      </div>
-
-      {/* Filter Bar Section */}
+      {/* Filter Bar Section - MOVED HERE */}
       <div className="shrink-0 p-3 border-t bg-background">
         <div className="flex items-center gap-2">
           <div className="flex-grow">
@@ -99,7 +84,21 @@ export default function MapPage() {
           </Sheet>
         </div>
       </div>
+
+      {/* Horizontal Scrollable Offer List Section */}
+      <div className="shrink-0 py-3 bg-background border-t">
+        <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas no Mapa</h3>
+        <ScrollArea className="w-full whitespace-nowrap">
+          <div className="flex space-x-4 px-4 pb-2.5">
+            {nearbyOffers.map((offer) => (
+              <div key={offer.id} className="w-72 shrink-0">
+                <OfferCard offer={offer} />
+              </div>
+            ))}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      </div>
     </div>
   );
 }
-
