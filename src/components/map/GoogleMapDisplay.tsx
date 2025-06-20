@@ -6,7 +6,7 @@ import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from '@react-google-m
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { calculateDistance } from '@/lib/utils'; // Import the utility
+import { calculateDistance } from '@/lib/utils'; 
 
 interface MapMarker {
   id: string;
@@ -28,7 +28,7 @@ interface GoogleMapDisplayProps {
 const mapContainerStyle = {
   width: '100%',
   height: '100%',
-  borderRadius: '0.5rem', // Ensure this matches or is handled by parent if overflow-hidden
+  borderRadius: '0.5rem', 
 };
 
 const getMarkerIcon = (
@@ -37,33 +37,32 @@ const getMarkerIcon = (
   isMapsApiLoaded: boolean
 ): google.maps.Icon | undefined => {
   if (!isMapsApiLoaded || !window.google || !window.google.maps || !window.google.maps.Size || !window.google.maps.Point) {
-    // console.warn('[getMarkerIcon] Google Maps API objects (Size/Point) not ready.');
-    return undefined; // Fallback to default marker
+    return undefined; 
   }
 
-  const closeColor = '#28a745'; // Green
-  const mediumColor = '#ffc107'; // Yellow
-  const farColor = '#dc3545'; // Red
-  const selectedColor = '#007bff'; // Primary Blue for selected
+  const closeColor = '#28a745'; 
+  const mediumColor = '#ffc107'; 
+  const farColor = '#dc3545'; 
+  const selectedColor = '#007bff'; 
 
   let fillColor = farColor;
   let animationClass = '';
   let zIndex = 1;
   let scale = 1;
 
-  if (distance < 1) { // Less than 1km
+  if (distance < 1) { 
     fillColor = closeColor;
     animationClass = 'marker-pulse-animation';
     zIndex = 3;
     scale = 1.1;
-  } else if (distance < 5) { // 1km to 5km
+  } else if (distance < 5) { 
     fillColor = mediumColor;
     zIndex = 2;
   }
 
   if (isSelected) {
     fillColor = selectedColor;
-    zIndex = 10; // Ensure selected is on top
+    zIndex = 10; 
     scale = 1.2;
   }
 
@@ -95,17 +94,17 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
   const mapRef = React.useRef<google.maps.Map | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: apiKey || "",
+    googleMapsApiKey: apiKey || "", // Ensure apiKey is provided, default to empty string if undefined
     libraries: ['marker'], 
   });
   
   useEffect(() => {
-    console.log('[GoogleMapDisplay] mapCenter prop changed or component re-rendered. New mapCenter:', mapCenter);
-    setCurrentVisualCenter(mapCenter);
+    console.log('[DEBUG] GoogleMapDisplay: mapCenter prop changed or component re-rendered. New mapCenter:', mapCenter);
+    setCurrentVisualCenter(mapCenter); // Update visual center when mapCenter prop changes
   }, [mapCenter]);
 
   const onLoad = React.useCallback(function callback(mapInstance: google.maps.Map) {
-    console.log('[GoogleMapDisplay] Map loaded. Initial center from map instance:', mapInstance.getCenter()?.toJSON());
+    console.log('[DEBUG] GoogleMapDisplay: Map loaded. Initial center from map instance:', mapInstance.getCenter()?.toJSON());
     mapRef.current = mapInstance;
     const initialCenter = mapInstance.getCenter();
     if (initialCenter) {
@@ -114,7 +113,7 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
   }, []);
 
   const onUnmount = React.useCallback(function callback() {
-    console.log('[GoogleMapDisplay] Map unmounted.');
+    console.log('[DEBUG] GoogleMapDisplay: Map unmounted.');
     mapRef.current = null;
   }, []);
 
@@ -122,7 +121,7 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
     if (mapRef.current && typeof mapRef.current.getCenter === 'function') {
       const newCenter = mapRef.current.getCenter();
       if (newCenter) {
-        console.log('[GoogleMapDisplay] Map idle. New visual center:', { lat: newCenter.lat(), lng: newCenter.lng() });
+        console.log('[DEBUG] GoogleMapDisplay: Map idle. New visual center:', { lat: newCenter.lat(), lng: newCenter.lng() });
         setCurrentVisualCenter({ lat: newCenter.lat(), lng: newCenter.lng() });
       }
     }
@@ -131,7 +130,7 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
 
   const handleMarkerClick = useCallback((marker: MapMarker) => {
     setSelectedMarker(marker);
-    console.log('[GoogleMapDisplay] Marker clicked:', marker.title);
+    console.log('[DEBUG] GoogleMapDisplay: Marker clicked:', marker.title);
   }, []);
 
   const handleInfoWindowClose = useCallback(() => {
@@ -144,10 +143,10 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
   
   const memoizedMarkers = useMemo(() => {
     if (!isLoaded || !currentVisualCenter) {
-      console.log('[GoogleMapDisplay] memoizedMarkers: Conditions not met (isLoaded:', isLoaded, ', currentVisualCenter:', currentVisualCenter,')');
+      console.log('[DEBUG] GoogleMapDisplay memoizedMarkers: Conditions not met (isLoaded:', isLoaded, ', currentVisualCenter:', currentVisualCenter,')');
       return [];
     }
-    console.log('[GoogleMapDisplay] memoizedMarkers: Recalculating for', initialMarkers.length, 'markers. currentVisualCenter:', currentVisualCenter);
+    console.log('[DEBUG] GoogleMapDisplay memoizedMarkers: Recalculating for', initialMarkers.length, 'markers. currentVisualCenter:', currentVisualCenter);
     return initialMarkers.map(marker => {
       const distance = calculateDistance(currentVisualCenter.lat, currentVisualCenter.lng, marker.lat, marker.lng);
       const icon = getMarkerIcon(distance, selectedMarker?.id === marker.id, isLoaded);
@@ -162,20 +161,23 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
 
   if (loadError) {
     const isInvalidKeyError = loadError.message.includes('InvalidKeyMapError') || loadError.message.toLowerCase().includes('api key not valid');
-    console.error('[GoogleMapDisplay] Load Error:', loadError);
+    console.error('[DEBUG] GoogleMapDisplay: Load Error:', loadError);
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-muted border border-destructive/50 rounded-md p-4 text-center">
         <p className="text-destructive font-semibold text-lg mb-2">Erro ao carregar o Google Maps</p>
         {isInvalidKeyError && (
             <p className="text-destructive text-md mb-2">
-                Parece que há um problema com sua chave da API do Google Maps (InvalidKeyMapError).
+                <strong>Causa provável: Problema com a Chave da API (InvalidKeyMapError).</strong>
             </p>
         )}
-        <p className="text-destructive text-sm mb-1">{loadError.message}</p>
-        <p className="text-xs text-muted-foreground mb-3">Consulte o console do navegador para mais detalhes técnicos sobre o erro do Google Maps.</p>
+        <p className="text-destructive text-sm mb-1">Mensagem: {loadError.message}</p>
+        <p className="text-xs text-muted-foreground mb-3">
+          Consulte o console do navegador para detalhes técnicos e os logs `[DEBUG]` da configuração do Firebase.
+          <br />O erro `InvalidKeyMapError` geralmente significa um problema com sua `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
+        </p>
         <ul className="text-xs text-muted-foreground list-disc list-inside text-left mt-2 space-y-1 max-w-md">
-          <li>**Verifique sua chave da API**: Garanta que `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` está correta no seu arquivo `.env.local` e que o servidor foi reiniciado.</li>
-          <li>**Google Cloud Console**:
+          <li><strong>Verifique `.env.local`</strong>: Garanta que `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` está correta e que o servidor foi reiniciado.</li>
+          <li><strong>Console Google Cloud</strong>:
             <ul>
                 <li>A API "Maps JavaScript API" deve estar ativada.</li>
                 <li>Verifique se há uma conta de faturamento válida e ativa associada ao projeto.</li>
@@ -191,21 +193,21 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
   }
 
   if (!apiKey) {
-    console.warn('[GoogleMapDisplay] API Key is missing.');
+    console.warn('[DEBUG] GoogleMapDisplay: API Key (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) is missing or undefined in the code.');
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-muted border border-destructive/50 rounded-md p-4 text-center">
         <p className="text-destructive font-semibold text-lg mb-2">Chave da API do Google Maps não configurada!</p>
         <p className="text-muted-foreground text-sm max-w-md">
-          Para usar o mapa, adicione sua chave da API do Google Maps à variável de ambiente `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` no seu arquivo `.env.local` (localizado na raiz do projeto).
+          Para usar o mapa, adicione sua chave da API do Google Maps à variável de ambiente `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` no seu arquivo `.env.local`.
         </p>
-        <p className="text-xs text-muted-foreground mt-2 max-w-md">Exemplo: <code className="bg-destructive/20 px-1 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="SUA_CHAVE_DE_API_AQUI"</code></p>
-        <p className="text-xs text-muted-foreground mt-1 max-w-md">Após adicionar a chave, reinicie o servidor de desenvolvimento.</p>
+        <p className="text-xs text-muted-foreground mt-2 max-w-md">Ex: <code className="bg-destructive/20 px-1 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="SUA_CHAVE_AQUI"</code></p>
+        <p className="text-xs text-muted-foreground mt-1 max-w-md">Após adicionar, reinicie o servidor de desenvolvimento.</p>
       </div>
     );
   }
 
   if (!isLoaded) {
-    console.log('[GoogleMapDisplay] Rendering: Google Maps API not loaded yet.');
+    console.log('[DEBUG] GoogleMapDisplay: Rendering - Google Maps API not loaded yet.');
     return (
       <div className="w-full h-full flex items-center justify-center bg-muted border rounded-md p-4 text-center">
         <p className="text-muted-foreground">Carregando Mapa...</p>
@@ -213,7 +215,7 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
     );
   }
   
-  console.log('[GoogleMapDisplay] Rendering Map. mapCenter:', mapCenter, 'zoom:', zoom, '#markers:', memoizedMarkers.length);
+  console.log('[DEBUG] GoogleMapDisplay: Rendering Map. mapCenter:', mapCenter, 'zoom:', zoom, '#markers:', memoizedMarkers.length);
 
   return (
     <GoogleMap
