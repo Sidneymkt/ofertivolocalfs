@@ -1,13 +1,12 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import InteractiveMapPlaceholder from '@/components/map/InteractiveMapPlaceholder';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ListFilter } from 'lucide-react';
 import RecommendedOfferCard from '@/components/offers/RecommendedOfferCard';
-import { mockOffers, categories } from '@/types';
+import { mockOffers, categories, type Offer } from '@/types';
 import CategoryPills from '@/components/offers/CategoryPills';
 import {
   Sheet,
@@ -18,9 +17,45 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import AdvancedFiltersSheet from '@/components/map/AdvancedFiltersSheet';
+import GoogleMapDisplay from '@/components/map/GoogleMapDisplay'; // Import the new map component
+
+interface MapMarker {
+  id: string;
+  lat: number;
+  lng: number;
+  title: string;
+  offerId: string;
+  imageUrl?: string;
+  'data-ai-hint'?: string;
+}
 
 export default function MapPage() {
   const nearbyOffers = useMemo(() => mockOffers.slice(0, 5), []);
+  
+  const [mapCenter, setMapCenter] = useState({ lat: -3.0993, lng: -59.9839 }); // Default to Manaus center
+  const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
+
+  useEffect(() => {
+    // Set initial map center based on the first offer if available
+    if (mockOffers.length > 0 && mockOffers[0].latitude && mockOffers[0].longitude) {
+      setMapCenter({ lat: mockOffers[0].latitude, lng: mockOffers[0].longitude });
+    }
+
+    // Prepare markers from mockOffers
+    const markersData = mockOffers
+      .filter(offer => offer.latitude && offer.longitude)
+      .map(offer => ({
+        id: offer.id,
+        lat: offer.latitude as number,
+        lng: offer.longitude as number,
+        title: offer.title,
+        offerId: offer.id,
+        imageUrl: offer.imageUrl,
+        'data-ai-hint': offer['data-ai-hint'],
+      }));
+    setMapMarkers(markersData);
+  }, []);
+
 
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isFiltersSheetOpen, setIsFiltersSheetOpen] = useState(false);
@@ -28,24 +63,33 @@ export default function MapPage() {
   const handleSelectCategory = (categoryName: string) => {
     setSelectedCategory(categoryName);
     console.log('MapPage - Selected Category:', categoryName);
+    // Potentially filter mapMarkers or nearbyOffers here based on category
   };
 
   const handleApplyFilters = (filters: any) => {
     console.log('Applying advanced filters:', filters);
+    // Apply filter logic to mapMarkers and nearbyOffers
     setIsFiltersSheetOpen(false);
   };
 
   const handleClearFilters = () => {
     console.log('Clearing advanced filters');
+    // Reset filter logic
     setIsFiltersSheetOpen(false);
   };
 
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   return (
-    <div className="flex flex-col h-full"> {/* Changed flex-1 to h-full */}
+    <div className="flex flex-col h-full">
       {/* Map Section - Moved to the top */}
       <div className="flex-1 relative p-1 md:p-2">
-        <InteractiveMapPlaceholder />
+        <GoogleMapDisplay 
+          apiKey={googleMapsApiKey}
+          mapCenter={mapCenter}
+          zoom={12}
+          markers={mapMarkers}
+        />
       </div>
 
       {/* Filter Bar Section */}
