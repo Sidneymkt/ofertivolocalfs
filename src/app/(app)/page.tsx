@@ -19,7 +19,7 @@ import { Timestamp } from 'firebase/firestore'; // Import Timestamp
 const mockPageOffers: Offer[] = [
   {
     id: 'mock-offer-1',
-    title: 'Pizza Grande Especial (Exemplo)',
+    title: 'Pizza Grande Especial (Destaque)',
     description: 'Deliciosa pizza grande com 3 ingredientes à sua escolha e borda recheada.',
     merchantName: 'Pizzaria Fantasia',
     merchantId: 'mock-merchant-1',
@@ -33,7 +33,7 @@ const mockPageOffers: Offer[] = [
     createdAt: Timestamp.fromDate(new Date()),
     updatedAt: Timestamp.fromDate(new Date()),
     offerType: 'padrao',
-    visibility: 'destaque',
+    visibility: 'destaque', // DESTAQUE
     status: 'active',
     pointsAwarded: 10,
     createdBy: 'mock-merchant-1',
@@ -41,8 +41,8 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 155,
     rating: 4.7,
     reviews: 30,
-    galleryImages: ['https://placehold.co/800x450.png'],
-    galleryImageHints: ['pizza restaurant'],
+    galleryImages: ['https://placehold.co/800x450.png?text=Pizza+1', 'https://placehold.co/800x450.png?text=Pizza+2'], // TEM GALLERYIMAGES
+    galleryImageHints: ['pizza restaurant', 'dinner food'],
     tags: ['#pizza', '#familia', '#promocao']
   },
   {
@@ -95,6 +95,145 @@ const mockPageOffers: Offer[] = [
     rating: 4.3,
     reviews: 15,
     tags: ['#lanche', '#saudavel']
+  },
+  {
+    id: 'mock-offer-4',
+    title: 'Super Destaque: Viagem Incrível',
+    description: 'Pacote de viagem para o paraíso com tudo incluso.',
+    merchantName: 'Agência Viajar Bem',
+    merchantId: 'mock-merchant-4',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'travel beach journey',
+    category: 'Lazer',
+    discountedPrice: 1990.00,
+    originalPrice: 2500.00,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 30))),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'padrao',
+    visibility: 'destaque', // DESTAQUE
+    status: 'active',
+    pointsAwarded: 100,
+    createdBy: 'mock-merchant-4',
+    merchantIsVerified: true,
+    usersUsedCount: 20,
+    rating: 4.9,
+    reviews: 10,
+    galleryImages: ['https://placehold.co/800x450.png?text=Praia', 'https://placehold.co/800x450.png?text=Resort'], // TEM GALLERYIMAGES
+    galleryImageHints: ['beach resort', 'travel vacation'],
+    tags: ['#viagem', '#ferias', '#destaque']
+  },
+  {
+    id: 'mock-offer-5',
+    title: 'Serviço de Limpeza Profissional (Com Galeria)',
+    description: 'Limpeza residencial completa com equipe especializada.',
+    merchantName: 'Limpa Tudo Ltda',
+    merchantId: 'mock-merchant-5',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'cleaning service home',
+    category: 'Serviços',
+    discountedPrice: 150.00,
+    originalPrice: 200.00,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 15))),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'padrao',
+    visibility: 'normal',
+    status: 'active',
+    pointsAwarded: 20,
+    createdBy: 'mock-merchant-5',
+    merchantIsVerified: false,
+    usersUsedCount: 45,
+    rating: 4.5,
+    reviews: 12,
+    galleryImages: ['https://placehold.co/800x450.png?text=Limpeza+Sala'], // TEM GALLERYIMAGES => será destaque também
+    galleryImageHints: ['cleaning livingroom'],
+    tags: ['#limpeza', '#casa']
+  },
+  {
+    id: 'mock-offer-6',
+    title: 'Curso de Culinária Online (Destaque)',
+    description: 'Aprenda a cozinhar pratos incríveis com chefs renomados.',
+    merchantName: 'Escola Gourmet Digital',
+    merchantId: 'mock-merchant-6',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'cooking course online',
+    category: 'Educação',
+    discountedPrice: 99.90,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 60))),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'exclusiva_app',
+    visibility: 'destaque', // DESTAQUE
+    status: 'active',
+    pointsAwarded: 30,
+    createdBy: 'mock-merchant-6',
+    merchantIsVerified: true,
+    usersUsedCount: 90,
+    rating: 4.8,
+    reviews: 25,
+    galleryImages: ['https://placehold.co/800x450.png?text=Chef+Cozinha'],
+    galleryImageHints: ['chef cooking'],
+    tags: ['#curso', '#culinaria', '#online']
+  },
+  {
+    id: 'mock-offer-7',
+    title: 'Consultoria Fitness Personalizada (Com Galeria)',
+    description: 'Alcance seus objetivos de fitness com um plano personalizado.',
+    merchantName: 'Personal Trainer Pro',
+    merchantId: 'mock-merchant-7',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'fitness workout gym',
+    category: 'Saúde',
+    discountedPrice: 250.00,
+    originalPrice: 350.00,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 20))),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'padrao',
+    visibility: 'normal',
+    status: 'active',
+    pointsAwarded: 25,
+    createdBy: 'mock-merchant-7',
+    merchantIsVerified: true,
+    usersUsedCount: 55,
+    rating: 4.6,
+    reviews: 18,
+    galleryImages: ['https://placehold.co/800x450.png?text=Academia'], // TEM GALLERYIMAGES => será destaque
+    galleryImageHints: ['gym workout'],
+    tags: ['#fitness', '#saude', '#personal']
+  },
+    {
+    id: 'mock-offer-8',
+    title: 'Smartphone Última Geração (Destaque VIP)',
+    description: 'Compre o novo smartphone com desconto exclusivo e capa grátis.',
+    merchantName: 'Tech Store Manaus',
+    merchantId: 'mock-merchant-8',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'smartphone tech gadget',
+    category: 'Compras',
+    discountedPrice: 2999.00,
+    originalPrice: 3599.00,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 10))),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'cupom_qr',
+    visibility: 'destaque', // DESTAQUE
+    status: 'active',
+    pointsAwarded: 50,
+    createdBy: 'mock-merchant-8',
+    merchantIsVerified: true,
+    usersUsedCount: 30,
+    rating: 4.7,
+    reviews: 15,
+    galleryImages: ['https://placehold.co/800x450.png?text=Celular+Novo', 'https://placehold.co/800x450.png?text=Caixa+Celular'], // TEM GALLERYIMAGES
+    galleryImageHints: ['new smartphone', 'phone box'],
+    tags: ['#smartphone', '#tecnologia', '#promocao']
   }
 ];
 
@@ -142,7 +281,7 @@ export default function FeedPage() {
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
         return dateB - dateA;
       })
-      .slice(0, 4);
+      .slice(0, 8); // Increased from 4 to 8
   }, [allOffers]);
 
   const filteredOffers = useMemo(() => {
