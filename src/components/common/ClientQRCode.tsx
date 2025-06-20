@@ -2,9 +2,8 @@
 'use client';
 
 import React from 'react';
-// Statically import QRCodeSVG. Its client-side nature should be handled by
-// the parent's dynamic import of this entire component with ssr: false.
-import { QRCodeSVG } from 'react-qr-code';
+// Try wildcard import as named import seems to fail in this environment
+import * as QRCodeModule from 'react-qr-code';
 import { cn } from '@/lib/utils';
 
 interface ClientQRCodeProps {
@@ -14,17 +13,18 @@ interface ClientQRCodeProps {
 }
 
 const ClientQRCode: React.FC<ClientQRCodeProps> = ({ value, size, className }) => {
-  // This component (ClientQRCode) is dynamically imported by its parents with ssr: false.
-  // Thus, this code should only execute on the client-side.
-  // The primary issue is whether 'import { QRCodeSVG } from "react-qr-code"'
-  // successfully resolves QRCodeSVG to a function.
+  // Attempt to access QRCodeSVG, it might be nested or default
+  // Based on react-qr-code documentation, QRCodeSVG should be a named export.
+  const ActualQRCodeComponent = QRCodeModule.QRCodeSVG;
 
-  if (typeof QRCodeSVG !== 'function') {
+  if (typeof ActualQRCodeComponent !== 'function') {
     // This console.error will help confirm if this path is taken,
-    // indicating QRCodeSVG itself is not resolving as expected.
+    // indicating ActualQRCodeComponent itself is not resolving as expected.
     console.error(
-      "ClientQRCode: QRCodeSVG from 'react-qr-code' is not a function or is undefined. Value received:",
-      QRCodeSVG
+      "ClientQRCode: QRCodeSVG component from 'react-qr-code' module (via QRCodeModule.QRCodeSVG) is not a function or is undefined. Value received:",
+      ActualQRCodeComponent,
+      "Full QRCodeModule structure:",
+      QRCodeModule
     );
     return (
       <div
@@ -34,13 +34,13 @@ const ClientQRCode: React.FC<ClientQRCodeProps> = ({ value, size, className }) =
         )}
         style={{ width: size, height: size }}
       >
-        QR Code Unavailable
+        QR Code Load Error
       </div>
     );
   }
 
-  // If we reach here, QRCodeSVG should be a function.
-  return <QRCodeSVG value={value} size={size} className={className} />;
+  // If we reach here, ActualQRCodeComponent should be a function.
+  return <ActualQRCodeComponent value={value} size={size} className={className} />;
 };
 
 export default ClientQRCode;
