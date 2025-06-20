@@ -85,7 +85,7 @@ export default function MapPage() {
   return (
     <div className="flex flex-col h-full"> {/* Ensures this div takes full height */}
       {/* Map Section - Takes up available space */}
-      <div className="flex-1 relative shadow-lg rounded-lg overflow-hidden min-h-[300px] md:min-h-[400px]"> {/* Ensure this container has dimensions */}
+      <div className="h-[65vh] relative shadow-lg rounded-lg overflow-hidden"> {/* Explicit height */}
         <GoogleMapDisplay 
           apiKey={googleMapsApiKey}
           mapCenter={mapCenter}
