@@ -28,9 +28,10 @@ interface GoogleMapDisplayProps {
 const mapContainerStyle = {
   width: '100%',
   height: '100%',
+  borderRadius: '0.5rem', // Added for slightly rounded corners
 };
 
-const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, zoom = 13, markers }) => {
+const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, zoom = 12, markers }) => {
   const router = useRouter();
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
 
@@ -48,11 +49,11 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
 
   if (!apiKey) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-muted border rounded-md">
-        <p className="text-destructive text-center p-4">
+      <div className="w-full h-full flex items-center justify-center bg-muted border rounded-md p-4 text-center">
+        <p className="text-destructive">
           Chave da API do Google Maps não configurada.
           <br />
-          Por favor, adicione NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ao seu arquivo .env.
+          Adicione NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ao seu arquivo .env.
         </p>
       </div>
     );
@@ -69,6 +70,7 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
           mapTypeControl: false,
           fullscreenControl: false,
           zoomControl: true,
+          gestureHandling: 'cooperative', // Improves user experience on mobile
         }}
       >
         {markers.map((marker) => (
@@ -86,10 +88,10 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
             onCloseClick={handleInfoWindowClose}
             options={{ pixelOffset: new window.google.maps.Size(0, -30) }}
           >
-            <div className="p-1 w-64">
+            <div className="p-1 w-56 sm:w-64"> {/* Responsive width */}
               <h3 className="text-sm font-semibold mb-1 truncate">{selectedMarker.title}</h3>
               {selectedMarker.imageUrl && (
-                 <div className="relative w-full h-24 mb-2 rounded overflow-hidden">
+                 <div className="relative w-full h-24 mb-2 rounded overflow-hidden bg-muted">
                     <Image 
                         src={selectedMarker.imageUrl} 
                         alt={selectedMarker.title} 

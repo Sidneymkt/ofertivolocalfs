@@ -17,7 +17,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import AdvancedFiltersSheet from '@/components/map/AdvancedFiltersSheet';
-import GoogleMapDisplay from '@/components/map/GoogleMapDisplay'; // Import the new map component
+import GoogleMapDisplay from '@/components/map/GoogleMapDisplay';
 
 interface MapMarker {
   id: string;
@@ -30,7 +30,12 @@ interface MapMarker {
 }
 
 export default function MapPage() {
-  const nearbyOffers = useMemo(() => mockOffers.slice(0, 5), []);
+  const nearbyOffers = useMemo(() => {
+    // Example: Take first 5 offers that have lat/lng for the "nearby" list
+    return mockOffers
+      .filter(offer => offer.latitude && offer.longitude)
+      .slice(0, 5);
+  }, []);
   
   const [mapCenter, setMapCenter] = useState({ lat: -3.0993, lng: -59.9839 }); // Default to Manaus center
   const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
@@ -50,8 +55,8 @@ export default function MapPage() {
         lng: offer.longitude as number,
         title: offer.title,
         offerId: offer.id,
-        imageUrl: offer.imageUrl,
-        'data-ai-hint': offer['data-ai-hint'],
+        imageUrl: offer.galleryImages && offer.galleryImages.length > 0 ? offer.galleryImages[0] : offer.imageUrl,
+        'data-ai-hint': offer.galleryImageHints && offer.galleryImageHints.length > 0 ? offer.galleryImageHints[0] : offer['data-ai-hint'] || 'offer location',
       }));
     setMapMarkers(markersData);
   }, []);
@@ -63,18 +68,18 @@ export default function MapPage() {
   const handleSelectCategory = (categoryName: string) => {
     setSelectedCategory(categoryName);
     console.log('MapPage - Selected Category:', categoryName);
-    // Potentially filter mapMarkers or nearbyOffers here based on category
+    // TODO: Filter mapMarkers or nearbyOffers here based on category
   };
 
   const handleApplyFilters = (filters: any) => {
     console.log('Applying advanced filters:', filters);
-    // Apply filter logic to mapMarkers and nearbyOffers
+    // TODO: Apply filter logic to mapMarkers and nearbyOffers
     setIsFiltersSheetOpen(false);
   };
 
   const handleClearFilters = () => {
     console.log('Clearing advanced filters');
-    // Reset filter logic
+    // TODO: Reset filter logic
     setIsFiltersSheetOpen(false);
   };
 
@@ -82,8 +87,8 @@ export default function MapPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Map Section - Moved to the top */}
-      <div className="flex-1 relative p-1 md:p-2">
+      {/* Map Section - Takes up available space */}
+      <div className="flex-1 relative p-1 md:p-2 shadow-lg rounded-lg overflow-hidden mb-3">
         <GoogleMapDisplay 
           apiKey={googleMapsApiKey}
           mapCenter={mapCenter}
@@ -93,7 +98,7 @@ export default function MapPage() {
       </div>
 
       {/* Filter Bar Section */}
-      <div className="shrink-0 p-3 border-t bg-background">
+      <div className="shrink-0 px-1 py-3 md:px-3 md:py-3 border-t bg-background">
         <div className="flex items-center gap-2">
           <div className="flex-grow">
             <CategoryPills
@@ -113,7 +118,7 @@ export default function MapPage() {
                 <ListFilter size={20} />
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[85vh] flex flex-col rounded-t-2xl">
+            <SheetContent side="bottom" className="h-[85vh] flex flex-col rounded-t-2xl p-0">
               <SheetHeader className="px-4 py-3 border-b">
                 <SheetTitle className="text-lg">Filtros Avançados</SheetTitle>
                 <SheetDescription>
@@ -131,16 +136,20 @@ export default function MapPage() {
       {/* Horizontal Scrollable Nearby Offer List Section */}
       <div className="shrink-0 py-3 bg-background border-t">
         <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas no Mapa</h3>
-        <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex space-x-4 px-4 pb-2.5">
-            {nearbyOffers.map((offer) => (
-              <div key={offer.id} className="w-72 shrink-0">
-                <RecommendedOfferCard offer={offer} />
-              </div>
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        {nearbyOffers.length > 0 ? (
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex space-x-3 px-4 pb-2.5">
+              {nearbyOffers.map((offer) => (
+                <div key={offer.id} className="w-64 sm:w-72 shrink-0"> {/* Adjusted width */}
+                  <RecommendedOfferCard offer={offer} />
+                </div>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        ) : (
+          <p className="px-4 text-sm text-muted-foreground">Nenhuma oferta próxima encontrada no momento.</p>
+        )}
       </div>
     </div>
   );
