@@ -10,48 +10,13 @@ import FeaturedMerchantsList from '@/components/merchants/FeaturedMerchantsList'
 import { Input } from '@/components/ui/input';
 import { Search as SearchIcon, MapPin } from 'lucide-react';
 import RecommendedOffersList from '@/components/offers/RecommendedOffersList';
-import GoogleMapDisplay from '@/components/map/GoogleMapDisplay'; // Import the map display
-
-interface MapMarker {
-  id: string;
-  lat: number;
-  lng: number;
-  title: string;
-  offerId: string;
-  imageUrl?: string;
-  'data-ai-hint'?: string;
-}
+// Removed GoogleMapDisplay import and related hooks/state from here
 
 export default function FeedPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
-  const [mapCenter, setMapCenter] = useState({ lat: -3.0993, lng: -59.9839 }); // Default to Manaus center
-  const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
-  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-
-  useEffect(() => {
-    // Set initial map center based on the first offer if available
-    const firstOfferWithLocation = mockOffers.find(offer => offer.latitude && offer.longitude);
-    if (firstOfferWithLocation?.latitude && firstOfferWithLocation?.longitude) {
-      setMapCenter({ lat: firstOfferWithLocation.latitude, lng: firstOfferWithLocation.longitude });
-    }
-
-    // Prepare markers from mockOffers
-    const markersData = mockOffers
-      .filter(offer => offer.latitude && offer.longitude)
-      .map(offer => ({
-        id: offer.id,
-        lat: offer.latitude as number,
-        lng: offer.longitude as number,
-        title: offer.title,
-        offerId: offer.id,
-        imageUrl: offer.galleryImages && offer.galleryImages.length > 0 ? offer.galleryImages[0] : offer.imageUrl,
-        'data-ai-hint': offer.galleryImageHints && offer.galleryImageHints.length > 0 ? offer.galleryImageHints[0] : offer['data-ai-hint'] || 'offer location',
-      }));
-    setMapMarkers(markersData);
-  }, []);
-
+  // Map related state and useEffect removed from here
 
   const featuredOffers = useMemo(() => {
     return [
@@ -105,20 +70,7 @@ export default function FeedPage() {
 
   return (
     <div className="space-y-6 md:space-y-8 pb-4">
-      {/* Map Section */}
-      <section className="px-4 md:px-0">
-        <h2 className="text-xl font-semibold font-headline mb-3 flex items-center gap-2">
-          <MapPin className="text-primary" /> Encontre Ofertas no Mapa
-        </h2>
-        <div className="h-64 md:h-72 w-full rounded-lg overflow-hidden shadow-md border">
-          <GoogleMapDisplay
-            apiKey={googleMapsApiKey}
-            mapCenter={mapCenter}
-            zoom={12}
-            markers={mapMarkers}
-          />
-        </div>
-      </section>
+      {/* Map Section removed from here */}
 
       {featuredOffers.length > 0 && (
         <section className="space-y-3">

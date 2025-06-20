@@ -42,9 +42,14 @@ export default function MapPage() {
 
   useEffect(() => {
     // Set initial map center based on the first offer if available
-    if (mockOffers.length > 0 && mockOffers[0].latitude && mockOffers[0].longitude) {
+    const firstOfferWithLocation = mockOffers.find(offer => offer.latitude && offer.longitude);
+    if (firstOfferWithLocation?.latitude && firstOfferWithLocation?.longitude) {
+      setMapCenter({ lat: firstOfferWithLocation.latitude, lng: firstOfferWithLocation.longitude });
+    } else if (mockOffers.length > 0 && mockOffers[0].latitude && mockOffers[0].longitude) {
+      // Fallback to first offer if firstOfferWithLocation is somehow undefined but there are offers
       setMapCenter({ lat: mockOffers[0].latitude, lng: mockOffers[0].longitude });
     }
+
 
     // Prepare markers from mockOffers
     const markersData = mockOffers
@@ -140,7 +145,7 @@ export default function MapPage() {
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex space-x-3 px-4 pb-2.5">
               {nearbyOffers.map((offer) => (
-                <div key={offer.id} className="w-64 sm:w-72 shrink-0"> {/* Adjusted width */}
+                <div key={offer.id} className="w-72 shrink-0"> {/* Adjusted width */}
                   <RecommendedOfferCard offer={offer} />
                 </div>
               ))}
