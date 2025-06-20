@@ -21,7 +21,6 @@ import AdvancedFiltersSheet from '@/components/map/AdvancedFiltersSheet';
 
 export default function MapPage() {
   const nearbyOffers = useMemo(() => mockOffers.slice(0, 5), []);
-  // Removed recommendedOffersOnMap as the section is being removed
 
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isFiltersSheetOpen, setIsFiltersSheetOpen] = useState(false);
@@ -43,7 +42,7 @@ export default function MapPage() {
 
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1"> {/* Changed h-full to flex-1 */}
       {/* Map Section - Moved to the top */}
       <div className="flex-1 relative p-1 md:p-2">
         <InteractiveMapPlaceholder />
@@ -99,8 +98,6 @@ export default function MapPage() {
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </div>
-
-      {/* Removed "Mais Sugestões para Você" section */}
     </div>
   );
 }
