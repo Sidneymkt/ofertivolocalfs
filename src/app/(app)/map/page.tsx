@@ -1,14 +1,12 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react'; 
+import React, { useState, useMemo } from 'react';
 import InteractiveMapPlaceholder from '@/components/map/InteractiveMapPlaceholder';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ListFilter } from 'lucide-react';
-// import OfferCard from '@/components/offers/OfferCard'; // No longer used here
-import RecommendedOfferCard from '@/components/offers/RecommendedOfferCard'; // Using this instead
-import RecommendedOffersList from '@/components/offers/RecommendedOffersList';
+import RecommendedOfferCard from '@/components/offers/RecommendedOfferCard';
 import { mockOffers, categories } from '@/types';
 import CategoryPills from '@/components/offers/CategoryPills';
 import {
@@ -23,10 +21,7 @@ import AdvancedFiltersSheet from '@/components/map/AdvancedFiltersSheet';
 
 export default function MapPage() {
   const nearbyOffers = useMemo(() => mockOffers.slice(0, 5), []);
-  const recommendedOffersOnMap = useMemo(() => {
-    const nearbyOfferIds = new Set(nearbyOffers.map(o => o.id));
-    return mockOffers.filter(offer => !nearbyOfferIds.has(offer.id)).slice(0, 8);
-  }, [nearbyOffers]);
+  // Removed recommendedOffersOnMap as the section is being removed
 
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isFiltersSheetOpen, setIsFiltersSheetOpen] = useState(false);
@@ -38,7 +33,7 @@ export default function MapPage() {
 
   const handleApplyFilters = (filters: any) => {
     console.log('Applying advanced filters:', filters);
-    setIsFiltersSheetOpen(false); 
+    setIsFiltersSheetOpen(false);
   };
 
   const handleClearFilters = () => {
@@ -49,7 +44,7 @@ export default function MapPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Map Section */}
+      {/* Map Section - Moved to the top */}
       <div className="flex-1 relative p-1 md:p-2">
         <InteractiveMapPlaceholder />
       </div>
@@ -96,8 +91,8 @@ export default function MapPage() {
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex space-x-4 px-4 pb-2.5">
             {nearbyOffers.map((offer) => (
-              <div key={offer.id} className="w-72 shrink-0"> {/* Adjusted width */}
-                <RecommendedOfferCard offer={offer} /> {/* Changed to RecommendedOfferCard */}
+              <div key={offer.id} className="w-72 shrink-0">
+                <RecommendedOfferCard offer={offer} />
               </div>
             ))}
           </div>
@@ -105,13 +100,7 @@ export default function MapPage() {
         </ScrollArea>
       </div>
 
-      {/* New Recommended Offers Section */}
-      {recommendedOffersOnMap.length > 0 && (
-        <div className="shrink-0 py-3 bg-background border-t">
-          <h3 className="text-md font-semibold px-4 mb-2">Mais Sugestões para Você</h3>
-          <RecommendedOffersList offers={recommendedOffersOnMap} />
-        </div>
-      )}
+      {/* Removed "Mais Sugestões para Você" section */}
     </div>
   );
 }
