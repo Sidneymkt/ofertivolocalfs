@@ -48,7 +48,7 @@ const FollowedMerchantsList: React.FC<FollowedMerchantsListProps> = ({ merchants
                 {/* Placeholder for merchant category or last offer */}
                 <p className="text-xs text-muted-foreground">Ver ofertas e novidades</p> 
               </div>
-              <Button variant="ghost" size="sm" asChild className="text-primary hover:text-primary/80">
+              <Button variant="ghost" size="sm" asChild className="text-primary hover:text-primary/80 ml-auto shrink-0">
                 {/* In a real app, this would link to the merchant's profile page */}
                 <Link href={`/merchant/${merchant.id}`}> 
                   Visitar <ExternalLink size={14} className="ml-1.5" />
