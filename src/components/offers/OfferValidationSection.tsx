@@ -1,13 +1,19 @@
 
 'use client';
 
-import React, { useState, useEffect }  from 'react'; // Added useEffect
+import React, { useState, useEffect }  from 'react';
 import type { Offer } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { QrCode, Gift, Users, TrendingUp, KeyRound } from 'lucide-react';
+import { Gift, Users, TrendingUp, KeyRound, QrCode as QrCodeIconLucide } from 'lucide-react'; // Changed QrCode to QrCodeIconLucide
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
-import { QRCodeSVG } from 'react-qr-code';
+import dynamic from 'next/dynamic';
+
+const DynamicClientQRCode = dynamic(() => import('@/components/common/ClientQRCode'), {
+  ssr: false,
+  loading: () => <p className="text-sm text-muted-foreground p-4 text-center">Carregando QR Code...</p>,
+});
+
 
 interface OfferValidationSectionProps {
   offer: Offer;
@@ -16,11 +22,6 @@ interface OfferValidationSectionProps {
 const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }) => {
   const { toast } = useToast();
   const [numericCode, setNumericCode] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState(false); // Added state for client-side rendering
-
-  useEffect(() => {
-    setIsClient(true); // Set to true once component mounts on client
-  }, []);
 
   const handleSimulateCheckIn = () => {
     toast({
@@ -45,7 +46,7 @@ const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }
     <Card className="shadow-lg" id="qr-code-section">
       <CardHeader>
         <CardTitle className="flex items-center text-xl">
-          <QrCode className="mr-2 text-primary" /> Valide sua Oferta
+          <QrCodeIconLucide className="mr-2 text-primary" /> Valide sua Oferta
         </CardTitle>
         <CardDescription>
           Apresente o QR Code ou o código numérico no estabelecimento para validar e ganhar pontos.
@@ -53,12 +54,8 @@ const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col items-center space-y-3">
-          <div className="p-3 bg-white rounded-lg border shadow-md min-h-[180px] min-w-[180px] flex items-center justify-center">
-            {isClient ? (
-              <QRCodeSVG value={qrCodeValue} size={180} />
-            ) : (
-              <p className="text-sm text-muted-foreground">Carregando QR Code...</p>
-            )}
+          <div className="p-3 bg-white rounded-lg border shadow-md min-h-[204px] min-w-[204px] flex items-center justify-center">
+            <DynamicClientQRCode value={qrCodeValue} size={180} />
           </div>
           <p className="text-xs text-muted-foreground text-center max-w-xs">
             Mostre este QR Code {numericCode ? 'ou informe o código abaixo ' : ''}
