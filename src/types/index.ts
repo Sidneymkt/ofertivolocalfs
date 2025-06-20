@@ -97,7 +97,7 @@ export interface Offer {
   pointsAwarded?: number;
   pointsForCheckin?: number;
   pointsForShare?: number;
-  pointsForRating?: number; // Renamed from pointsForComment
+  pointsForRating?: number;
   isRedeemableWithPoints?: boolean;
 
   // Location & Rating (optional on creation, might be auto-populated or admin-set)
@@ -246,7 +246,7 @@ export type AdminMetricItem = {
 export const POINTS_CHECKIN = 5;
 export const POINTS_SHARE_OFFER = 3;
 export const POINTS_FOLLOW_MERCHANT = 2;
-export const POINTS_RATE_OFFER_OR_MERCHANT = 1; // Renamed from POINTS_COMMENT_OFFER
+export const POINTS_RATE_OFFER_OR_MERCHANT = 1;
 export const POINTS_PROFILE_COMPLETE = 50;
 export const POINTS_SIGNUP_WELCOME = 100;
 
@@ -260,7 +260,8 @@ export const mockBadges: Badge[] = [
 ];
 
 const now = new Date();
-const oneDay = 86400000;
+const oneDay = 86400000; // milliseconds in a day
+const oneHour = 3600000; // milliseconds in an hour
 
 export const mockUser: User = {
   id: 'user123',
@@ -539,6 +540,148 @@ export const mockOffers: Offer[] = [
     longitude: -60.0012,
     terms: 'Válido após 3 check-ins registrados no app. Recompensa sujeita à disponibilidade do dia.'
   },
+  {
+    id: 'offer-icecream-6',
+    offerType: 'padrao',
+    title: '🍦 Casquinha Dobrada esta Semana!',
+    description: 'Peça uma casquinha e leve outra do mesmo sabor por nossa conta. Válido de Seg a Qui.',
+    merchantName: 'Sorveteria Gostoso',
+    merchantId: 'sorveteriaGostosoMerchant',
+    createdBy: 'sorveteriaGostosoMerchant',
+    merchantIsVerified: true,
+    imageUrl: 'https://placehold.co/600x300.png?text=Sorvete+Casquinha',
+    'data-ai-hint': 'ice cream cone',
+    originalPrice: 10.00,
+    discountedPrice: 5.00, // Effective price per cone
+    discountType: 'finalValue',
+    discountPercentage: 50,
+    category: 'Alimentação',
+    tags: ['#Sorvete', '#Promo', '#Casquinha'],
+    validityStartDate: new Date(now.getTime() - oneDay * (now.getDay() === 0 ? 6 : now.getDay() - 1)), // Start of current week (Mon)
+    validityEndDate: new Date(now.getTime() - oneDay * (now.getDay() === 0 ? 6 : now.getDay() - 1) + oneDay * 3 + (23*oneHour)), // End of current week (Thu 23:00)
+    status: 'active',
+    visibility: 'normal',
+    createdAt: new Date(now.getTime() - oneHour * 10), // Created recently
+    updatedAt: new Date(now.getTime() - oneHour * 1),
+    pointsAwarded: POINTS_CHECKIN,
+    pointsForCheckin: POINTS_CHECKIN,
+    pointsForRating: POINTS_RATE_OFFER_OR_MERCHANT,
+    terms: 'Válido para casquinhas simples. Sabores tradicionais. De Segunda a Quinta.',
+    isPresentialOnly: true,
+  },
+  {
+    id: 'offer-books-7',
+    offerType: 'exclusiva_app',
+    title: '📚 20% OFF em Livros de Ficção (App)',
+    description: 'Use o app e ganhe 20% de desconto em qualquer livro de ficção. Exclusivo Ofertivo!',
+    merchantName: 'Livraria Saber',
+    merchantId: 'livrariaSaberMerchant',
+    createdBy: 'livrariaSaberMerchant',
+    merchantIsVerified: false,
+    imageUrl: 'https://placehold.co/600x300.png?text=Livros+Oferta',
+    'data-ai-hint': 'books fiction',
+    discountedPrice: 0, // Price varies
+    discountPercentage: 20,
+    discountType: 'percentage',
+    category: 'Educação',
+    tags: ['#Leitura', '#Livros', '#DescontoExclusivo'],
+    validityStartDate: new Date(now.getTime() - oneDay * 3),
+    validityEndDate: new Date(now.getTime() + oneDay * 10),
+    status: 'active',
+    visibility: 'destaque',
+    createdAt: new Date(now.getTime() - oneHour * 8), // Created recently
+    updatedAt: new Date(now.getTime() - oneHour * 2),
+    pointsAwarded: POINTS_CHECKIN + POINTS_RATE_OFFER_OR_MERCHANT,
+    pointsForCheckin: POINTS_CHECKIN,
+    pointsForRating: POINTS_RATE_OFFER_OR_MERCHANT,
+    terms: 'Desconto aplicado no caixa ao apresentar o QR Code da oferta no app. Não cumulativo.',
+    isPresentialOnly: true,
+  },
+  {
+    id: 'offer-pet-8',
+    offerType: 'primeiro_uso',
+    title: '🐾 Banho e Tosa com 15% OFF (1ª Vez)',
+    description: 'Primeira visita do seu pet? Ganhe 15% de desconto no pacote completo de banho e tosa!',
+    merchantName: 'PetShop Amigo Fiel',
+    merchantId: 'petShopAmigoFielMerchant',
+    createdBy: 'petShopAmigoFielMerchant',
+    merchantIsVerified: true,
+    imageUrl: 'https://placehold.co/600x300.png?text=Pet+Shop',
+    'data-ai-hint': 'dog grooming',
+    originalPrice: 80.00,
+    discountedPrice: 68.00,
+    discountType: 'finalValue',
+    discountPercentage: 15,
+    isForNewUsersOnly: true,
+    category: 'Serviços',
+    tags: ['#PetShop', '#BanhoETosa', '#PrimeiraVez'],
+    validityStartDate: new Date(now.getFullYear(), now.getMonth(), 1),
+    validityEndDate: new Date(now.getFullYear(), now.getMonth() + 2, 0), // Valid for current and next month
+    status: 'active',
+    visibility: 'normal',
+    createdAt: new Date(now.getTime() - oneHour * 6), // Created recently
+    updatedAt: new Date(now.getTime() - oneHour * 3),
+    pointsAwarded: POINTS_CHECKIN,
+    pointsForCheckin: POINTS_CHECKIN,
+    pointsForRating: POINTS_RATE_OFFER_OR_MERCHANT,
+    terms: 'Válido apenas para o primeiro serviço de banho e tosa do pet no estabelecimento. Agendamento necessário.',
+    isPresentialOnly: true,
+  },
+  {
+    id: 'offer-flowers-9',
+    offerType: 'bairro',
+    title: '💐 Buquê do Dia com Entrega Grátis (Bairro Flores)',
+    description: 'Lindo buquê de flores da estação com entrega gratuita para o bairro Flores.',
+    merchantName: 'Floricultura Bela Flor',
+    merchantId: 'floriculturaBelaFlorMerchant',
+    createdBy: 'floriculturaBelaFlorMerchant',
+    merchantIsVerified: false,
+    imageUrl: 'https://placehold.co/600x300.png?text=Flores+Buque',
+    'data-ai-hint': 'flower bouquet',
+    discountedPrice: 75.00, // Price includes free delivery
+    targetNeighborhood: 'Flores',
+    category: 'Compras',
+    tags: ['#Flores', '#Presente', '#EntregaGratis', '#BairroFlores'],
+    validityStartDate: new Date(now.getTime() - oneDay),
+    validityEndDate: new Date(now.getTime() + oneDay * 5),
+    status: 'active',
+    visibility: 'normal',
+    createdAt: new Date(now.getTime() - oneHour * 4), // Created recently
+    updatedAt: new Date(now.getTime() - oneHour * 1),
+    pointsAwarded: POINTS_CHECKIN + 1,
+    pointsForCheckin: POINTS_CHECKIN + 1,
+    pointsForRating: POINTS_RATE_OFFER_OR_MERCHANT,
+    terms: 'Entrega gratuita válida apenas para endereços no bairro Flores. Consulte flores da estação.',
+  },
+  {
+    id: 'offer-cinema-10',
+    offerType: 'padrao',
+    title: '🎬 Ingresso Meia para Todos nas Terças!',
+    description: 'Toda terça-feira, todos pagam meia entrada no Cinema Estrela! Aproveite.',
+    merchantName: 'Cinema Estrela',
+    merchantId: 'cinemaEstrelaMerchant',
+    createdBy: 'cinemaEstrelaMerchant',
+    merchantIsVerified: true,
+    imageUrl: 'https://placehold.co/600x300.png?text=Cinema+Oferta',
+    'data-ai-hint': 'cinema movie',
+    originalPrice: 30.00,
+    discountedPrice: 15.00,
+    discountType: 'finalValue',
+    discountPercentage: 50,
+    category: 'Lazer',
+    tags: ['#Cinema', '#MeiaEntrada', '#Filmes', '#TerçaFeira'],
+    validityStartDate: new Date(now.getFullYear(), 0, 1),
+    validityEndDate: new Date(now.getFullYear(), 11, 31), // Valid for the whole year
+    status: 'active',
+    visibility: 'normal',
+    createdAt: new Date(now.getTime() - oneHour * 2), // Created very recently
+    updatedAt: new Date(now.getTime()),
+    pointsAwarded: POINTS_CHECKIN,
+    pointsForCheckin: POINTS_CHECKIN,
+    pointsForRating: POINTS_RATE_OFFER_OR_MERCHANT,
+    terms: 'Válido todas as terças-feiras, exceto feriados e pré-estreias. Sujeito à lotação da sala.',
+    isPresentialOnly: true,
+  },
 ];
 
 export const mockSweepstakes: Sweepstake[] = [
@@ -580,6 +723,11 @@ export const getMockMerchantById = (id: string): { id: string, name: string, ima
     if (id === 'atletaShopMerchant') return {id, name: 'Atleta Shop', isVerified: true, 'data-ai-hint': 'sport store', imageUrl: 'https://placehold.co/64x64.png?text=AS'};
     if (id === 'botecoMestreMerchant') return {id, name: 'Boteco do Mestre', isVerified: false, 'data-ai-hint': 'bar restaurant', imageUrl: 'https://placehold.co/64x64.png?text=BM'};
     if (id === 'cafeAconchegoMerchant') return {id, name: 'Café Aconchego', isVerified: true, 'data-ai-hint': 'coffee shop', imageUrl: 'https://placehold.co/64x64.png?text=CA'};
+    if (id === 'sorveteriaGostosoMerchant') return {id, name: 'Sorveteria Gostoso', isVerified: true, 'data-ai-hint': 'ice cream shop', imageUrl: 'https://placehold.co/64x64.png?text=SG'};
+    if (id === 'livrariaSaberMerchant') return {id, name: 'Livraria Saber', isVerified: false, 'data-ai-hint': 'bookstore shop', imageUrl: 'https://placehold.co/64x64.png?text=LS'};
+    if (id === 'petShopAmigoFielMerchant') return {id, name: 'PetShop Amigo Fiel', isVerified: true, 'data-ai-hint': 'pet store', imageUrl: 'https://placehold.co/64x64.png?text=AF'};
+    if (id === 'floriculturaBelaFlorMerchant') return {id, name: 'Floricultura Bela Flor', isVerified: false, 'data-ai-hint': 'flower shop', imageUrl: 'https://placehold.co/64x64.png?text=FB'};
+    if (id === 'cinemaEstrelaMerchant') return {id, name: 'Cinema Estrela', isVerified: true, 'data-ai-hint': 'cinema theater', imageUrl: 'https://placehold.co/64x64.png?text=CE'};
 
 
     return undefined;
