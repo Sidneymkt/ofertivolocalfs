@@ -1,9 +1,19 @@
+
+'use client';
+// This component is no longer used directly on the main feed page,
+// but kept for potential use elsewhere or as a reference for more complex filtering.
+
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Check, Filter, ListFilter, MapPin } from 'lucide-react';
-import { categories } from '@/types'; // Assuming categories are defined in types
+import { categories as defaultCategories } from '@/types'; // Assuming categories are defined in types
 
-const OfferFilters = () => {
+interface OfferFiltersProps {
+  categories?: {name: string, icon: string}[]; // Allow passing categories
+}
+
+
+const OfferFilters: React.FC<OfferFiltersProps> = ({ categories = defaultCategories}) => {
   // Placeholder state and handlers
   const distanceOptions = ['<1km', '<5km', '<10km', 'Qualquer'];
 
