@@ -6,7 +6,8 @@ import InteractiveMapPlaceholder from '@/components/map/InteractiveMapPlaceholde
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ListFilter } from 'lucide-react';
-import OfferCard from '@/components/offers/OfferCard';
+// import OfferCard from '@/components/offers/OfferCard'; // No longer used here
+import RecommendedOfferCard from '@/components/offers/RecommendedOfferCard'; // Using this instead
 import RecommendedOffersList from '@/components/offers/RecommendedOffersList';
 import { mockOffers, categories } from '@/types';
 import CategoryPills from '@/components/offers/CategoryPills';
@@ -47,9 +48,9 @@ export default function MapPage() {
 
 
   return (
-    <div className="flex flex-col h-full"> {/* Changed to h-full */}
+    <div className="flex flex-col h-full">
       {/* Map Section */}
-      <div className="flex-1 relative p-1 md:p-2"> {/* Changed to flex-1 */}
+      <div className="flex-1 relative p-1 md:p-2">
         <InteractiveMapPlaceholder />
       </div>
 
@@ -95,8 +96,8 @@ export default function MapPage() {
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex space-x-4 px-4 pb-2.5">
             {nearbyOffers.map((offer) => (
-              <div key={offer.id} className="w-72 shrink-0">
-                <OfferCard offer={offer} />
+              <div key={offer.id} className="w-72 shrink-0"> {/* Adjusted width */}
+                <RecommendedOfferCard offer={offer} /> {/* Changed to RecommendedOfferCard */}
               </div>
             ))}
           </div>
