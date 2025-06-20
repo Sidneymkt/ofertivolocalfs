@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, FileText, Download, Search, Filter, Mail, Phone } from 'lucide-react';
+import { Users, FileText, Download, Search, Filter, Mail, Phone, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // Mock data for leads
 const mockLeads = [
@@ -20,20 +21,28 @@ const mockLeads = [
 
 
 export default function LeadsCrmPage() {
+  const router = useRouter();
   return (
     <div className="space-y-8 p-4 md:p-6 lg:p-8 selection:bg-primary selection:text-primary-foreground">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-            <h1 className="text-3xl font-headline font-bold text-foreground flex items-center gap-3">
-            <Users className="h-8 w-8 text-primary" />
-            CRM de Leads
-            </h1>
-            <p className="text-muted-foreground">Gerencie seus contatos e interações com clientes.</p>
-        </div>
-        <Button onClick={() => alert('Funcionalidade de exportação em breve!')}>
-          <Download className="mr-2 h-5 w-5" /> Exportar Leads (CSV/Excel)
+      <div className="flex items-center gap-4 mb-8">
+        <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => router.back()}>
+          <ArrowLeft size={18} />
+          <span className="sr-only">Voltar</span>
         </Button>
-      </header>
+        <header className="flex-grow flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+              <h1 className="text-2xl md:text-3xl font-headline font-bold text-foreground flex items-center gap-3">
+              <Users className="h-8 w-8 text-primary" />
+              CRM de Leads
+              </h1>
+              <p className="text-muted-foreground">Gerencie seus contatos e interações com clientes.</p>
+          </div>
+          <Button onClick={() => alert('Funcionalidade de exportação em breve!')}>
+            <Download className="mr-2 h-5 w-5" /> Exportar Leads (CSV/Excel)
+          </Button>
+        </header>
+      </div>
+
 
       <Card className="shadow-lg">
         <CardHeader>

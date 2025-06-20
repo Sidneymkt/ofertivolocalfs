@@ -22,7 +22,7 @@ import { categories, offerTypes, type OfferTypeId, type Offer, mockAdvertiserUse
 import { 
   CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIconLucide, 
   AlertCircle, CheckCircle, Info, QrCode as QrCodeIconLucide, Smartphone, UserCheck, CheckCheck as CheckCheckIcon, Package as PackageIcon, LocateFixed, Building as BuildingIcon,
-  Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon, FileText, Star as StarIcon
+  Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon, FileText, Star as StarIcon, ArrowLeft
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils';
 import { generateOfferContent, type GenerateOfferContentInput } from '@/ai/flows/generate-offer-content-flow';
 import { generateOfferTerms, type GenerateOfferTermsInput } from '@/ai/flows/generate-offer-terms-flow';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 
 const DynamicClientQRCode = dynamic(() => import('@/components/common/ClientQRCode'), {
   ssr: false,
@@ -171,6 +172,7 @@ const getIconForOfferType = (typeId: OfferTypeId | undefined): React.ElementType
 
 export default function CreateOfferPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isLoadingAIContent, setIsLoadingAIContent] = useState(false);
@@ -617,12 +619,19 @@ export default function CreateOfferPage() {
 
   return (
     <div className="space-y-8 p-4 md:p-6 lg:p-8 selection:bg-primary selection:text-primary-foreground">
-      <header className="mb-8">
-        <h1 className="text-3xl font-headline font-bold text-foreground">
-          Criar Nova Oferta
-        </h1>
-        <p className="text-muted-foreground">Preencha os detalhes abaixo para cadastrar sua promoção.</p>
-      </header>
+      <div className="flex items-center gap-4 mb-8">
+        <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => router.back()}>
+          <ArrowLeft size={18} />
+          <span className="sr-only">Voltar</span>
+        </Button>
+        <header className="flex-grow">
+          <h1 className="text-2xl md:text-3xl font-headline font-bold text-foreground">
+            Criar Nova Oferta
+          </h1>
+          <p className="text-muted-foreground">Preencha os detalhes abaixo para cadastrar sua promoção.</p>
+        </header>
+      </div>
+
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">

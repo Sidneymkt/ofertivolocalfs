@@ -7,15 +7,17 @@ import type { Sweepstake } from '@/types';
 import { mockSweepstakes } from '@/types'; // Importa todos os sorteios
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Ticket, CalendarDays, Coins } from 'lucide-react';
+import { Ticket, CalendarDays, Coins, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from "@/hooks/use-toast";
 import { format, isPast, isFuture } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function AllSweepstakesPage() {
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleParticipate = (e: React.MouseEvent, sweepstake: Sweepstake) => {
     e.stopPropagation(); // Prevent click from bubbling to the parent Link
@@ -56,15 +58,21 @@ export default function AllSweepstakesPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-headline font-bold text-foreground text-center my-6">
-        Todos os Sorteios
-      </h1>
+    <div className="space-y-8 pb-8">
+      <div className="flex items-center justify-between mt-4 mb-6 px-4 md:px-0">
+        <Button variant="outline" size="sm" onClick={() => router.back()}>
+          <ArrowLeft size={16} className="mr-2" /> Voltar
+        </Button>
+        <h1 className="text-2xl md:text-3xl font-headline font-bold text-foreground text-center flex-grow">
+          Todos os Sorteios
+        </h1>
+        <div className="w-16"></div> {/* Spacer to balance the back button */}
+      </div>
       
       {mockSweepstakes.length === 0 ? (
         <p className="text-center text-muted-foreground py-10">Nenhum sorteio disponível no momento.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 md:px-0">
           {mockSweepstakes.map((item) => (
             <Card key={item.id} className="overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out flex flex-col bg-card group">
               <Link href={`/sweepstake/${item.id}`} className="flex flex-col flex-grow">

@@ -18,13 +18,14 @@ import { mockAdvertiserUser, type Sweepstake } from '@/types'; // Assuming mockA
 import { 
   CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIconLucide, 
   AlertCircle, CheckCircle, Info, QrCode as QrCodeIconLucide, Smartphone, UserCheck, CheckCheck as CheckCheckIcon, Package as PackageIcon, LocateFixed, Building as BuildingIcon,
-  Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon, FileText, Star as StarIcon, Gift, Coins, Award, Users, Trophy
+  Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon, FileText, Star as StarIcon, Gift, Coins, Award, Users, Trophy, ArrowLeft
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const sweepstakeFormSchema = z.object({
   title: z.string().min(5, "Título do sorteio deve ter pelo menos 5 caracteres.").max(100, "Título muito longo."),
@@ -62,6 +63,7 @@ type SweepstakeFormValues = z.infer<typeof sweepstakeFormSchema>;
 
 export default function CreateSweepstakePage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -140,13 +142,20 @@ export default function CreateSweepstakePage() {
 
   return (
     <div className="space-y-8 p-4 md:p-6 lg:p-8 selection:bg-primary selection:text-primary-foreground">
-      <header className="mb-8">
-        <h1 className="text-3xl font-headline font-bold text-foreground flex items-center gap-3">
-          <Trophy className="h-8 w-8 text-primary" />
-          Criar Novo Sorteio
-        </h1>
-        <p className="text-muted-foreground">Preencha os detalhes abaixo para configurar seu sorteio.</p>
-      </header>
+      <div className="flex items-center gap-4 mb-8">
+        <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => router.back()}>
+          <ArrowLeft size={18} />
+          <span className="sr-only">Voltar</span>
+        </Button>
+        <header className="flex-grow">
+          <h1 className="text-2xl md:text-3xl font-headline font-bold text-foreground flex items-center gap-3">
+            <Trophy className="h-8 w-8 text-primary" />
+            Criar Novo Sorteio
+          </h1>
+          <p className="text-muted-foreground">Preencha os detalhes abaixo para configurar seu sorteio.</p>
+        </header>
+      </div>
+
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
