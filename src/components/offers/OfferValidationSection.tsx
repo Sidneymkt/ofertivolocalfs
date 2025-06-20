@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState }  from 'react';
+import React, { useState, useEffect }  from 'react'; // Added useEffect
 import type { Offer } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Gift, Users, TrendingUp, KeyRound } from 'lucide-react';
@@ -16,6 +16,11 @@ interface OfferValidationSectionProps {
 const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }) => {
   const { toast } = useToast();
   const [numericCode, setNumericCode] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false); // Added state for client-side rendering
+
+  useEffect(() => {
+    setIsClient(true); // Set to true once component mounts on client
+  }, []);
 
   const handleSimulateCheckIn = () => {
     toast({
@@ -48,8 +53,12 @@ const OfferValidationSection: React.FC<OfferValidationSectionProps> = ({ offer }
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col items-center space-y-3">
-          <div className="p-3 bg-white rounded-lg border shadow-md">
-            <QRCodeSVG value={qrCodeValue} size={180} />
+          <div className="p-3 bg-white rounded-lg border shadow-md min-h-[180px] min-w-[180px] flex items-center justify-center">
+            {isClient ? (
+              <QRCodeSVG value={qrCodeValue} size={180} />
+            ) : (
+              <p className="text-sm text-muted-foreground">Carregando QR Code...</p>
+            )}
           </div>
           <p className="text-xs text-muted-foreground text-center max-w-xs">
             Mostre este QR Code {numericCode ? 'ou informe o código abaixo ' : ''}

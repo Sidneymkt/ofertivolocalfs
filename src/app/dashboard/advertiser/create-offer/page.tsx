@@ -163,6 +163,11 @@ export default function CreateOfferPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isLoadingAIContent, setIsLoadingAIContent] = useState(false);
   const [isLoadingAITerms, setIsLoadingAITerms] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const form = useForm<OfferFormValues>({
     resolver: zodResolver(offerFormSchema),
@@ -473,13 +478,20 @@ export default function CreateOfferPage() {
             </div>
             <div className="mt-4 p-4 border rounded-md bg-muted/30 flex flex-col items-center justify-center">
                 <h4 className="font-semibold mb-2 text-sm">QR Code (Prévia)</h4>
-                {offerTitleForQRCode && (
+                {isClient && offerTitleForQRCode && (
                     <div style={{ background: 'white', padding: '16px', borderRadius: '8px' }}>
                         <QRCodeSVG value={qrValue} size={120} />
                     </div>
                 )}
-                {!offerTitleForQRCode && (
-                    <Image src="https://placehold.co/150x150.png?text=QR+CODE" alt="Placeholder QR Code" width={120} height={120} data-ai-hint="qr code"/>
+                {isClient && !offerTitleForQRCode && (
+                     <div style={{ background: 'white', padding: '16px', borderRadius: '8px' }}>
+                        <QRCodeSVG value="https://ofertivo.app/coupon?title=OfertaPendente" size={120} />
+                    </div>
+                )}
+                {!isClient && (
+                    <div className="w-[152px] h-[152px] flex items-center justify-center bg-white rounded-md"> 
+                        <p className="text-xs text-muted-foreground">Carregando QR Code...</p>
+                    </div>
                 )}
                 <p className="text-xs text-muted-foreground mt-2">O QR Code real será vinculado ao ID da oferta ao publicar.</p>
             </div>
