@@ -30,7 +30,7 @@ const mockPageOffers: Offer[] = [
     originalPrice: 59.90,
     validityStartDate: Timestamp.fromDate(new Date()),
     validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 7))),
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 1))), // Recent
     updatedAt: Timestamp.fromDate(new Date()),
     offerType: 'padrao',
     visibility: 'destaque', // DESTAQUE
@@ -41,13 +41,13 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 155,
     rating: 4.7,
     reviews: 30,
-    galleryImages: ['https://placehold.co/800x450.png?text=Pizza+1', 'https://placehold.co/800x450.png?text=Pizza+2'], // TEM GALLERYIMAGES
+    galleryImages: ['https://placehold.co/800x450.png?text=Pizza+1', 'https://placehold.co/800x450.png?text=Pizza+2'], 
     galleryImageHints: ['pizza restaurant', 'dinner food'],
     tags: ['#pizza', '#familia', '#promocao']
   },
   {
     id: 'mock-offer-2',
-    title: 'Corte de Cabelo Moderno (Exemplo)',
+    title: 'Corte de Cabelo Moderno (Recente)',
     description: 'Renove seu visual com um corte moderno e estiloso + lavagem especial.',
     merchantName: 'Barbearia Estilo Único',
     merchantId: 'mock-merchant-2',
@@ -58,7 +58,7 @@ const mockPageOffers: Offer[] = [
     originalPrice: 60.00,
     validityStartDate: Timestamp.fromDate(new Date()),
     validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 10))),
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 2))), // Recent
     updatedAt: Timestamp.fromDate(new Date()),
     offerType: 'exclusiva_app',
     visibility: 'normal',
@@ -73,7 +73,7 @@ const mockPageOffers: Offer[] = [
   },
   {
     id: 'mock-offer-3',
-    title: 'Combo Lanche da Tarde (Exemplo)',
+    title: 'Combo Lanche da Tarde (Mais Recente)',
     description: 'Um delicioso sanduíche natural + suco de laranja 300ml.',
     merchantName: 'Cantina Sabor & Saúde',
     merchantId: 'mock-merchant-3',
@@ -83,7 +83,7 @@ const mockPageOffers: Offer[] = [
     discountedPrice: 19.90,
     validityStartDate: Timestamp.fromDate(new Date()),
     validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 3))),
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.fromDate(new Date()), // Most recent
     updatedAt: Timestamp.fromDate(new Date()),
     offerType: 'combo',
     visibility: 'normal',
@@ -109,7 +109,7 @@ const mockPageOffers: Offer[] = [
     originalPrice: 2500.00,
     validityStartDate: Timestamp.fromDate(new Date()),
     validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 30))),
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 5))),
     updatedAt: Timestamp.fromDate(new Date()),
     offerType: 'padrao',
     visibility: 'destaque', // DESTAQUE
@@ -120,7 +120,7 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 20,
     rating: 4.9,
     reviews: 10,
-    galleryImages: ['https://placehold.co/800x450.png?text=Praia', 'https://placehold.co/800x450.png?text=Resort'], // TEM GALLERYIMAGES
+    galleryImages: ['https://placehold.co/800x450.png?text=Praia', 'https://placehold.co/800x450.png?text=Resort'], 
     galleryImageHints: ['beach resort', 'travel vacation'],
     tags: ['#viagem', '#ferias', '#destaque']
   },
@@ -137,7 +137,7 @@ const mockPageOffers: Offer[] = [
     originalPrice: 200.00,
     validityStartDate: Timestamp.fromDate(new Date()),
     validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 15))),
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 3))), // Recent
     updatedAt: Timestamp.fromDate(new Date()),
     offerType: 'padrao',
     visibility: 'normal',
@@ -148,7 +148,7 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 45,
     rating: 4.5,
     reviews: 12,
-    galleryImages: ['https://placehold.co/800x450.png?text=Limpeza+Sala'], // TEM GALLERYIMAGES => será destaque também
+    galleryImages: ['https://placehold.co/800x450.png?text=Limpeza+Sala'], 
     galleryImageHints: ['cleaning livingroom'],
     tags: ['#limpeza', '#casa']
   },
@@ -164,7 +164,7 @@ const mockPageOffers: Offer[] = [
     discountedPrice: 99.90,
     validityStartDate: Timestamp.fromDate(new Date()),
     validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 60))),
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 10))),
     updatedAt: Timestamp.fromDate(new Date()),
     offerType: 'exclusiva_app',
     visibility: 'destaque', // DESTAQUE
@@ -192,7 +192,7 @@ const mockPageOffers: Offer[] = [
     originalPrice: 350.00,
     validityStartDate: Timestamp.fromDate(new Date()),
     validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 20))),
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 4))), // Recent
     updatedAt: Timestamp.fromDate(new Date()),
     offerType: 'padrao',
     visibility: 'normal',
@@ -203,11 +203,11 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 55,
     rating: 4.6,
     reviews: 18,
-    galleryImages: ['https://placehold.co/800x450.png?text=Academia'], // TEM GALLERYIMAGES => será destaque
+    galleryImages: ['https://placehold.co/800x450.png?text=Academia'],
     galleryImageHints: ['gym workout'],
     tags: ['#fitness', '#saude', '#personal']
   },
-    {
+  {
     id: 'mock-offer-8',
     title: 'Smartphone Última Geração (Destaque VIP)',
     description: 'Compre o novo smartphone com desconto exclusivo e capa grátis.',
@@ -220,7 +220,7 @@ const mockPageOffers: Offer[] = [
     originalPrice: 3599.00,
     validityStartDate: Timestamp.fromDate(new Date()),
     validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 10))),
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 12))),
     updatedAt: Timestamp.fromDate(new Date()),
     offerType: 'cupom_qr',
     visibility: 'destaque', // DESTAQUE
@@ -231,9 +231,117 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 30,
     rating: 4.7,
     reviews: 15,
-    galleryImages: ['https://placehold.co/800x450.png?text=Celular+Novo', 'https://placehold.co/800x450.png?text=Caixa+Celular'], // TEM GALLERYIMAGES
+    galleryImages: ['https://placehold.co/800x450.png?text=Celular+Novo', 'https://placehold.co/800x450.png?text=Caixa+Celular'],
     galleryImageHints: ['new smartphone', 'phone box'],
     tags: ['#smartphone', '#tecnologia', '#promocao']
+  },
+  {
+    id: 'mock-offer-9',
+    title: 'Manicure e Pedicure Completa',
+    description: 'Unhas perfeitas com os melhores produtos e profissionais.',
+    merchantName: 'Salão Bela Unha',
+    merchantId: 'mock-merchant-9',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'manicure nails beauty',
+    category: 'Serviços',
+    discountedPrice: 50.00,
+    originalPrice: 70.00,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 15))),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 6))),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'padrao',
+    visibility: 'normal',
+    status: 'active',
+    pointsAwarded: 10,
+    createdBy: 'mock-merchant-9',
+    merchantIsVerified: true,
+    usersUsedCount: 65,
+    rating: 4.6,
+    reviews: 18,
+    tags: ['#unhas', '#belezafeminina']
+  },
+  {
+    id: 'mock-offer-10',
+    title: 'Rodízio Japonês para Casal',
+    description: 'Delicie-se com nosso rodízio completo de sushi e sashimi.',
+    merchantName: 'Restaurante Sakura',
+    merchantId: 'mock-merchant-10',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'sushi japanese food',
+    category: 'Alimentação',
+    discountedPrice: 129.90,
+    originalPrice: 159.90,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 20))),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 7))),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'padrao',
+    visibility: 'destaque',
+    status: 'active',
+    pointsAwarded: 25,
+    createdBy: 'mock-merchant-10',
+    merchantIsVerified: true,
+    usersUsedCount: 95,
+    rating: 4.9,
+    reviews: 40,
+    galleryImages: ['https://placehold.co/800x450.png?text=Sushi+Combo', 'https://placehold.co/800x450.png?text=Temaki+Delicia'],
+    galleryImageHints: ['sushi combo', 'japanese temaki'],
+    tags: ['#japa', '#rodizio', '#casal']
+  },
+  {
+    id: 'mock-offer-11',
+    title: 'Ingresso Cinema 2D (Filme Estreia)',
+    description: 'Assista aos grandes lançamentos do cinema com desconto.',
+    merchantName: 'Cinema Ofertivo',
+    merchantId: 'mock-merchant-11',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'cinema movie ticket',
+    category: 'Lazer',
+    discountedPrice: 15.00,
+    originalPrice: 30.00,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 30))),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 8))),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'cupom_qr',
+    visibility: 'normal',
+    status: 'active',
+    pointsAwarded: 5,
+    createdBy: 'mock-merchant-11',
+    merchantIsVerified: false,
+    usersUsedCount: 350,
+    rating: 4.2,
+    reviews: 55,
+    tags: ['#cinema', '#filme', '#estreia']
+  },
+  {
+    id: 'mock-offer-12',
+    title: 'Óculos de Sol da Nova Coleção',
+    description: 'Proteja seus olhos com estilo. Diversos modelos com 30% OFF.',
+    merchantName: 'Ótica Visão Clara',
+    merchantId: 'mock-merchant-12',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'sunglasses fashion style',
+    category: 'Compras',
+    discountedPrice: 139.90, // Assuming an average original price and applying 30% off
+    originalPrice: 199.85,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 25))),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 9))),
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'padrao',
+    visibility: 'normal',
+    status: 'active',
+    pointsAwarded: 15,
+    createdBy: 'mock-merchant-12',
+    merchantIsVerified: true,
+    usersUsedCount: 40,
+    rating: 4.5,
+    reviews: 10,
+    galleryImages: ['https://placehold.co/800x450.png?text=Óculos+Modelo+1', 'https://placehold.co/800x450.png?text=Óculos+Modelo+2'],
+    galleryImageHints: ['sunglasses model', 'fashion eyewear'],
+    tags: ['#oculos', '#verao', '#estilo']
   }
 ];
 
@@ -281,7 +389,7 @@ export default function FeedPage() {
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
         return dateB - dateA;
       })
-      .slice(0, 8); // Increased from 4 to 8
+      .slice(0, 8);
   }, [allOffers]);
 
   const filteredOffers = useMemo(() => {
@@ -313,7 +421,7 @@ export default function FeedPage() {
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
         return dateB - dateA;
       })
-      .slice(0, 6);
+      .slice(0, 10); // Increased from 6 to 10
   }, [filteredOffers]);
 
   const recommendedOffers = useMemo(() => {
@@ -329,7 +437,7 @@ export default function FeedPage() {
     setSelectedCategory(categoryName);
   };
 
-  if (loading && allOffers.length === 0) { // Show loader only if mock data hasn't been set yet or if allOffers is still genuinely empty from a fast mock set
+  if (loading && allOffers.length === 0) { 
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -360,7 +468,7 @@ export default function FeedPage() {
       </div>
 
       <CategoryPills
-        categories={categories} // Static categories from types/index.ts
+        categories={categories} 
         selectedCategory={selectedCategory}
         onSelectCategory={handleSelectCategory}
       />
@@ -401,7 +509,7 @@ export default function FeedPage() {
        {recentOffers.length === 0 && !searchTerm && selectedCategory && (
          <p className="text-center text-muted-foreground py-6 px-4 md:px-0">Nenhuma oferta recente encontrada na categoria "{selectedCategory}".</p>
        )}
-       {allOffers.length === 0 && !loading && !searchTerm && !selectedCategory && ( // Check loading state here
+       {allOffers.length === 0 && !loading && !searchTerm && !selectedCategory && ( 
          <p className="text-center text-muted-foreground py-10 px-4 md:px-0 text-lg">
             Nenhuma oferta disponível no momento. <br/> Volte mais tarde!
         </p>
