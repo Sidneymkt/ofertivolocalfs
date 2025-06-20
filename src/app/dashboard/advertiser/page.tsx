@@ -8,15 +8,15 @@ import QuickActionsCard from '@/components/dashboard/advertiser/QuickActionsCard
 import PublishedOffersSection from '@/components/dashboard/advertiser/PublishedOffersSection';
 import GenericDashboardSection from '@/components/dashboard/advertiser/GenericDashboardSection';
 import AdvertiserProfileSettingsCard from '@/components/dashboard/advertiser/AdvertiserProfileSettingsCard';
-import { mockAdvertiserUser, type AdvertiserMetricItem, type PublishedOfferSummary } from '@/types'; 
+import { mockAdvertiserUser, type AdvertiserMetricItem, type PublishedOfferSummary, ADVERTISER_PLAN_DETAILS } from '@/types'; 
 import { BarChart2, Eye, MousePointerClick, CheckCircle, Users, Coins, TrendingUp, ShoppingBag, Settings, Bell, Gift, ListFilter, FileText, DollarSign, AlertCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 const advertiserName = mockAdvertiserUser.businessName || "Meu Negócio"; 
 
 const advertiserPlan = {
-  name: "Plano Pro",
-  monthlyPointsLimit: 1000,
+  name: mockAdvertiserUser.advertiserPlan ? ADVERTISER_PLAN_DETAILS[mockAdvertiserUser.advertiserPlan].name : "Não Definido",
+  monthlyPointsLimit: 1000, // This could also come from ADVERTISER_PLAN_DETAILS if defined there
   pointsDistributedThisMonth: 650, 
 };
 
@@ -88,6 +88,8 @@ const publishedOffers: PublishedOfferSummary[] = [
 ];
 
 export default function AdvertiserDashboardPage() {
+  const currentPlanDetails = mockAdvertiserUser.advertiserPlan ? ADVERTISER_PLAN_DETAILS[mockAdvertiserUser.advertiserPlan] : null;
+
   return (
     <div className="space-y-8 p-4 md:p-6 lg:p-8 selection:bg-primary selection:text-primary-foreground">
       <header className="mb-8">
@@ -98,6 +100,24 @@ export default function AdvertiserDashboardPage() {
       </header>
 
       <AdvertiserMetricsGrid metrics={metrics} />
+
+      {currentPlanDetails && (
+        <GenericDashboardSection
+          title="Economia e Valor dos Pontos"
+          icon={DollarSign}
+          description={`Informações sobre o valor dos pontos no seu plano atual: ${currentPlanDetails.name}.`}
+        >
+          <div className="text-center p-4 bg-muted/50 rounded-md border">
+            <p className="text-lg">No seu plano <span className="font-semibold text-primary">{currentPlanDetails.name}</span>:</p>
+            <p className="text-3xl font-bold text-primary mt-1">
+              1 Ponto = R$ {currentPlanDetails.pointValueInBRL.toFixed(2).replace('.', ',')}
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Este é o valor de "custo" estimado por ponto que você distribui para os usuários.
+            </p>
+          </div>
+        </GenericDashboardSection>
+      )}
 
       <GenericDashboardSection 
         title="Uso de Pontos do Plano Mensal" 
@@ -159,3 +179,4 @@ export default function AdvertiserDashboardPage() {
     </div>
   );
 }
+

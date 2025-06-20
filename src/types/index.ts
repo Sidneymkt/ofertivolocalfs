@@ -97,7 +97,7 @@ export interface Offer {
   pointsAwarded?: number;
   pointsForCheckin?: number;
   pointsForShare?: number;
-  pointsForComment?: number;
+  pointsForRating?: number; // Renamed from pointsForComment
   isRedeemableWithPoints?: boolean;
 
   // Location & Rating (optional on creation, might be auto-populated or admin-set)
@@ -151,6 +151,13 @@ export const USER_LEVELS = {
 
 export type UserStatus = 'active' | 'inactive' | 'suspended' | 'pending_verification';
 export type AdvertiserPlan = 'basic' | 'pro' | 'premium' | 'trial';
+
+export const ADVERTISER_PLAN_DETAILS: Record<AdvertiserPlan, { name: string; pointValueInBRL: number; description: string }> = {
+  trial: { name: 'Teste (Trial)', pointValueInBRL: 0.05, description: 'Plano de experimentação com funcionalidades básicas.' },
+  basic: { name: 'Básico', pointValueInBRL: 0.04, description: 'Ideal para pequenos negócios começando.' },
+  pro: { name: 'Pro', pointValueInBRL: 0.03, description: 'Mais recursos para negócios em crescimento.' },
+  premium: { name: 'Premium', pointValueInBRL: 0.02, description: 'Todas as funcionalidades para grandes anunciantes.' },
+};
 
 export interface User {
   id: string;
@@ -239,7 +246,7 @@ export type AdminMetricItem = {
 export const POINTS_CHECKIN = 5;
 export const POINTS_SHARE_OFFER = 3;
 export const POINTS_FOLLOW_MERCHANT = 2;
-export const POINTS_COMMENT_OFFER = 1;
+export const POINTS_RATE_OFFER_OR_MERCHANT = 1; // Renamed from POINTS_COMMENT_OFFER
 export const POINTS_PROFILE_COMPLETE = 50;
 export const POINTS_SIGNUP_WELCOME = 100;
 
@@ -284,8 +291,8 @@ export const mockUser: User = {
       { id: 'swp2', sweepstakeId: 'sw2', sweepstakeTitle: 'Vale Compras de R$200 Loja X', timestamp: new Date(now.getTime() - oneDay * 8), pointsSpent: 50 },
   ],
   commentsMade: [
-      { id: 'cmtUser1', userId: 'user123', userName: 'Ana Clara Explorer', rating: 5, text: 'Adorei a pizza, super recomendo! Massa fininha e crocante.', timestamp: new Date(now.getTime() - oneDay), offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante + Refri Grátis', pointsEarned: POINTS_COMMENT_OFFER },
-      { id: 'cmtUser2', userId: 'user123', userName: 'Ana Clara Explorer', rating: 4, text: 'O corte ficou bom, mas o ambiente poderia ser mais silencioso.', timestamp: new Date(now.getTime() - oneDay * 3), offerId: 'offer-barber-2', offerTitle: 'Corte Masculino + Barba Modelada', pointsEarned: POINTS_COMMENT_OFFER },
+      { id: 'cmtUser1', userId: 'user123', userName: 'Ana Clara Explorer', rating: 5, text: 'Adorei a pizza, super recomendo! Massa fininha e crocante.', timestamp: new Date(now.getTime() - oneDay), offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante + Refri Grátis', pointsEarned: POINTS_RATE_OFFER_OR_MERCHANT },
+      { id: 'cmtUser2', userId: 'user123', userName: 'Ana Clara Explorer', rating: 4, text: 'O corte ficou bom, mas o ambiente poderia ser mais silencioso.', timestamp: new Date(now.getTime() - oneDay * 3), offerId: 'offer-barber-2', offerTitle: 'Corte Masculino + Barba Modelada', pointsEarned: POINTS_RATE_OFFER_OR_MERCHANT },
   ],
   isAdvertiser: false,
   address: 'Rua das Palmeiras, 123, Bairro Flores',
@@ -366,13 +373,13 @@ export const mockOffers: Offer[] = [
     validityStartDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0),
     validityEndDate: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59),
     usersUsedCount: 138,
-    pointsAwarded: POINTS_CHECKIN + 2,
+    pointsAwarded: POINTS_CHECKIN + 2 + POINTS_SHARE_OFFER + POINTS_RATE_OFFER_OR_MERCHANT,
     pointsForCheckin: POINTS_CHECKIN + 2,
     pointsForShare: POINTS_SHARE_OFFER,
-    pointsForComment: POINTS_COMMENT_OFFER,
+    pointsForRating: POINTS_RATE_OFFER_OR_MERCHANT,
     comments: [
-      { id: 'c1', userId: 'userX', userName: 'João Silva', userAvatarUrl: 'https://placehold.co/40x40.png?text=JS', userAvatarHint: 'person avatar', rating: 5, text: 'Pizza maravilhosa, atendimento top!', timestamp: new Date(now.getTime() - 3600000 * 5), pointsEarned: POINTS_COMMENT_OFFER },
-      { id: 'c2', userId: 'userY', userName: 'Maria Oliveira', userAvatarUrl: 'https://placehold.co/40x40.png?text=MO', userAvatarHint: 'woman avatar', rating: 4, text: 'Gostei muito, ótimo custo-benefício.', timestamp: new Date(now.getTime() - 3600000 * 24), pointsEarned: POINTS_COMMENT_OFFER },
+      { id: 'c1', userId: 'userX', userName: 'João Silva', userAvatarUrl: 'https://placehold.co/40x40.png?text=JS', userAvatarHint: 'person avatar', rating: 5, text: 'Pizza maravilhosa, atendimento top!', timestamp: new Date(now.getTime() - 3600000 * 5), pointsEarned: POINTS_RATE_OFFER_OR_MERCHANT },
+      { id: 'c2', userId: 'userY', userName: 'Maria Oliveira', userAvatarUrl: 'https://placehold.co/40x40.png?text=MO', userAvatarHint: 'woman avatar', rating: 4, text: 'Gostei muito, ótimo custo-benefício.', timestamp: new Date(now.getTime() - 3600000 * 24), pointsEarned: POINTS_RATE_OFFER_OR_MERCHANT },
     ],
     status: 'active',
     visibility: 'destaque',
@@ -414,6 +421,7 @@ export const mockOffers: Offer[] = [
     usersUsedCount: 72,
     pointsAwarded: POINTS_CHECKIN,
     pointsForCheckin: POINTS_CHECKIN,
+    pointsForRating: POINTS_RATE_OFFER_OR_MERCHANT,
     status: 'active',
     visibility: 'normal',
     createdAt: new Date(now.getTime() - oneDay * 10),
@@ -452,6 +460,7 @@ export const mockOffers: Offer[] = [
     usersUsedCount: 95,
     pointsAwarded: POINTS_CHECKIN,
     pointsForCheckin: POINTS_CHECKIN,
+    pointsForRating: POINTS_RATE_OFFER_OR_MERCHANT,
     isPresentialOnly: true,
     status: 'active',
     visibility: 'destaque',
@@ -492,6 +501,7 @@ export const mockOffers: Offer[] = [
     usersUsedCount: 150,
     pointsAwarded: POINTS_CHECKIN,
     pointsForCheckin: POINTS_CHECKIN,
+    pointsForRating: POINTS_RATE_OFFER_OR_MERCHANT,
     status: 'active',
     visibility: 'normal',
     createdAt: new Date(now.getTime() - oneDay * 20),
@@ -523,6 +533,7 @@ export const mockOffers: Offer[] = [
     createdAt: new Date(now.getTime() - oneDay * 30),
     updatedAt: new Date(now.getTime() - oneDay * 5),
     pointsAwarded: 0, // Pontos são ganhos nos check-ins normais
+    pointsForRating: POINTS_RATE_OFFER_OR_MERCHANT,
     distance: '1.5km',
     latitude: -3.0987,
     longitude: -60.0012,

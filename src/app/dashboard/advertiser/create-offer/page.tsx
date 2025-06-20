@@ -22,7 +22,7 @@ import { categories, offerTypes, type OfferTypeId, type Offer, mockAdvertiserUse
 import { 
   CalendarIcon, UploadCloud, X, Brain, Tag, DollarSign, Percent, Clock, ListChecks, Eye, Gamepad2, Save, Send, Image as ImageIconLucide, 
   AlertCircle, CheckCircle, Info, QrCode as QrCodeIconLucide, Smartphone, UserCheck, CheckCheck as CheckCheckIcon, Package as PackageIcon, LocateFixed, Building as BuildingIcon,
-  Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon, FileText
+  Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon, FileText, Star as StarIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -85,7 +85,7 @@ const offerFormSchemaBase = z.object({
     (val) => (String(val).trim() === "" ? 0 : parseInt(String(val), 10)),
     z.number().int().min(0).optional().default(0)
   ),
-  pointsForComment: z.preprocess(
+  pointsForRating: z.preprocess( // Renamed from pointsForComment
     (val) => (String(val).trim() === "" ? 0 : parseInt(String(val), 10)),
     z.number().int().min(0).optional().default(0)
   ),
@@ -202,7 +202,7 @@ export default function CreateOfferPage() {
       isUnlimited: false,
       pointsForCheckin: 0,
       pointsForShare: 0,
-      pointsForComment: 0,
+      pointsForRating: 0, // Renamed from pointsForComment
       isRedeemableWithPoints: false,
       isPresentialOnly: false,
       timeLimit: '',
@@ -348,7 +348,8 @@ export default function CreateOfferPage() {
       comboItem2: data.comboItem2,
       comboItem3: data.comboItem3,
       targetNeighborhood: data.targetNeighborhood,
-      pointsAwarded: (data.pointsForCheckin || 0) + (data.pointsForShare || 0) + (data.pointsForComment || 0) || 5, 
+      pointsAwarded: (data.pointsForCheckin || 0) + (data.pointsForShare || 0) + (data.pointsForRating || 0) || 5, 
+      pointsForRating: data.pointsForRating,
     };
 
     console.log('Simulating saving offer to Firestore:', newOffer);
@@ -1049,7 +1050,7 @@ export default function CreateOfferPage() {
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <FormField control={form.control} name="pointsForCheckin" render={({ field }) => ( <FormItem> <FormLabel htmlFor="pointsForCheckin">Pontos por Check-in</FormLabel> <FormControl><Input id="pointsForCheckin" type="number" placeholder="Ex: 5" {...field} value={field.value ?? 0} /></FormControl> <FormMessage /> </FormItem> )}/>
                 <FormField control={form.control} name="pointsForShare" render={({ field }) => ( <FormItem> <FormLabel htmlFor="pointsForShare">Pontos por Compartilhamento</FormLabel> <FormControl><Input id="pointsForShare" type="number" placeholder="Ex: 3" {...field} value={field.value ?? 0} /></FormControl> <FormMessage /> </FormItem> )}/>
-                <FormField control={form.control} name="pointsForComment" render={({ field }) => ( <FormItem> <FormLabel htmlFor="pointsForComment">Pontos por Comentário</FormLabel> <FormControl><Input id="pointsForComment" type="number" placeholder="Ex: 1" {...field} value={field.value ?? 0} /></FormControl> <FormMessage /> </FormItem> )}/>
+                <FormField control={form.control} name="pointsForRating" render={({ field }) => ( <FormItem> <FormLabel htmlFor="pointsForRating">Pontos por Avaliação (<StarIcon className="inline h-3 w-3" /> Oferta/Negócio)</FormLabel> <FormControl><Input id="pointsForRating" type="number" placeholder="Ex: 1" {...field} value={field.value ?? 0} /></FormControl> <FormMessage /> </FormItem> )}/>
                 <div className="sm:col-span-2 lg:col-span-3">
                      <FormField control={form.control} name="isRedeemableWithPoints" render={({ field }) => (
                         <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
@@ -1111,3 +1112,4 @@ export default function CreateOfferPage() {
     </div>
   );
 }
+

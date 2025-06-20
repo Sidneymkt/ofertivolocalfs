@@ -2,7 +2,7 @@
 import PointsDisplay from '@/components/rewards/PointsDisplay';
 import Leaderboard from '@/components/rewards/Leaderboard';
 import SweepstakesList from '@/components/rewards/SweepstakesList';
-import { mockUser, mockSweepstakes, POINTS_SIGNUP_WELCOME, POINTS_PROFILE_COMPLETE, POINTS_CHECKIN, POINTS_COMMENT_OFFER, POINTS_SHARE_OFFER, POINTS_FOLLOW_MERCHANT } from '@/types';
+import { mockUser, mockSweepstakes, POINTS_SIGNUP_WELCOME, POINTS_PROFILE_COMPLETE, POINTS_CHECKIN, POINTS_RATE_OFFER_OR_MERCHANT, POINTS_SHARE_OFFER, POINTS_FOLLOW_MERCHANT } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { HelpCircle, Gift } from 'lucide-react';
 
@@ -23,7 +23,7 @@ export default function RewardsPage() {
             <li>Cadastro inicial: <span className="font-semibold text-primary">+{POINTS_SIGNUP_WELCOME} pontos</span></li>
             <li>Completar perfil: <span className="font-semibold text-primary">+{POINTS_PROFILE_COMPLETE} pontos</span></li>
             <li>Check-in em ofertas: <span className="font-semibold text-primary">+{POINTS_CHECKIN} pontos</span></li>
-            <li>Comentar em ofertas: <span className="font-semibold text-primary">+{POINTS_COMMENT_OFFER} ponto(s)</span></li>
+            <li>Avaliar ofertas e comerciantes: <span className="font-semibold text-primary">+{POINTS_RATE_OFFER_OR_MERCHANT} ponto(s)</span></li>
             <li>Compartilhar ofertas: <span className="font-semibold text-primary">+{POINTS_SHARE_OFFER} pontos</span></li>
             <li>Seguir um negócio: <span className="font-semibold text-primary">+{POINTS_FOLLOW_MERCHANT} pontos</span></li>
           </ul>
