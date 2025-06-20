@@ -51,8 +51,8 @@ const offerFormSchemaBase = z.object({
   description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres.").max(380, "Descrição não pode exceder 380 caracteres."),
   images: z.custom<File[]>().array().min(1, "Pelo menos uma imagem é obrigatória.").max(6, "Máximo de 6 imagens.").optional(),
   category: z.string({ required_error: "Categoria é obrigatória." }),
-  validityStartDate: z.date({ required_error: "Data de início é obrigatória." }),
-  validityEndDate: z.date({ required_error: "Data de fim é obrigatória." }),
+  validityStartDate: z.date({ required_error: "Data de início é obrigatória." }).nullable(),
+  validityEndDate: z.date({ required_error: "Data de fim é obrigatória." }).nullable(),
   terms: z.string().max(1000, "Termos e condições muito longos.").optional(),
   visibility: z.enum(["normal", "destaque", "sorteio"]).default("normal"),
   tags: z.string().optional(),
@@ -124,7 +124,10 @@ const offerFormSchema = offerFormSchemaBase.refine(data => {
 }, {
   message: "Preço promocional deve ser menor que o preço original.",
   path: ["discountedPrice"],
-}).refine(data => data.validityEndDate >= data.validityStartDate, {
+}).refine(data => {
+  if (!data.validityStartDate || !data.validityEndDate) return true; // Skip if dates are not set
+  return data.validityEndDate >= data.validityStartDate;
+}, {
   message: "Data de fim deve ser igual ou posterior à data de início.",
   path: ["validityEndDate"],
 }).refine(data => {
@@ -186,8 +189,8 @@ export default function CreateOfferPage() {
       description: '',
       images: [],
       category: undefined,
-      validityStartDate: new Date(),
-      validityEndDate: new Date(Date.now() + 7 * 86400000), 
+      validityStartDate: undefined, // Initialized as undefined
+      validityEndDate: undefined,   // Initialized as undefined
       terms: '',
       visibility: "normal",
       tags: '',
@@ -214,6 +217,21 @@ export default function CreateOfferPage() {
   });
 
   const { watch, setValue, getValues, trigger, control } = form;
+
+  useEffect(() => {
+    // Set default dates only on the client after mount to avoid hydration mismatch
+    const today = new Date();
+    const sevenDaysLater = new Date(Date.now() + 7 * 86400000);
+
+    if (getValues("validityStartDate") === undefined) { // Check if still undefined (not set by user)
+      setValue("validityStartDate", today, { shouldValidate: true });
+    }
+    if (getValues("validityEndDate") === undefined) { // Check if still undefined
+      setValue("validityEndDate", sevenDaysLater, { shouldValidate: true });
+    }
+  }, [setValue, getValues]);
+
+
   const isUnlimited = watch("isUnlimited");
   const selectedOfferType = watch("offerType");
   const discountType = watch("discountType");
@@ -290,12 +308,24 @@ export default function CreateOfferPage() {
   };
 
   const onSubmit: SubmitHandler<OfferFormValues> = (data) => {
+    // Ensure dates are not null before creating the offer object
+    if (!data.validityStartDate || !data.validityEndDate) {
+        toast({
+            variant: "destructive",
+            title: "Datas Inválidas",
+            description: "As datas de início e fim da validade são obrigatórias.",
+        });
+        return;
+    }
+
     const imageFileNames = selectedFiles.map(file => file.name);
     const galleryImageHints = imageFileNames.map((_, index) => `${data.title.split(" ")[0]} ${data.category}`.toLowerCase().slice(0,20)); 
 
     const newOffer: Offer = {
       id: `offer-${Date.now()}-${Math.random().toString(36).substring(2,7)}`, 
       ...data,
+      validityStartDate: data.validityStartDate, // Already a Date object
+      validityEndDate: data.validityEndDate,     // Already a Date object
       status: 'awaiting_approval', 
       createdBy: mockAdvertiserUser.advertiserProfileId || 'unknown_advertiser',
       merchantId: mockAdvertiserUser.advertiserProfileId || 'unknown_advertiser',
@@ -858,7 +888,7 @@ export default function CreateOfferPage() {
                             </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) } initialFocus/>
+                            <Calendar mode="single" selected={field.value || undefined} onSelect={field.onChange} disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) } initialFocus/>
                         </PopoverContent>
                         </Popover>
                         <FormMessage />
@@ -881,7 +911,7 @@ export default function CreateOfferPage() {
                             </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date < (form.getValues("validityStartDate") || new Date(new Date().setHours(0,0,0,0))) } initialFocus />
+                            <Calendar mode="single" selected={field.value || undefined} onSelect={field.onChange} disabled={(date) => date < (form.getValues("validityStartDate") || new Date(new Date().setHours(0,0,0,0))) } initialFocus />
                         </PopoverContent>
                         </Popover>
                         <FormMessage />

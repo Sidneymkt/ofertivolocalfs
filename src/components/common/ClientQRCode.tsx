@@ -2,20 +2,10 @@
 'use client';
 
 import React from 'react';
-// Statically import QRCodeSVG. Its client-side nature is handled by the parent's dynamic import of this entire component.
+// Statically import QRCodeSVG. Its client-side nature should be handled by
+// the parent's dynamic import of this entire component with ssr: false.
 import { QRCodeSVG } from 'react-qr-code';
-
-// Props for QRCodeSVG from react-qr-code.
-// It's good practice to define or import the specific props if available,
-// but for this fix, we'll assume the basic props are sufficient or use 'any'.
-interface QRCodeSVGActualProps extends React.SVGProps<SVGSVGElement> {
-    value: string;
-    size?: number;
-    bgColor?: string;
-    fgColor?: string;
-    level?: 'L' | 'M' | 'Q' | 'H';
-    title?: string;
-}
+import { cn } from '@/lib/utils';
 
 interface ClientQRCodeProps {
   value: string;
@@ -24,29 +14,33 @@ interface ClientQRCodeProps {
 }
 
 const ClientQRCode: React.FC<ClientQRCodeProps> = ({ value, size, className }) => {
-  // This component is dynamically imported with ssr:false by its parents.
-  // So, by the time this renders, we should be on the client, and QRCodeSVG should be defined.
+  // This component (ClientQRCode) is dynamically imported by its parents with ssr: false.
+  // Thus, this code should only execute on the client-side.
+  // The primary issue is whether 'import { QRCodeSVG } from "react-qr-code"'
+  // successfully resolves QRCodeSVG to a function.
 
   if (typeof QRCodeSVG !== 'function') {
-    // This indicates a problem with the import or the library itself.
-    console.error('QRCodeSVG is not a function. Check react-qr-code import, installation, and library version. The value of QRCodeSVG is:', QRCodeSVG);
-    // Fallback UI
+    // This console.error will help confirm if this path is taken,
+    // indicating QRCodeSVG itself is not resolving as expected.
+    console.error(
+      "ClientQRCode: QRCodeSVG from 'react-qr-code' is not a function or is undefined. Value received:",
+      QRCodeSVG
+    );
     return (
-        <div 
-            className={cn("flex items-center justify-center bg-muted border border-dashed border-destructive rounded-md text-destructive p-2 text-xs text-center", className)} 
-            style={{ width: size, height: size }}
-        >
-            Error: QR Code indisponível.
-        </div>
+      <div
+        className={cn(
+          "flex items-center justify-center bg-muted border border-dashed border-destructive rounded-md text-destructive p-2 text-xs text-center",
+          className
+        )}
+        style={{ width: size, height: size }}
+      >
+        QR Code Unavailable
+      </div>
     );
   }
-  
-  // Cast to any if specific props are not strictly typed or to bypass potential minor type mismatches.
-  // For a production component, ensuring accurate prop typing is better.
-  const QRComponent = QRCodeSVG as React.ComponentType<QRCodeSVGActualProps>;
 
-  return <QRComponent value={value} size={size} className={className} />;
+  // If we reach here, QRCodeSVG should be a function.
+  return <QRCodeSVG value={value} size={size} className={className} />;
 };
 
 export default ClientQRCode;
-
