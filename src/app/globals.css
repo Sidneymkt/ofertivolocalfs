@@ -120,3 +120,4 @@ body {
   animation: pulse-marker 1.8s infinite ease-in-out; /* Slightly faster animation */
   transform-origin: center 30px; /* Anchor point for scaling, assuming a 40px tall icon anchored at bottom center */
 }
+
