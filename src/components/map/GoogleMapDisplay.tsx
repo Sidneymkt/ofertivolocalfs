@@ -93,14 +93,12 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
   const [currentVisualCenter, setCurrentVisualCenter] = useState(mapCenter); 
   const mapRef = React.useRef<google.maps.Map | null>(null);
 
-  // Log the API key when the component mounts or apiKey prop changes
   useEffect(() => {
     console.log("[DEBUG] GoogleMapDisplay Component: apiKey prop received:", apiKey ? "SET (masked)" : "MISSING or undefined");
   }, [apiKey]);
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey || "", 
-    libraries: ['marker'], 
   });
   
   useEffect(() => {
@@ -271,6 +269,3 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
 };
 
 export default GoogleMapDisplay;
-
-    
-    
