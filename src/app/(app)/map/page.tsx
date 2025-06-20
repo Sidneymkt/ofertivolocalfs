@@ -16,8 +16,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetFooter,
-  SheetClose,
 } from "@/components/ui/sheet";
 import AdvancedFiltersSheet from '@/components/map/AdvancedFiltersSheet';
 
@@ -47,12 +45,12 @@ export default function MapPage() {
   return (
     <div className="flex flex-col h-[calc(100vh_-_8rem)]"> {/* Adjust height considering header and bottom nav */}
       {/* Map Section */}
-      <div className="flex-grow relative">
+      <div className="flex-grow relative p-1 md:p-2"> {/* Added small padding for visual separation */}
         <InteractiveMapPlaceholder />
       </div>
 
       {/* Horizontal Scrollable Offer List Section */}
-      <div className="shrink-0 py-3 bg-background border-t border-b">
+      <div className="shrink-0 py-3 bg-background border-t">
         <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas no Mapa</h3>
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex space-x-4 px-4 pb-2.5">
@@ -66,25 +64,25 @@ export default function MapPage() {
         </ScrollArea>
       </div>
 
-      {/* Bottom Sheet / Filter Section */}
-      <div className="p-4 mt-auto shrink-0">
-        <div className="mb-3">
-          <CategoryPills
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onSelectCategory={handleSelectCategory}
-          />
-        </div>
-        
-        <div className="flex justify-center">
+      {/* Filter Bar Section */}
+      <div className="shrink-0 p-3 border-t bg-background">
+        <div className="flex items-center gap-2">
+          <div className="flex-grow">
+            <CategoryPills
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={handleSelectCategory}
+            />
+          </div>
           <Sheet open={isFiltersSheetOpen} onOpenChange={setIsFiltersSheetOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
-                className="flex items-center justify-center h-12 w-full rounded-lg bg-card hover:bg-muted border-border text-sm"
+                size="icon"
+                className="shrink-0"
+                aria-label="Abrir filtros avançados"
               >
-                <ListFilter size={20} className="mr-2" />
-                Ver Todos os Filtros
+                <ListFilter size={20} />
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] flex flex-col rounded-t-2xl">
@@ -97,7 +95,6 @@ export default function MapPage() {
               <div className="flex-grow overflow-y-auto">
                 <AdvancedFiltersSheet onApplyFilters={handleApplyFilters} onClearFilters={handleClearFilters} />
               </div>
-              {/* Footer is now inside AdvancedFiltersSheet */}
             </SheetContent>
           </Sheet>
         </div>
@@ -105,3 +102,4 @@ export default function MapPage() {
     </div>
   );
 }
+
