@@ -203,6 +203,20 @@ export interface User {
   responsibleName?: string; // For advertiser context
 }
 
+export interface SweepstakeParticipant {
+  id: string; // User ID
+  name: string;
+  avatarUrl?: string;
+  avatarHint?: string;
+  entryDate: Date;
+}
+
+export interface SweepstakeWinner {
+  userId: string;
+  userName: string;
+  avatarUrl?: string;
+  avatarHint?: string;
+}
 
 export interface Sweepstake {
   id: string;
@@ -210,8 +224,21 @@ export interface Sweepstake {
   description: string;
   imageUrl: string;
   'data-ai-hint'?: string;
+  prizeDetails: string;
   pointsToEnter: number;
+  startDate: Date;
   endDate: Date;
+  numberOfWinners: number;
+  maxParticipants?: number;
+  rules?: string;
+  createdBy: string; // advertiserId
+  status: 'upcoming' | 'active' | 'ended' | 'drawing_complete' | 'cancelled';
+  
+  // Gerenciamento
+  isDrawn?: boolean;
+  drawDate?: Date;
+  winners?: SweepstakeWinner[];
+  participants?: SweepstakeParticipant[];
 }
 
 
@@ -288,12 +315,12 @@ export const mockUser: User = {
       { id: 'share2', offerId: 'offer-sports-3', offerTitle: 'Tênis Corrida ProBoost X', platform: 'Instagram', timestamp: new Date(now.getTime() - oneDay * 4), pointsEarned: POINTS_SHARE_OFFER },
   ],
   sweepstakeParticipations: [
-      { id: 'swp1', sweepstakeId: 'sw1', sweepstakeTitle: 'Jantar Romântico Vale R$300', timestamp: new Date(now.getTime() - oneDay * 3), pointsSpent: 100 },
-      { id: 'swp2', sweepstakeId: 'sw2', sweepstakeTitle: 'Vale Compras de R$200 Loja X', timestamp: new Date(now.getTime() - oneDay * 8), pointsSpent: 50 },
+      { id: 'swpUser1', sweepstakeId: 'sw1', sweepstakeTitle: 'Ganhe um Jantar Romântico', timestamp: new Date(now.getTime() - oneDay * 3), pointsSpent: 100 },
+      { id: 'swpUser2', sweepstakeId: 'sw2', sweepstakeTitle: 'Vale Compras de R$200', timestamp: new Date(now.getTime() - oneDay * 8), pointsSpent: 50 },
   ],
   commentsMade: [
-      { id: 'cmtUser1', userId: 'user123', userName: 'Ana Clara Explorer', rating: 5, text: 'Adorei a pizza, super recomendo! Massa fininha e crocante.', timestamp: new Date(now.getTime() - oneDay), offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante + Refri Grátis', pointsEarned: POINTS_RATE_OFFER_OR_MERCHANT },
-      { id: 'cmtUser2', userId: 'user123', userName: 'Ana Clara Explorer', rating: 4, text: 'O corte ficou bom, mas o ambiente poderia ser mais silencioso.', timestamp: new Date(now.getTime() - oneDay * 3), offerId: 'offer-barber-2', offerTitle: 'Corte Masculino + Barba Modelada', pointsEarned: POINTS_RATE_OFFER_OR_MERCHANT },
+      { id: 'cmtUser1', userId: 'user123', userName: 'Ana Clara Explorer', userAvatarUrl: 'https://placehold.co/40x40.png?text=AE', rating: 5, text: 'Adorei a pizza, super recomendo! Massa fininha e crocante.', timestamp: new Date(now.getTime() - oneDay), offerId: 'offer-pizza-1', offerTitle: '50% Off Pizza Gigante + Refri Grátis', pointsEarned: POINTS_RATE_OFFER_OR_MERCHANT },
+      { id: 'cmtUser2', userId: 'user123', userName: 'Ana Clara Explorer', userAvatarUrl: 'https://placehold.co/40x40.png?text=AE', rating: 4, text: 'O corte ficou bom, mas o ambiente poderia ser mais silencioso.', timestamp: new Date(now.getTime() - oneDay * 3), offerId: 'offer-barber-2', offerTitle: 'Corte Masculino + Barba Modelada', pointsEarned: POINTS_RATE_OFFER_OR_MERCHANT },
   ],
   isAdvertiser: false,
   address: 'Rua das Palmeiras, 123, Bairro Flores',
@@ -684,10 +711,84 @@ export const mockOffers: Offer[] = [
   },
 ];
 
+
+const mockParticipants: SweepstakeParticipant[] = [
+  { id: 'user123', name: 'Ana Clara Explorer', avatarUrl: 'https://placehold.co/40x40.png?text=AE', avatarHint: 'woman avatar', entryDate: new Date(now.getTime() - oneDay * 2) },
+  { id: 'user002', name: 'Bruno Costa', avatarUrl: 'https://placehold.co/40x40.png?text=BC', avatarHint: 'man avatar', entryDate: new Date(now.getTime() - oneDay * 1) },
+  { id: 'user003', name: 'Carla Dias', avatarUrl: 'https://placehold.co/40x40.png?text=CD', avatarHint: 'woman smiling', entryDate: new Date(now.getTime() - oneHour * 5) },
+  { id: 'userTop4', name: 'Fernanda Fidelidade', avatarUrl: 'https://placehold.co/40x40.png?text=FF', avatarHint: 'woman glasses', entryDate: new Date(now.getTime() - oneDay * 3) },
+  { id: 'userTop5', name: 'Rafael Checkin', avatarUrl: 'https://placehold.co/40x40.png?text=RC', avatarHint: 'man happy', entryDate: new Date(now.getTime() - oneHour * 10) },
+  { id: 'userX', name: 'João Silva', avatarUrl: 'https://placehold.co/40x40.png?text=JS', avatarHint: 'person avatar', entryDate: new Date(now.getTime() - oneDay * 1.5) },
+  { id: 'userY', name: 'Maria Oliveira', avatarUrl: 'https://placehold.co/40x40.png?text=MO', avatarHint: 'woman avatar', entryDate: new Date(now.getTime() - oneHour * 3) },
+];
+
 export const mockSweepstakes: Sweepstake[] = [
-  { id: 'sw1', title: 'Ganhe um Jantar Romântico', description: 'Concorra a um jantar especial para duas pessoas no Restaurante Aconchego. Sorteio dia 30!', imageUrl: 'https://placehold.co/600x300.png?text=Jantar', 'data-ai-hint': 'romantic dinner', pointsToEnter: 100, endDate: new Date(now.getTime() + oneDay * 7) },
-  { id: 'sw2', title: 'Vale Compras de R$200', description: 'Use seus pontos para concorrer a um vale compras de R$200 na Loja Estilo Total. O resultado sai em 2 semanas!', imageUrl: 'https://placehold.co/600x300.png?text=Vale+Compras', 'data-ai-hint': 'shopping giftcard', pointsToEnter: 50, endDate: new Date(now.getTime() + oneDay * 14) },
-  { id: 'sw3', title: 'Um Ano de Pizza Grátis', description: 'Imagine: uma pizza grande por mês, por um ano inteiro! Participe com 200 pontos.', imageUrl: 'https://placehold.co/600x300.png?text=Pizza+Ano', 'data-ai-hint': 'pizza stack', pointsToEnter: 200, endDate: new Date(now.getTime() + oneDay * 30) },
+  { 
+    id: 'sw1', 
+    title: 'Sorteio: Jantar Romântico Vale R$300', 
+    description: 'Concorra a um jantar especial para duas pessoas no Restaurante Aconchego. Demonstre seu amor!', 
+    imageUrl: 'https://placehold.co/600x300.png?text=Jantar', 
+    'data-ai-hint': 'romantic dinner couple', 
+    prizeDetails: 'Um voucher de R$300 para usar no Restaurante Aconchego.',
+    pointsToEnter: 100, 
+    startDate: new Date(now.getTime() - oneDay * 5), // Started 5 days ago
+    endDate: new Date(now.getTime() + oneDay * 2), // Ends in 2 days
+    numberOfWinners: 1,
+    createdBy: 'advUserPizzariaSaborosa', // Example creator
+    status: 'active',
+    isDrawn: false,
+    participants: mockParticipants.slice(0, 5).map(p => ({...p, entryDate: new Date(now.getTime() - (Math.random()*5*oneDay))})), // 5 random participants
+    rules: 'O ganhador será notificado por email. Prêmio intransferível. Validade do voucher: 30 dias após o sorteio.'
+  },
+  { 
+    id: 'sw2', 
+    title: 'Vale Compras de R$200 Loja X', 
+    description: 'Use seus pontos para concorrer a um vale compras de R$200 na Loja Estilo Total. Renove seu guarda-roupa!', 
+    imageUrl: 'https://placehold.co/600x300.png?text=Vale+Compras', 
+    'data-ai-hint': 'shopping giftcard fashion', 
+    prizeDetails: 'Um vale compras de R$200 para a Loja Estilo Total.',
+    pointsToEnter: 50, 
+    startDate: new Date(now.getTime() - oneDay * 10), // Started 10 days ago
+    endDate: new Date(now.getTime() + oneDay * 4), // Ends in 4 days
+    numberOfWinners: 3,
+    createdBy: 'advUserAtletaShop',
+    status: 'active',
+    isDrawn: false,
+    participants: mockParticipants.slice(2, 7).map(p => ({...p, entryDate: new Date(now.getTime() - (Math.random()*10*oneDay))})), // 5 different random participants
+  },
+  { 
+    id: 'sw3', 
+    title: 'Sorteio Finalizado: Um Ano de Pizza Grátis', 
+    description: 'Imagine: uma pizza grande por mês, por um ano inteiro! Este sorteio já foi encerrado.', 
+    imageUrl: 'https://placehold.co/600x300.png?text=Pizza+Ano', 
+    'data-ai-hint': 'pizza stack award', 
+    prizeDetails: '12 Vouchers, cada um para uma pizza grande. Um por mês.',
+    pointsToEnter: 200, 
+    startDate: new Date(now.getTime() - oneDay * 60), // Started 60 days ago
+    endDate: new Date(now.getTime() - oneDay * 30), // Ended 30 days ago
+    numberOfWinners: 1,
+    createdBy: 'advUserPizzariaSaborosa',
+    status: 'drawing_complete',
+    isDrawn: true,
+    drawDate: new Date(now.getTime() - oneDay * 29),
+    winners: [{ userId: mockParticipants[0].id, userName: mockParticipants[0].name, avatarUrl: mockParticipants[0].avatarUrl, avatarHint: mockParticipants[0].avatarHint }],
+    participants: mockParticipants.map(p => ({...p, entryDate: new Date(now.getTime() - (Math.random()*50*oneDay) - (oneDay * 30) )})), // All participants, entries before end date
+  },
+  {
+    id: 'sw4',
+    title: 'Sorteio Próximo: Kit Gamer Completo',
+    description: 'Prepare-se! Em breve um sorteio incrível de um Kit Gamer com teclado, mouse, headset e mousepad RGB.',
+    imageUrl: 'https://placehold.co/600x300.png?text=Kit+Gamer',
+    'data-ai-hint': 'gaming setup pc',
+    prizeDetails: '1x Teclado Mecânico Gamer RGB, 1x Mouse Gamer 16000DPI, 1x Headset Gamer 7.1 Surround, 1x Mousepad Gamer Extra Grande',
+    pointsToEnter: 150,
+    startDate: new Date(now.getTime() + oneDay * 7), // Starts in 1 week
+    endDate: new Date(now.getTime() + oneDay * 21), // Ends in 3 weeks
+    numberOfWinners: 1,
+    createdBy: 'advUserAtletaShop',
+    status: 'upcoming',
+    isDrawn: false,
+  }
 ];
 
 export const categories: Category[] = [
@@ -704,6 +805,10 @@ export const categories: Category[] = [
 export const getMockOfferById = (id: string): Offer | undefined => {
   return mockOffers.find(offer => offer.id === id);
 };
+
+export const getMockSweepstakeById = (id: string): Sweepstake | undefined => {
+  return mockSweepstakes.find(sweepstake => sweepstake.id === id);
+}
 
 
 export const getMockMerchantById = (id: string): { id: string, name: string, imageUrl?: string, 'data-ai-hint'?: string, isVerified?: boolean } | undefined => {
@@ -972,4 +1077,6 @@ export const mockFeaturedMerchants: FeaturedMerchant[] = [
     category: 'Lazer',
   },
 ];
+    
+
     
