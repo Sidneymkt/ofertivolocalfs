@@ -1,22 +1,19 @@
 
 'use client';
 
+import React from 'react';
 import Image from 'next/image';
 import type { Sweepstake } from '@/types';
+import { mockSweepstakes } from '@/types'; // Importa todos os sorteios
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Ticket, CalendarDays, Coins } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from "@/hooks/use-toast";
-import { format, isPast, isFuture } from 'date-fns'; // Import date-fns functions
-import { ptBR } from 'date-fns/locale'; // Import ptBR locale
+import { format, isPast, isFuture } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-interface SweepstakesListProps {
-  sweepstakes: Sweepstake[];
-  showViewAllButton?: boolean; // Optional prop
-}
-
-const SweepstakesList: React.FC<SweepstakesListProps> = ({ sweepstakes, showViewAllButton = false }) => {
+export default function AllSweepstakesPage() {
   const { toast } = useToast();
 
   const handleParticipate = (sweepstake: Sweepstake) => {
@@ -34,7 +31,6 @@ const SweepstakesList: React.FC<SweepstakesListProps> = ({ sweepstakes, showView
         variant: "default",
       });
     } else if (sweepstake.status === 'active') {
-      // In a real app: check user points, deduct points, record participation
       toast({
         title: "Participação Registrada!",
         description: `Você participou do sorteio "${sweepstake.title}". ${sweepstake.pointsToEnter} pontos foram deduzidos (simulado). Boa sorte!`,
@@ -48,7 +44,7 @@ const SweepstakesList: React.FC<SweepstakesListProps> = ({ sweepstakes, showView
       });
     }
   };
-  
+
   const getFormattedDate = (dateString: Date) => {
     try {
       return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
@@ -57,19 +53,17 @@ const SweepstakesList: React.FC<SweepstakesListProps> = ({ sweepstakes, showView
     }
   };
 
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-headline font-semibold flex items-center gap-2">
-          <Ticket className="text-primary" size={24}/> Sorteios Ativos e Próximos
-        </h3>
-      </div>
-      {sweepstakes.length === 0 ? (
-        <p className="text-center text-muted-foreground py-8">Nenhum sorteio ativo ou programado no momento. Volte em breve!</p>
+    <div className="space-y-8">
+      <h1 className="text-3xl font-headline font-bold text-foreground text-center my-6">
+        Todos os Sorteios
+      </h1>
+      
+      {mockSweepstakes.length === 0 ? (
+        <p className="text-center text-muted-foreground py-10">Nenhum sorteio disponível no momento.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {sweepstakes.map((item) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {mockSweepstakes.map((item) => (
             <Card key={item.id} className="overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out flex flex-col bg-card">
               <CardHeader className="p-0 relative">
                 <Image
@@ -80,9 +74,11 @@ const SweepstakesList: React.FC<SweepstakesListProps> = ({ sweepstakes, showView
                   className="object-cover w-full h-48"
                   data-ai-hint={item['data-ai-hint'] as string}
                 />
-                 <Badge variant="secondary" className="absolute top-3 left-3 flex items-center gap-1.5 py-1 px-2.5 text-xs bg-black/50 text-white backdrop-blur-sm">
-                    <CalendarDays size={14} /> 
-                    {item.status === 'upcoming' ? `Inicia em: ${getFormattedDate(item.startDate)}` : `Termina em: ${getFormattedDate(item.endDate)}`}
+                <Badge variant="secondary" className="absolute top-3 left-3 flex items-center gap-1.5 py-1 px-2.5 text-xs bg-black/50 text-white backdrop-blur-sm">
+                  <CalendarDays size={14} /> 
+                  {item.status === 'upcoming' ? `Inicia em: ${getFormattedDate(item.startDate)}` : 
+                   item.status === 'ended' || item.status === 'drawing_complete' ? `Encerrado em: ${getFormattedDate(item.endDate)}` :
+                   `Termina em: ${getFormattedDate(item.endDate)}`}
                 </Badge>
               </CardHeader>
               <CardContent className="p-5 flex-grow">
@@ -92,8 +88,10 @@ const SweepstakesList: React.FC<SweepstakesListProps> = ({ sweepstakes, showView
                   <Coins size={18} className="text-amber-500"/>
                   Custo: {item.pointsToEnter} pontos por bilhete
                 </div>
-                 {item.status === 'ended' || item.status === 'drawing_complete' && (
-                  <Badge variant="outline" className="mt-2 text-sm">Sorteio Encerrado</Badge>
+                 {(item.status === 'ended' || item.status === 'drawing_complete' || item.status === 'cancelled') && (
+                  <Badge variant={item.status === 'cancelled' ? "destructive" : "outline"} className="mt-2 text-sm">
+                    {item.status === 'cancelled' ? 'Cancelado' : 'Sorteio Encerrado'}
+                  </Badge>
                 )}
               </CardContent>
               <CardFooter className="p-5 pt-0 border-t mt-auto">
@@ -105,6 +103,7 @@ const SweepstakesList: React.FC<SweepstakesListProps> = ({ sweepstakes, showView
                   <Ticket className="w-5 h-5 mr-2" />
                   {item.status === 'upcoming' ? 'Ver Detalhes' : 
                    item.status === 'ended' || item.status === 'drawing_complete' ? 'Ver Resultados' : 
+                   item.status === 'cancelled' ? 'Sorteio Cancelado' :
                    'Participar do Sorteio'}
                 </Button>
               </CardFooter>
@@ -114,6 +113,4 @@ const SweepstakesList: React.FC<SweepstakesListProps> = ({ sweepstakes, showView
       )}
     </div>
   );
-};
-
-export default SweepstakesList;
+}

@@ -1,12 +1,18 @@
+'use client';
 
 import PointsDisplay from '@/components/rewards/PointsDisplay';
 import Leaderboard from '@/components/rewards/Leaderboard';
 import SweepstakesList from '@/components/rewards/SweepstakesList';
 import { mockUser, mockSweepstakes, POINTS_SIGNUP_WELCOME, POINTS_PROFILE_COMPLETE, POINTS_CHECKIN, POINTS_RATE_OFFER_OR_MERCHANT, POINTS_SHARE_OFFER, POINTS_FOLLOW_MERCHANT } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { HelpCircle, Gift } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { HelpCircle, Gift, Ticket } from 'lucide-react';
+import Link from 'next/link';
 
 export default function RewardsPage() {
+  // Mostra apenas os sorteios ativos e futuros na página principal de recompensas
+  const activeAndUpcomingSweepstakes = mockSweepstakes.filter(s => s.status === 'active' || s.status === 'upcoming');
+
   return (
     <div className="space-y-8">
       <PointsDisplay points={mockUser.points} />
@@ -31,9 +37,15 @@ export default function RewardsPage() {
       </Card>
 
       <Leaderboard />
-      <SweepstakesList sweepstakes={mockSweepstakes} />
+      <SweepstakesList sweepstakes={activeAndUpcomingSweepstakes.slice(0, 2)} /> {/* Mostra no máximo 2 sorteios aqui */}
+
+      <div className="text-center mt-8">
+        <Link href="/sweepstakes" passHref>
+          <Button variant="outline" className="border-primary text-primary hover:bg-primary/10">
+            <Ticket className="mr-2 h-4 w-4" /> Ver todos os Sorteios
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }
-
-    
