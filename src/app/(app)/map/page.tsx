@@ -6,6 +6,8 @@ import InteractiveMapPlaceholder from '@/components/map/InteractiveMapPlaceholde
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Leaf, Coffee, Beef, CakeSlice, ListFilter, ChevronDown } from 'lucide-react';
+import OfferCard from '@/components/offers/OfferCard'; // Import OfferCard
+import { mockOffers } from '@/types'; // Import mockOffers
 
 // Mock categories for the filter bar, similar to the prototype
 const mapCategories = [
@@ -16,11 +18,30 @@ const mapCategories = [
 ];
 
 export default function MapPage() {
+  // Take a few offers for the horizontal list, e.g., first 5
+  const nearbyOffers = mockOffers.slice(0, 5);
+
   return (
     <div className="flex flex-col h-[calc(100vh_-_8rem)]"> {/* Adjust height considering header and bottom nav */}
+      {/* Map Section */}
       <div className="flex-grow relative">
         <InteractiveMapPlaceholder />
         {/* Potentially add overlay buttons for map interaction here if needed */}
+      </div>
+
+      {/* Horizontal Scrollable Offer List Section */}
+      <div className="shrink-0 py-3 bg-background border-t border-b">
+        <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas no Mapa</h3>
+        <ScrollArea className="w-full whitespace-nowrap">
+          <div className="flex space-x-4 px-4 pb-2.5">
+            {nearbyOffers.map((offer) => (
+              <div key={offer.id} className="w-72 shrink-0"> {/* Fixed width for each card container */}
+                <OfferCard offer={offer} />
+              </div>
+            ))}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </div>
 
       {/* Bottom Sheet / Filter Section - Styled like the prototype */}
