@@ -748,7 +748,6 @@ export const mockFeaturedMerchants: FeaturedMerchant[] = [
     logoUrl: 'https://placehold.co/100x100.png?text=PS',
     'data-ai-hint': 'pizza logo',
     category: 'Alimentação',
-    tagline: 'A melhor da cidade!',
   },
   {
     id: 'barbeariaPremiumMerchant',
@@ -756,7 +755,6 @@ export const mockFeaturedMerchants: FeaturedMerchant[] = [
     logoUrl: 'https://placehold.co/100x100.png?text=BP',
     'data-ai-hint': 'barber logo',
     category: 'Serviços',
-    tagline: 'Estilo e precisão.',
   },
   {
     id: 'atletaShopMerchant',
@@ -764,7 +762,6 @@ export const mockFeaturedMerchants: FeaturedMerchant[] = [
     logoUrl: 'https://placehold.co/100x100.png?text=AS',
     'data-ai-hint': 'sport store logo',
     category: 'Compras',
-    tagline: 'Sua melhor performance.',
   },
   {
     id: 'botecoMestreMerchant',
@@ -772,7 +769,6 @@ export const mockFeaturedMerchants: FeaturedMerchant[] = [
     logoUrl: 'https://placehold.co/100x100.png?text=BM',
     'data-ai-hint': 'bar logo',
     category: 'Alimentação',
-    tagline: 'Happy hour garantido!',
   },
   {
     id: 'cafeAconchegoMerchant',
@@ -780,7 +776,41 @@ export const mockFeaturedMerchants: FeaturedMerchant[] = [
     logoUrl: 'https://placehold.co/100x100.png?text=CA',
     'data-ai-hint': 'coffee shop logo',
     category: 'Alimentação',
-    tagline: 'Seu cantinho especial.',
+  },
+  {
+    id: 'sorveteriaGostosoMerchant',
+    name: 'Sorveteria Gostoso',
+    logoUrl: 'https://placehold.co/100x100.png?text=SG',
+    'data-ai-hint': 'ice cream logo',
+    category: 'Alimentação',
+  },
+  {
+    id: 'livrariaSaberMerchant',
+    name: 'Livraria Saber',
+    logoUrl: 'https://placehold.co/100x100.png?text=LS',
+    'data-ai-hint': 'bookstore logo',
+    category: 'Educação',
+  },
+  {
+    id: 'petShopAmigoFielMerchant',
+    name: 'PetShop Amigo Fiel',
+    logoUrl: 'https://placehold.co/100x100.png?text=AF',
+    'data-ai-hint': 'pet shop logo',
+    category: 'Serviços',
+  },
+  {
+    id: 'floriculturaBelaFlorMerchant',
+    name: 'Floricultura Bela Flor',
+    logoUrl: 'https://placehold.co/100x100.png?text=FB',
+    'data-ai-hint': 'flower shop logo',
+    category: 'Compras',
+  },
+  {
+    id: 'cinemaEstrelaMerchant',
+    name: 'Cinema Estrela',
+    logoUrl: 'https://placehold.co/100x100.png?text=CE',
+    'data-ai-hint': 'cinema logo',
+    category: 'Lazer',
   },
 ];
     
