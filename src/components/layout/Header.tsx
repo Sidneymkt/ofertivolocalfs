@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Menu, Search, Home, MapPin, Award, User as UserIcon, Settings, LogOut, BarChartHorizontalBig } from 'lucide-react';
+import { Menu, Search, Home, MapPin, Award, User as UserIcon, Settings, LogOut, BarChartHorizontalBig, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 
@@ -103,9 +103,14 @@ const Header = () => {
           Ofertivo
         </Link>
         
-        <Button variant="ghost" size="icon" aria-label="Search">
-          <Search className="h-6 w-6" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" aria-label="Search">
+            <Search className="h-6 w-6" />
+          </Button>
+          <Button variant="ghost" size="icon" aria-label="Notifications">
+            <Bell className="h-6 w-6" />
+          </Button>
+        </div>
       </div>
     </header>
   );
