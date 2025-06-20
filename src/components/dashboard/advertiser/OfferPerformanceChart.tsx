@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { LineChart as LineChartIcon, Eye, MousePointerClick, CheckCircle } from 'lucide-react';
+import { LineChart as LineChartIcon, Eye, MousePointerClick, CheckCircle, TrendingUp } from 'lucide-react'; // Added TrendingUp
 import {
   LineChart,
   Line,

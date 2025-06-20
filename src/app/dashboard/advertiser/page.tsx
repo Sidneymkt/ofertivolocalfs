@@ -3,7 +3,7 @@
 
 import React from 'react';
 import AdvertiserMetricsGrid from '@/components/dashboard/advertiser/AdvertiserMetricsGrid';
-import PerformanceChartPlaceholder from '@/components/dashboard/advertiser/PerformanceChartPlaceholder';
+import OfferPerformanceChart from '@/components/dashboard/advertiser/OfferPerformanceChart'; // Ensured import path matches the new filename
 import QuickActionsCard from '@/components/dashboard/advertiser/QuickActionsCard';
 import PublishedOffersSection from '@/components/dashboard/advertiser/PublishedOffersSection';
 import GenericDashboardSection from '@/components/dashboard/advertiser/GenericDashboardSection';
@@ -139,7 +139,7 @@ export default function AdvertiserDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <PerformanceChartPlaceholder />
+          <OfferPerformanceChart /> {/* Updated component */}
         </div>
         <div>
           <QuickActionsCard />
@@ -179,4 +179,3 @@ export default function AdvertiserDashboardPage() {
     </div>
   );
 }
-
