@@ -28,12 +28,21 @@ const ClientQRCode: React.FC<ClientQRCodeProps> = ({ value, size, className }) =
     // This ensures the import only happens on the client-side
     import('react-qr-code')
       .then(module => {
-        // Check if the module and QRCodeSVG export exist
+        let ResolvedComponent: ComponentType<QRCodeSVGProps> | undefined = undefined;
+
         if (module && typeof module.QRCodeSVG === 'function') {
-          setQrComponent(() => module.QRCodeSVG);
+          ResolvedComponent = module.QRCodeSVG;
+        } else if (module && module.default && typeof module.default === 'function') {
+          // Try default export if named export 'QRCodeSVG' is not a function
+          ResolvedComponent = module.default as ComponentType<QRCodeSVGProps>;
+        }
+        // You could add more checks here if needed, e.g., for module.default.QRCodeSVG
+
+        if (ResolvedComponent) {
+          setQrComponent(() => ResolvedComponent);
         } else {
           // Log an error if QRCodeSVG is not found (for developer debugging)
-          console.error('QRCodeSVG component not found in react-qr-code module.');
+          console.error('QRCodeSVG component could not be resolved from react-qr-code module. Module structure:', module);
         }
       })
       .catch(error => {
