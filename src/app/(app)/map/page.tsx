@@ -92,8 +92,8 @@ export default function MapPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Map Section - Takes up available space */}
-      <div className="flex-1 relative p-1 md:p-2 shadow-lg rounded-lg overflow-hidden mb-3">
+      {/* Map Section - Takes up available space, positioned first */}
+      <div className="flex-1 relative shadow-lg rounded-lg overflow-hidden min-h-[300px]"> {/* Removed padding/margin, added min-h */}
         <GoogleMapDisplay 
           apiKey={googleMapsApiKey}
           mapCenter={mapCenter}
@@ -102,7 +102,7 @@ export default function MapPage() {
         />
       </div>
 
-      {/* Filter Bar Section */}
+      {/* Filter Bar Section - Positioned second, contains CategoryPills */}
       <div className="shrink-0 px-1 py-3 md:px-3 md:py-3 border-t bg-background">
         <div className="flex items-center gap-2">
           <div className="flex-grow">
@@ -138,14 +138,14 @@ export default function MapPage() {
         </div>
       </div>
 
-      {/* Horizontal Scrollable Nearby Offer List Section */}
+      {/* Horizontal Scrollable Nearby Offer List Section - Positioned third */}
       <div className="shrink-0 py-3 bg-background border-t">
         <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas no Mapa</h3>
         {nearbyOffers.length > 0 ? (
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex space-x-3 px-4 pb-2.5">
               {nearbyOffers.map((offer) => (
-                <div key={offer.id} className="w-72 shrink-0"> {/* Adjusted width */}
+                <div key={offer.id} className="w-72 shrink-0">
                   <RecommendedOfferCard offer={offer} />
                 </div>
               ))}
