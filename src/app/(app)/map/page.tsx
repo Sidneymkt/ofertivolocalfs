@@ -42,7 +42,7 @@ export default function MapPage() {
 
 
   return (
-    <div className="flex flex-col flex-1"> {/* Changed h-full to flex-1 */}
+    <div className="flex flex-col h-full"> {/* Changed flex-1 to h-full */}
       {/* Map Section - Moved to the top */}
       <div className="flex-1 relative p-1 md:p-2">
         <InteractiveMapPlaceholder />
