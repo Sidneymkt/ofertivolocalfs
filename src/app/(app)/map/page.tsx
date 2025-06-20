@@ -123,8 +123,9 @@ export default function MapPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="h-[65vh] relative shadow-lg rounded-lg overflow-hidden">
+    <div className="flex flex-col h-full"> {/* Ensures the page takes full height of its container */}
+      {/* Map Section - Takes up most of the space */}
+      <div className="flex-grow relative shadow-lg rounded-lg overflow-hidden">
         <GoogleMapDisplay 
           apiKey={googleMapsApiKey}
           mapCenter={mapCenter}
@@ -133,57 +134,62 @@ export default function MapPage() {
         />
       </div>
 
-      <div className="shrink-0 px-1 py-3 md:px-3 md:py-3 border-t bg-background">
-        <div className="flex items-center gap-2">
-          <div className="flex-grow">
-            <CategoryPills
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={handleSelectCategory}
-            />
-          </div>
-          <Sheet open={isFiltersSheetOpen} onOpenChange={setIsFiltersSheetOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0"
-                aria-label="Abrir filtros avançados"
-              >
-                <ListFilter size={20} />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="h-[85vh] flex flex-col rounded-t-2xl p-0">
-              <SheetHeader className="px-4 py-3 border-b">
-                <SheetTitle className="text-lg">Filtros Avançados</SheetTitle>
-                <SheetDescription>
-                  Refine sua busca para encontrar as melhores ofertas.
-                </SheetDescription>
-              </SheetHeader>
-              <div className="flex-grow overflow-y-auto">
-                <AdvancedFiltersSheet onApplyFilters={handleApplyFilters} onClearFilters={handleClearFilters} />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-
-      <div className="shrink-0 py-3 bg-background border-t">
-        <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas no Mapa</h3>
-        {nearbyOffers.length > 0 ? (
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex space-x-3 px-4 pb-2.5">
-              {nearbyOffers.map((offer) => (
-                <div key={offer.id} className="w-72 shrink-0">
-                  <RecommendedOfferCard offer={offer} />
-                </div>
-              ))}
+      {/* Filters and Nearby Offers Section - Takes remaining space, content might scroll */}
+      <div className="flex-shrink-0 bg-background border-t">
+        {/* Filters */}
+        <div className="px-1 py-3 md:px-3 md:py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex-grow">
+              <CategoryPills
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onSelectCategory={handleSelectCategory}
+              />
             </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        ) : (
-          <p className="px-4 text-sm text-muted-foreground">Nenhuma oferta próxima encontrada no momento.</p>
-        )}
+            <Sheet open={isFiltersSheetOpen} onOpenChange={setIsFiltersSheetOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  aria-label="Abrir filtros avançados"
+                >
+                  <ListFilter size={20} />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[85vh] flex flex-col rounded-t-2xl p-0">
+                <SheetHeader className="px-4 py-3 border-b">
+                  <SheetTitle className="text-lg">Filtros Avançados</SheetTitle>
+                  <SheetDescription>
+                    Refine sua busca para encontrar as melhores ofertas.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="flex-grow overflow-y-auto">
+                  <AdvancedFiltersSheet onApplyFilters={handleApplyFilters} onClearFilters={handleClearFilters} />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+
+        {/* Nearby Offers List */}
+        <div className="py-3 border-t">
+          <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas no Mapa</h3>
+          {nearbyOffers.length > 0 ? (
+            <ScrollArea className="w-full whitespace-nowrap">
+              <div className="flex space-x-3 px-4 pb-2.5">
+                {nearbyOffers.map((offer) => (
+                  <div key={offer.id} className="w-72 shrink-0">
+                    <RecommendedOfferCard offer={offer} />
+                  </div>
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          ) : (
+            <p className="px-4 text-sm text-muted-foreground">Nenhuma oferta próxima encontrada no momento.</p>
+          )}
+        </div>
       </div>
     </div>
   );
