@@ -1,16 +1,30 @@
 
+'use client';
+
 import Image from 'next/image';
 import type { Sweepstake } from '@/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Ticket, CalendarDays, Coins } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from "@/hooks/use-toast"; // Import useToast
 
 interface SweepstakesListProps {
   sweepstakes: Sweepstake[];
 }
 
 const SweepstakesList: React.FC<SweepstakesListProps> = ({ sweepstakes }) => {
+  const { toast } = useToast(); // Initialize useToast
+
+  const handleParticipate = (sweepstakeTitle: string, pointsToEnter: number) => {
+    // In a real app: check user points, deduct points, record participation
+    toast({
+      title: "Participação Registrada!",
+      description: `Você participou do sorteio "${sweepstakeTitle}". ${pointsToEnter} pontos foram deduzidos (simulado). Boa sorte!`,
+      variant: "default", // or "success" if you add a success variant to your toast
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -46,7 +60,10 @@ const SweepstakesList: React.FC<SweepstakesListProps> = ({ sweepstakes }) => {
                 </div>
               </CardContent>
               <CardFooter className="p-5 pt-0 border-t mt-auto">
-                <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground text-base py-3">
+                <Button 
+                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground text-base py-3"
+                  onClick={() => handleParticipate(item.title, item.pointsToEnter)} // Add onClick handler
+                >
                   <Ticket className="w-5 h-5 mr-2" /> Participar do Sorteio
                 </Button>
               </CardFooter>
