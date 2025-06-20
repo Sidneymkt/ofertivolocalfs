@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react'; // Added missing React import
+import React from 'react';
 import Image from 'next/image';
 import type { Offer } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Timestamp } from 'firebase/firestore'; // Added import
 
 interface OfferCardProps {
   offer: Offer;
@@ -44,8 +45,25 @@ const OfferCard: React.FC<OfferCardProps> = ({ offer }) => {
     }
   };
   
-  const formattedValidity = offer.validityEndDate 
-    ? format(new Date(offer.validityEndDate), "'Válido até' dd 'de' MMMM", { locale: ptBR })
+  const getJsDate = (dateInput: Date | Timestamp | undefined): Date | null => {
+    if (!dateInput) return null;
+    if (dateInput instanceof Timestamp) {
+      return dateInput.toDate();
+    }
+    if (dateInput instanceof Date) {
+      return dateInput;
+    }
+    // Attempt to parse if it's a string or number, though type should be Date | Timestamp
+    const parsedDate = new Date(dateInput as any); // Cast to any if type system complains without further checks
+    if (!isNaN(parsedDate.getTime())) {
+        return parsedDate;
+    }
+    return null;
+  };
+
+  const endDateToFormat = getJsDate(offer.validityEndDate);
+  const formattedValidity = endDateToFormat
+    ? format(endDateToFormat, "'Válido até' dd 'de' MMMM", { locale: ptBR })
     : 'Validade não definida';
 
   return (
