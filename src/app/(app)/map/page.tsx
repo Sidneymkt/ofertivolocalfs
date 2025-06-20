@@ -31,7 +31,6 @@ interface MapMarker {
 
 export default function MapPage() {
   const nearbyOffers = useMemo(() => {
-    // Example: Take first 5 offers that have lat/lng for the "nearby" list
     return mockOffers
       .filter(offer => offer.latitude && offer.longitude)
       .slice(0, 5);
@@ -41,17 +40,11 @@ export default function MapPage() {
   const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
 
   useEffect(() => {
-    // Set initial map center based on the first offer if available
     const firstOfferWithLocation = mockOffers.find(offer => offer.latitude && offer.longitude);
     if (firstOfferWithLocation?.latitude && firstOfferWithLocation?.longitude) {
       setMapCenter({ lat: firstOfferWithLocation.latitude, lng: firstOfferWithLocation.longitude });
-    } else if (mockOffers.length > 0 && mockOffers[0].latitude && mockOffers[0].longitude) {
-      // Fallback to first offer if firstOfferWithLocation is somehow undefined but there are offers
-      setMapCenter({ lat: mockOffers[0].latitude, lng: mockOffers[0].longitude });
     }
 
-
-    // Prepare markers from mockOffers
     const markersData = mockOffers
       .filter(offer => offer.latitude && offer.longitude)
       .map(offer => ({
@@ -72,7 +65,6 @@ export default function MapPage() {
 
   const handleSelectCategory = (categoryName: string) => {
     setSelectedCategory(categoryName);
-    console.log('MapPage - Selected Category:', categoryName);
     // TODO: Filter mapMarkers or nearbyOffers here based on category
   };
 
@@ -91,9 +83,9 @@ export default function MapPage() {
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Map Section - Takes up available space, positioned first */}
-      <div className="flex-1 relative shadow-lg rounded-lg overflow-hidden min-h-[300px]"> {/* Removed padding/margin, added min-h */}
+    <div className="flex flex-col h-full"> {/* Ensures this div takes full height */}
+      {/* Map Section - Takes up available space */}
+      <div className="flex-1 relative shadow-lg rounded-lg overflow-hidden min-h-[300px] md:min-h-[400px]"> {/* Ensure this container has dimensions */}
         <GoogleMapDisplay 
           apiKey={googleMapsApiKey}
           mapCenter={mapCenter}
@@ -102,7 +94,7 @@ export default function MapPage() {
         />
       </div>
 
-      {/* Filter Bar Section - Positioned second, contains CategoryPills */}
+      {/* Filter Bar Section */}
       <div className="shrink-0 px-1 py-3 md:px-3 md:py-3 border-t bg-background">
         <div className="flex items-center gap-2">
           <div className="flex-grow">
@@ -138,7 +130,7 @@ export default function MapPage() {
         </div>
       </div>
 
-      {/* Horizontal Scrollable Nearby Offer List Section - Positioned third */}
+      {/* Horizontal Scrollable Nearby Offer List Section */}
       <div className="shrink-0 py-3 bg-background border-t">
         <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas no Mapa</h3>
         {nearbyOffers.length > 0 ? (
