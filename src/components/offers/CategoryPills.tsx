@@ -51,7 +51,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({ categories, onSelectCateg
           );
         })}
       </div>
-      <ScrollBar orientation="horizontal" className="invisible md:visible" />
+      <ScrollBar orientation="horizontal" />
     </ScrollArea>
   );
 };
