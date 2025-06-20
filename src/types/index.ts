@@ -303,6 +303,8 @@ export const mockAdvertiserUser: User = {
   email: 'carlos.pizza@saborosa.com', // Business contact email
   avatarUrl: 'https://placehold.co/100x100.png?text=CP', // Personal avatar
   avatarHint: 'person chef',
+  coverPhotoUrl: 'https://placehold.co/1200x300.png?text=Capa+Negocio',
+  coverPhotoHint: 'business cover abstract',
   
   isAdvertiser: true,
   advertiserProfileId: 'pizzariaSaborosaMerchant',
@@ -727,6 +729,58 @@ export const mockAdvertiserList: User[] = [
     advertiserStatus: 'suspended',
     advertiserPlan: 'basic',
     points: 10, level: 'Iniciante', currentXp: 2, xpToNextLevel: 100,
+  },
+];
+
+export interface FeaturedMerchant {
+  id: string;
+  name: string;
+  logoUrl: string;
+  'data-ai-hint': string;
+  category?: string;
+  tagline?: string;
+}
+
+export const mockFeaturedMerchants: FeaturedMerchant[] = [
+  {
+    id: 'pizzariaSaborosaMerchant',
+    name: 'Pizzaria Saborosa',
+    logoUrl: 'https://placehold.co/100x100.png?text=PS',
+    'data-ai-hint': 'pizza logo',
+    category: 'Alimentação',
+    tagline: 'A melhor da cidade!',
+  },
+  {
+    id: 'barbeariaPremiumMerchant',
+    name: 'Barbearia Premium',
+    logoUrl: 'https://placehold.co/100x100.png?text=BP',
+    'data-ai-hint': 'barber logo',
+    category: 'Serviços',
+    tagline: 'Estilo e precisão.',
+  },
+  {
+    id: 'atletaShopMerchant',
+    name: 'Atleta Shop',
+    logoUrl: 'https://placehold.co/100x100.png?text=AS',
+    'data-ai-hint': 'sport store logo',
+    category: 'Compras',
+    tagline: 'Sua melhor performance.',
+  },
+  {
+    id: 'botecoMestreMerchant',
+    name: 'Boteco do Mestre',
+    logoUrl: 'https://placehold.co/100x100.png?text=BM',
+    'data-ai-hint': 'bar logo',
+    category: 'Alimentação',
+    tagline: 'Happy hour garantido!',
+  },
+  {
+    id: 'cafeAconchegoMerchant',
+    name: 'Café Aconchego',
+    logoUrl: 'https://placehold.co/100x100.png?text=CA',
+    'data-ai-hint': 'coffee shop logo',
+    category: 'Alimentação',
+    tagline: 'Seu cantinho especial.',
   },
 ];
     
