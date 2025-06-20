@@ -19,7 +19,7 @@ interface MapMarker {
 }
 
 interface GoogleMapDisplayProps {
-  apiKey: string | undefined;
+  apiKey: string; // Made required
   mapCenter: { lat: number; lng: number };
   zoom?: number;
   markers: MapMarker[];
@@ -98,7 +98,7 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
   }, [apiKey]);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: apiKey || "", 
+    googleMapsApiKey: apiKey, 
   });
   
   useEffect(() => {
@@ -162,19 +162,17 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
         <p className="text-destructive font-semibold text-lg mb-2">Erro ao carregar o Google Maps</p>
         {isInvalidKeyError && (
             <p className="text-destructive text-md mb-2">
-                <strong>Causa provável: Problema com a Chave da API (InvalidKeyMapError).</strong>
+                <strong>Causa provável: Chave de API inválida ou mal configurada.</strong>
             </p>
         )}
         <p className="text-destructive text-sm mb-1">Mensagem: {loadError.message}</p>
         <p className="text-xs text-muted-foreground mb-3">
-          A chave da API do Google Maps usada foi: {apiKey ? `"${apiKey.substring(0,4)}...${apiKey.substring(apiKey.length - 4)}"` : "Nenhuma chave fornecida ao componente"}.
-          <br/>
           Consulte o console do navegador para detalhes técnicos.
         </p>
         <ul className="text-xs text-muted-foreground list-disc list-inside text-left mt-2 space-y-1 max-w-md">
           <li><strong>Verifique `.env.local`</strong>: Garanta que `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` está correta e que o servidor foi reiniciado.</li>
           <li><strong>Console Google Cloud</strong>:
-            <ul>
+            <ul className="pl-4">
                 <li>A API "Maps JavaScript API" deve estar ativada.</li>
                 <li>Verifique se há uma conta de faturamento válida e ativa associada ao projeto.</li>
                 <li>Confirme se as restrições da chave (Referenciadores HTTP, APIs permitidas) não estão bloqueando o uso.</li>
@@ -184,19 +182,6 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
             Link útil: <a href="https://developers.google.com/maps/documentation/javascript/error-messages#invalid-key-map-error" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Guia de Erros do Google Maps</a>
           </li>
         </ul>
-      </div>
-    );
-  }
-
-  if (!apiKey) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-muted border border-destructive/50 rounded-md p-4 text-center">
-        <p className="text-destructive font-semibold text-lg mb-2">Chave da API do Google Maps não configurada!</p>
-        <p className="text-muted-foreground text-sm max-w-md">
-          Para usar o mapa, adicione sua chave da API do Google Maps à variável de ambiente `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` no seu arquivo `.env.local`.
-        </p>
-        <p className="text-xs text-muted-foreground mt-2 max-w-md">Ex: <code className="bg-destructive/20 px-1 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="SUA_CHAVE_AQUI"</code></p>
-        <p className="text-xs text-muted-foreground mt-1 max-w-md">Após adicionar, reinicie o servidor de desenvolvimento.</p>
       </div>
     );
   }

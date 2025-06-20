@@ -1,10 +1,10 @@
-
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { ListFilter } from 'lucide-react';
+import { ListFilter, AlertTriangle, Loader2 } from 'lucide-react';
 import { categories, type Offer } from '@/types';
 import CategoryPills from '@/components/offers/CategoryPills';
 import {
@@ -17,51 +17,98 @@ import {
 } from "@/components/ui/sheet";
 import AdvancedFiltersSheet from '@/components/map/AdvancedFiltersSheet';
 import GoogleMapDisplay from '@/components/map/GoogleMapDisplay';
-
-// Para simplificar o teste, usamos um centro de mapa e marcadores fixos.
-// Isso remove a dependência do carregamento de dados do Firebase.
-const mapCenter = { lat: -3.0993, lng: -59.9839 }; // Centro de Manaus
-const testMarkers = [
-  {
-    id: 'marker-1',
-    lat: -3.1019,
-    lng: -60.0228,
-    title: 'Ponto de Teste 1 (Teatro Amazonas)',
-    offerId: 'offer-1',
-    imageUrl: 'https://placehold.co/100x100.png',
-    'data-ai-hint': 'theater building',
-  },
-  {
-    id: 'marker-2',
-    lat: -3.1305,
-    lng: -60.0217,
-    title: 'Ponto de Teste 2 (Praça da Saudade)',
-    offerId: 'offer-2',
-    imageUrl: 'https://placehold.co/100x100.png',
-    'data-ai-hint': 'square park',
-  }
-];
+import { getAllOffers } from '@/lib/firebase/services/offerService';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function MapPage() {
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isFiltersSheetOpen, setIsFiltersSheetOpen] = useState(false);
+  
+  // Directly read the environment variable here to decide rendering logic
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-  // Os manipuladores de filtro permanecem, mas não afetarão os marcadores do mapa neste modo de teste.
+  useEffect(() => {
+    const fetchOffers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const fetchedOffers = await getAllOffers();
+        setOffers(fetchedOffers);
+      } catch (err: any) {
+        console.error("Error fetching offers for map:", err);
+        setError("Não foi possível carregar os dados das ofertas.");
+      }
+      setLoading(false);
+    };
+
+    fetchOffers();
+  }, []);
+
   const handleApplyFilters = (filters: any) => {
-    console.log('Aplicando filtros avançados (sem efeito no teste):', filters);
+    console.log('Aplicando filtros avançados:', filters);
+    // TODO: Implement actual filtering logic
     setIsFiltersSheetOpen(false);
   };
   
   const handleClearFilters = () => {
-    console.log('Limpando filtros avançados (sem efeito no teste)');
+    console.log('Limpando filtros avançados');
     setSelectedCategory(''); 
+    // TODO: Clear other filters
     setIsFiltersSheetOpen(false);
   };
 
   const handleSelectCategory = (categoryName: string) => {
     setSelectedCategory(categoryName);
+    // TODO: Implement filtering by category
   };
+  
+  if (!googleMapsApiKey) {
+    return (
+      <Card className="m-4 shadow-lg border-destructive/50 bg-destructive/5">
+        <CardContent className="p-6 text-center space-y-4">
+          <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+          <h2 className="text-xl font-semibold text-destructive">Chave da API do Google Maps não configurada!</h2>
+          <p className="text-destructive/90">
+            Para que o mapa funcione, é essencial configurar a sua chave da API do Google Maps.
+          </p>
+          <div className="text-sm bg-destructive/10 p-3 rounded-md">
+            Adicione a seguinte linha ao seu arquivo <code className="font-mono bg-destructive/20 px-1 py-0.5 rounded">.env.local</code> na raiz do projeto:
+            <pre className="mt-2 text-left p-2 bg-background rounded-md text-card-foreground">
+              <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="SUA_CHAVE_AQUI"</code>
+            </pre>
+          </div>
+          <p className="text-xs text-muted-foreground pt-4 border-t">
+            Lembre-se de substituir "SUA_CHAVE_AQUI" pela sua chave real e de reiniciar o servidor de desenvolvimento após a alteração.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (loading) {
+     return (
+      <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const mapCenter = { lat: -3.0993, lng: -59.9839 }; // Default to Manaus center
+  const markers = offers
+    .filter(offer => offer.latitude && offer.longitude)
+    .map(offer => ({
+      id: offer.id!,
+      lat: offer.latitude!,
+      lng: offer.longitude!,
+      title: offer.title,
+      offerId: offer.id!,
+      imageUrl: offer.imageUrl,
+      'data-ai-hint': offer['data-ai-hint'],
+    }));
 
   return (
     <div className="flex flex-col h-full">
@@ -70,7 +117,7 @@ export default function MapPage() {
           apiKey={googleMapsApiKey}
           mapCenter={mapCenter}
           zoom={13}
-          markers={testMarkers}
+          markers={markers}
         />
       </div>
 
@@ -111,8 +158,14 @@ export default function MapPage() {
         </div>
 
         <div className="py-3 border-t">
-          <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas (Teste)</h3>
-          <p className="px-4 text-sm text-muted-foreground">A lista de ofertas está desativada para focar na exibição do mapa.</p>
+          <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas</h3>
+          {error ? (
+             <p className="px-4 text-sm text-destructive">{error}</p>
+          ) : offers.length > 0 ? (
+             <p className="px-4 text-sm text-muted-foreground">{offers.length} ofertas encontradas.</p>
+          ) : (
+             <p className="px-4 text-sm text-muted-foreground">Nenhuma oferta encontrada na área.</p>
+          )}
         </div>
       </div>
     </div>
