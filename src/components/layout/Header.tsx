@@ -23,6 +23,10 @@ const Header = () => {
   const router = useRouter();
   const { toast } = useToast();
 
+  // Configuration flags for icons
+  const showSearchIcon = true;
+  const showNotificationIcon = true;
+
   const handleLogout = () => {
     // In a real app, you'd clear session/token here
     // For now, simulate logout and redirect
@@ -104,12 +108,16 @@ const Header = () => {
         </Link>
         
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" aria-label="Search">
-            <Search className="h-6 w-6" />
-          </Button>
-          <Button variant="ghost" size="icon" aria-label="Notifications">
-            <Bell className="h-6 w-6" />
-          </Button>
+          {showSearchIcon && (
+            <Button variant="ghost" size="icon" aria-label="Search">
+              <Search className="h-6 w-6" />
+            </Button>
+          )}
+          {showNotificationIcon && (
+            <Button variant="ghost" size="icon" aria-label="Notifications">
+              <Bell className="h-6 w-6" />
+            </Button>
+          )}
         </div>
       </div>
     </header>
