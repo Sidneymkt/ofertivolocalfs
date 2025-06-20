@@ -9,7 +9,7 @@ import CategoryPills from '@/components/offers/CategoryPills';
 import FeaturedMerchantsList from '@/components/merchants/FeaturedMerchantsList';
 import { Input } from '@/components/ui/input';
 import { Search as SearchIcon } from 'lucide-react';
-import RecommendedOffersList from '@/components/offers/RecommendedOffersList'; // New import
+import RecommendedOffersList from '@/components/offers/RecommendedOffersList'; 
 
 export default function FeedPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,14 +53,12 @@ export default function FeedPage() {
   }, [filteredOffers]);
   
   const recommendedOffers = useMemo(() => {
-    // Select a different set of offers for recommendations
-    // Ensure these are not in featured or recent for better variety
     const recentAndFeaturedIds = new Set([...recentOffers.map(ro => ro.id), ...featuredOffers.map(fo => fo.id)]);
     return mockOffers
       .filter(offer => !recentAndFeaturedIds.has(offer.id))
-      .sort(() => 0.5 - Math.random()) // Basic shuffle for variety
-      .slice(0, 8); // Show 8 recommended offers
-  }, [filteredOffers, recentOffers, featuredOffers]);
+      .sort(() => 0.5 - Math.random()) 
+      .slice(0, 8); 
+  }, [recentOffers, featuredOffers]);
 
 
   const handleSelectCategory = (categoryName: string) => {
