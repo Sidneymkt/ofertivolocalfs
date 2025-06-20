@@ -2,11 +2,11 @@
 'use client';
 
 import type React from 'react';
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useRef, useState, type ChangeEvent, useEffect } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Edit3, Star as StarIcon, Users as UsersIcon, Award as AwardIcon, MessageSquare as MessageSquareIcon, Zap as ZapIcon, Camera, type LucideProps } from 'lucide-react';
+import { Edit3, Star as StarIcon, Users as UsersIcon, Award as AwardIcon, MessageSquare as MessageSquareIcon, Zap as ZapIcon, Camera, Save, type LucideProps } from 'lucide-react';
 import type { User, Badge as BadgeType } from '@/types';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -28,13 +28,22 @@ const badgeIconMap: { [key: string]: React.ElementType<LucideProps> } = {
 
 const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
   const { toast } = useToast();
-  const xpProgress = user.currentXp && user.xpToNextLevel ? (user.currentXp / user.xpToNextLevel) * 100 : 0;
+  const xpProgress = user.currentXp && user.xpToNextLevel && user.xpToNextLevel !== Infinity ? (user.currentXp / user.xpToNextLevel) * 100 : 0;
   
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const coverFileInputRef = useRef<HTMLInputElement>(null);
 
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(user.avatarUrl || null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(user.coverPhotoUrl || null);
+  const [isAvatarDirty, setIsAvatarDirty] = useState(false);
+  const [isCoverDirty, setIsCoverDirty] = useState(false);
+
+  useEffect(() => {
+    setAvatarPreviewUrl(user.avatarUrl || null);
+    setCoverPreviewUrl(user.coverPhotoUrl || null);
+    setIsAvatarDirty(false);
+    setIsCoverDirty(false);
+  }, [user]);
 
   const handleEditAvatarClick = () => {
     avatarFileInputRef.current?.click();
@@ -54,15 +63,44 @@ const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreviewUrl(reader.result as string);
+        if (imageType === 'avatar') {
+          setIsAvatarDirty(true);
+        } else if (imageType === 'cover') {
+          setIsCoverDirty(true);
+        }
         toast({
           title: `Foto de ${imageType === 'avatar' ? 'perfil' : 'capa'} selecionada`,
-          description: `Nova imagem "${file.name}" pronta para upload.`,
+          description: `Nova imagem "${file.name}" pronta. Clique em "Salvar Imagens" para aplicar.`,
         });
       };
       reader.readAsDataURL(file);
-      // In a real app, you would then upload the 'file' object.
+      // In a real app, you would store the 'file' object for upload.
       console.log(`Selected ${imageType} file:`, file.name);
     }
+  };
+
+  const handleSaveImageChanges = () => {
+    // Simulate saving image changes
+    // In a real app, you'd upload the new images here.
+    // For example, if avatarPreviewUrl is a data URI or File object.
+    if (isAvatarDirty) {
+      console.log("Simulating save of new avatar:", avatarPreviewUrl);
+      // Update user.avatarUrl in a parent state or via API call
+    }
+    if (isCoverDirty) {
+      console.log("Simulating save of new cover photo:", coverPreviewUrl);
+      // Update user.coverPhotoUrl in a parent state or via API call
+    }
+
+    toast({
+      title: "Imagens Salvas (Simulado)",
+      description: "Suas fotos de perfil e capa foram atualizadas com sucesso.",
+    });
+    
+    setIsAvatarDirty(false);
+    setIsCoverDirty(false);
+    // Potentially, inform parent component that user data needs refresh
+    // or update the user object locally if this component manages its own "saved" state.
   };
 
   return (
@@ -75,13 +113,14 @@ const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
             alt="Foto de Capa" 
             layout="fill" 
             objectFit="cover"
-            className="transition-opacity duration-300 group-hover:opacity-80"
+            className="transition-opacity duration-300" // Removed group-hover:opacity-80
             data-ai-hint={user.coverPhotoHint || "profile cover background"}
+            key={coverPreviewUrl || 'cover-default'} // Add key to force re-render on change
           />
           <Button 
             variant="outline" 
             size="icon" 
-            className="absolute top-3 right-3 rounded-full w-9 h-9 bg-card/80 backdrop-blur-sm border-primary text-primary hover:bg-primary/10 transition-opacity"
+            className="absolute top-3 right-3 rounded-full w-9 h-9 bg-card/80 backdrop-blur-sm border-primary text-primary hover:bg-primary/10"
             onClick={handleEditCoverPhotoClick}
             aria-label="Editar foto de capa"
           >
@@ -100,7 +139,7 @@ const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
         <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 transform">
           <div className="relative">
             <Avatar className="w-28 h-28 border-4 border-background shadow-lg ring-2 ring-offset-background ring-offset-2 ring-primary bg-card">
-              <AvatarImage src={avatarPreviewUrl || user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint || "profile person"} />
+              <AvatarImage src={avatarPreviewUrl || user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint || "profile person"} key={avatarPreviewUrl || 'avatar-default'} />
               <AvatarFallback className="text-4xl bg-muted text-muted-foreground">
                 {user.name?.substring(0, 1).toUpperCase()}
               </AvatarFallback>
@@ -129,7 +168,7 @@ const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
         <h2 className="text-2xl font-headline font-bold text-foreground mb-1">{user.name}</h2>
         
         <div className="text-sm text-primary font-semibold mb-1">
-          Nível {user.level || 1}
+          Nível {user.level || 'Iniciante'}
         </div>
         
         {user.currentXp !== undefined && user.xpToNextLevel !== undefined && user.xpToNextLevel !== Infinity && (
@@ -170,6 +209,12 @@ const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
             </div>
           </div>
         )}
+
+        {(isAvatarDirty || isCoverDirty) && (
+          <Button onClick={handleSaveImageChanges} className="mt-4 bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+            <Save size={16} className="mr-2" /> Salvar Imagens
+          </Button>
+        )}
         
       </CardContent>
     </Card>
@@ -177,4 +222,3 @@ const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
 };
 
 export default UserInfo;
-
