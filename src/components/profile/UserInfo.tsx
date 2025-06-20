@@ -81,7 +81,7 @@ const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
           <Button 
             variant="outline" 
             size="icon" 
-            className="absolute top-3 right-3 rounded-full w-9 h-9 bg-card/80 backdrop-blur-sm border-primary text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-3 right-3 rounded-full w-9 h-9 bg-card/80 backdrop-blur-sm border-primary text-primary hover:bg-primary/10 transition-opacity"
             onClick={handleEditCoverPhotoClick}
             aria-label="Editar foto de capa"
           >
@@ -178,4 +178,3 @@ const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
 
 export default UserInfo;
 
-    
