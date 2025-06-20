@@ -172,11 +172,14 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
       <div className="w-full h-full flex flex-col items-center justify-center bg-muted border rounded-md p-4 text-center">
         <p className="text-destructive font-semibold text-lg mb-2">Erro ao carregar o Google Maps</p>
         <p className="text-destructive text-sm mb-1">{loadError.message}</p>
-        <ul className="text-xs text-muted-foreground list-disc list-inside text-left mt-2">
-          <li>Verifique sua chave da API (<code className="text-xs bg-gray-200 px-1 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>) no <code className="text-xs bg-gray-200 px-1 rounded">.env</code>.</li>
-          <li>Confirme que "Maps JavaScript API" está ativada no Google Cloud Console.</li>
+        <ul className="text-xs text-muted-foreground list-disc list-inside text-left mt-2 space-y-1">
+          <li>Verifique sua chave da API (<code className="text-xs bg-gray-200 px-1 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>) no <code className="text-xs bg-gray-200 px-1 rounded">.env</code> ou <code className="text-xs bg-gray-200 px-1 rounded">.env.local</code>.</li>
+          <li>Confirme que "Maps JavaScript API" está ativada no Google Cloud Console para sua chave.</li>
           <li>Verifique se há faturamento ativo e habilitado para o projeto no Google Cloud.</li>
-          <li>Verifique se não há restrições de API (HTTP referrer, etc.) bloqueando o uso.</li>
+          <li>Verifique se não há restrições de API (HTTP referrer, etc.) bloqueando o uso da chave.</li>
+          <li>
+            Consulte: <a href="https://developers.google.com/maps/documentation/javascript/error-messages#invalid-key-map-error" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Guia de Erros do Google Maps (InvalidKeyMapError)</a>
+          </li>
         </ul>
       </div>
     );
@@ -187,7 +190,7 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
       <div className="w-full h-full flex flex-col items-center justify-center bg-muted border rounded-md p-4 text-center">
         <p className="text-destructive font-semibold text-lg mb-2">Chave da API do Google Maps não configurada.</p>
         <p className="text-muted-foreground text-sm">
-          Adicione <code className="bg-destructive/20 px-1 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> ao seu arquivo <code className="bg-destructive/20 px-1 py-0.5 rounded">.env</code> e reinicie o servidor.
+          Adicione <code className="bg-destructive/20 px-1 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="SUA_CHAVE_AQUI"</code> ao seu arquivo <code className="bg-destructive/20 px-1 py-0.5 rounded">.env.local</code> e reinicie o servidor.
         </p>
       </div>
     );
