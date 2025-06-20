@@ -250,6 +250,15 @@ export interface Sweepstake {
   participantCount?: number; // Counter
 }
 
+export interface MapMarker {
+  id: string;
+  lat: number;
+  lng: number;
+  title: string;
+  offerId: string;
+  imageUrl?: string;
+  'data-ai-hint'?: string;
+}
 
 export type AdvertiserMetricItem = {
   title: string;

@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import OfferList from '@/components/offers/OfferList'; // Manter para outros usos, se houver, ou remover se não mais usado
 import { categories } from '@/types'; // Keep static categories
-import type { Offer, Category, User } from '@/types'; // Import User for featured merchants
+import type { Offer, Category, User, MapMarker } from '@/types'; // Import User for featured merchants and MapMarker
 import FeaturedOffersList from '@/components/offers/FeaturedOffersList';
 import CategoryPills from '@/components/offers/CategoryPills';
 import FeaturedMerchantsList from '@/components/merchants/FeaturedMerchantsList';
@@ -15,6 +15,7 @@ import RecentOffersList from '@/components/offers/RecentOffersList'; // Importar
 import { getAllOffers } from '@/lib/firebase/services/offerService';
 import { getAllMerchants } from '@/lib/firebase/services/userService';
 import { Timestamp } from 'firebase/firestore'; // Import Timestamp
+import GoogleMapDisplay from '@/components/map/GoogleMapDisplay';
 
 // Temporary mock data for offers
 const mockPageOffers: Offer[] = [
@@ -44,7 +45,9 @@ const mockPageOffers: Offer[] = [
     reviews: 30,
     galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'], 
     galleryImageHints: ['pizza restaurant', 'dinner food'],
-    tags: ['#pizza', '#familia', '#promocao']
+    tags: ['#pizza', '#familia', '#promocao'],
+    latitude: -3.1019,
+    longitude: -60.0228,
   },
   {
     id: 'mock-offer-2',
@@ -70,7 +73,9 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 78,
     rating: 4.9,
     reviews: 22,
-    tags: ['#beleza', '#masculino', '#corte']
+    tags: ['#beleza', '#masculino', '#corte'],
+    latitude: -3.1305,
+    longitude: -60.0217,
   },
   {
     id: 'mock-offer-3',
@@ -95,7 +100,9 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 210,
     rating: 4.3,
     reviews: 15,
-    tags: ['#lanche', '#saudavel']
+    tags: ['#lanche', '#saudavel'],
+    latitude: -3.0900,
+    longitude: -59.9990,
   },
   {
     id: 'mock-offer-4',
@@ -407,6 +414,10 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  
+  const [mapCenter, setMapCenter] = useState({ lat: -3.0993, lng: -59.9839 });
+  const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -431,6 +442,28 @@ export default function FeedPage() {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (allOffers.length > 0) {
+      const markersData = allOffers
+        .filter(offer => offer.latitude && offer.longitude)
+        .map(offer => ({
+          id: offer.id!,
+          lat: offer.latitude as number,
+          lng: offer.longitude as number,
+          title: offer.title,
+          offerId: offer.id!,
+          imageUrl: offer.galleryImages?.[0] || offer.imageUrl,
+          'data-ai-hint': offer.galleryImageHints?.[0] || offer['data-ai-hint'] || 'offer location',
+        }));
+      setMapMarkers(markersData);
+
+      const firstOfferWithLocation = markersData[0];
+      if (firstOfferWithLocation) {
+        setMapCenter({ lat: firstOfferWithLocation.lat, lng: firstOfferWithLocation.lng });
+      }
+    }
+  }, [allOffers]);
 
   const featuredOffers = useMemo(() => {
     return allOffers
@@ -517,6 +550,21 @@ export default function FeedPage() {
           />
         </div>
       </div>
+      
+      <section className="space-y-3 px-4 md:px-0">
+        <h2 className="text-xl font-semibold font-headline flex items-center gap-2">
+            <MapPin className="text-primary"/>
+            Ofertas Perto de Você no Mapa
+        </h2>
+        <div className="h-80 w-full rounded-lg overflow-hidden border shadow-lg">
+            <GoogleMapDisplay
+                apiKey={googleMapsApiKey}
+                mapCenter={mapCenter}
+                zoom={12}
+                markers={mapMarkers}
+            />
+        </div>
+      </section>
 
       <CategoryPills
         categories={categories} 
