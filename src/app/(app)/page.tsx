@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import OfferList from '@/components/offers/OfferList';
+import OfferList from '@/components/offers/OfferList'; // Manter para outros usos, se houver, ou remover se não mais usado
 import { categories } from '@/types'; // Keep static categories
 import type { Offer, Category, User } from '@/types'; // Import User for featured merchants
 import FeaturedOffersList from '@/components/offers/FeaturedOffersList';
@@ -11,6 +11,7 @@ import FeaturedMerchantsList from '@/components/merchants/FeaturedMerchantsList'
 import { Input } from '@/components/ui/input';
 import { Search as SearchIcon, MapPin, Loader2 } from 'lucide-react';
 import RecommendedOffersList from '@/components/offers/RecommendedOffersList';
+import RecentOffersList from '@/components/offers/RecentOffersList'; // Importar o novo componente
 import { getAllOffers } from '@/lib/firebase/services/offerService';
 import { getAllMerchants } from '@/lib/firebase/services/userService';
 import { Timestamp } from 'firebase/firestore'; // Import Timestamp
@@ -41,7 +42,7 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 155,
     rating: 4.7,
     reviews: 30,
-    galleryImages: ['https://placehold.co/800x450.png?text=Pizza+1', 'https://placehold.co/800x450.png?text=Pizza+2'], 
+    galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'], 
     galleryImageHints: ['pizza restaurant', 'dinner food'],
     tags: ['#pizza', '#familia', '#promocao']
   },
@@ -120,7 +121,7 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 20,
     rating: 4.9,
     reviews: 10,
-    galleryImages: ['https://placehold.co/800x450.png?text=Praia', 'https://placehold.co/800x450.png?text=Resort'], 
+    galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'], 
     galleryImageHints: ['beach resort', 'travel vacation'],
     tags: ['#viagem', '#ferias', '#destaque']
   },
@@ -148,7 +149,7 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 45,
     rating: 4.5,
     reviews: 12,
-    galleryImages: ['https://placehold.co/800x450.png?text=Limpeza+Sala'], 
+    galleryImages: ['https://placehold.co/800x450.png'], 
     galleryImageHints: ['cleaning livingroom'],
     tags: ['#limpeza', '#casa']
   },
@@ -175,7 +176,7 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 90,
     rating: 4.8,
     reviews: 25,
-    galleryImages: ['https://placehold.co/800x450.png?text=Chef+Cozinha'],
+    galleryImages: ['https://placehold.co/800x450.png'],
     galleryImageHints: ['chef cooking'],
     tags: ['#curso', '#culinaria', '#online']
   },
@@ -203,7 +204,7 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 55,
     rating: 4.6,
     reviews: 18,
-    galleryImages: ['https://placehold.co/800x450.png?text=Academia'],
+    galleryImages: ['https://placehold.co/800x450.png'],
     galleryImageHints: ['gym workout'],
     tags: ['#fitness', '#saude', '#personal']
   },
@@ -231,7 +232,7 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 30,
     rating: 4.7,
     reviews: 15,
-    galleryImages: ['https://placehold.co/800x450.png?text=Celular+Novo', 'https://placehold.co/800x450.png?text=Caixa+Celular'],
+    galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'],
     galleryImageHints: ['new smartphone', 'phone box'],
     tags: ['#smartphone', '#tecnologia', '#promocao']
   },
@@ -248,7 +249,7 @@ const mockPageOffers: Offer[] = [
     originalPrice: 70.00,
     validityStartDate: Timestamp.fromDate(new Date()),
     validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 15))),
-    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 6))),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 6))), // Recent
     updatedAt: Timestamp.fromDate(new Date()),
     offerType: 'padrao',
     visibility: 'normal',
@@ -263,7 +264,7 @@ const mockPageOffers: Offer[] = [
   },
   {
     id: 'mock-offer-10',
-    title: 'Rodízio Japonês para Casal',
+    title: 'Rodízio Japonês para Casal (Destaque)',
     description: 'Delicie-se com nosso rodízio completo de sushi e sashimi.',
     merchantName: 'Restaurante Sakura',
     merchantId: 'mock-merchant-10',
@@ -274,7 +275,7 @@ const mockPageOffers: Offer[] = [
     originalPrice: 159.90,
     validityStartDate: Timestamp.fromDate(new Date()),
     validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 20))),
-    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 7))),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 7))), // Recent
     updatedAt: Timestamp.fromDate(new Date()),
     offerType: 'padrao',
     visibility: 'destaque',
@@ -285,7 +286,7 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 95,
     rating: 4.9,
     reviews: 40,
-    galleryImages: ['https://placehold.co/800x450.png?text=Sushi+Combo', 'https://placehold.co/800x450.png?text=Temaki+Delicia'],
+    galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'],
     galleryImageHints: ['sushi combo', 'japanese temaki'],
     tags: ['#japa', '#rodizio', '#casal']
   },
@@ -324,7 +325,7 @@ const mockPageOffers: Offer[] = [
     imageUrl: 'https://placehold.co/600x300.png',
     'data-ai-hint': 'sunglasses fashion style',
     category: 'Compras',
-    discountedPrice: 139.90, // Assuming an average original price and applying 30% off
+    discountedPrice: 139.90, 
     originalPrice: 199.85,
     validityStartDate: Timestamp.fromDate(new Date()),
     validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 25))),
@@ -339,9 +340,63 @@ const mockPageOffers: Offer[] = [
     usersUsedCount: 40,
     rating: 4.5,
     reviews: 10,
-    galleryImages: ['https://placehold.co/800x450.png?text=Óculos+Modelo+1', 'https://placehold.co/800x450.png?text=Óculos+Modelo+2'],
+    galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'],
     galleryImageHints: ['sunglasses model', 'fashion eyewear'],
     tags: ['#oculos', '#verao', '#estilo']
+  },
+  {
+    id: 'mock-offer-13',
+    title: 'Happy Hour Cerveja Artesanal (Destaque)',
+    description: 'Chopp artesanal em dobro das 18h às 20h.',
+    merchantName: 'Mestre Cervejeiro Pub',
+    merchantId: 'mock-merchant-13',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'beer pub craft',
+    category: 'Lazer',
+    discountedPrice: 10.00, // Preço simbólico do chopp, benefício é o "em dobro"
+    originalPrice: 20.00, 
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 14))),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 1))), // Recente
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'relampago',
+    visibility: 'destaque',
+    status: 'active',
+    pointsAwarded: 5,
+    createdBy: 'mock-merchant-13',
+    merchantIsVerified: true,
+    usersUsedCount: 88,
+    rating: 4.6,
+    reviews: 20,
+    galleryImages: ['https://placehold.co/800x450.png'],
+    galleryImageHints: ['craft beer glass'],
+    tags: ['#happyhour', '#cerveja', '#pub']
+  },
+  {
+    id: 'mock-offer-14',
+    title: 'Pacote de Lavagem Automotiva Completa',
+    description: 'Lavagem, enceramento e aspiração para deixar seu carro brilhando.',
+    merchantName: 'Auto Spa Premium',
+    merchantId: 'mock-merchant-14',
+    imageUrl: 'https://placehold.co/600x300.png',
+    'data-ai-hint': 'car wash service',
+    category: 'Serviços',
+    discountedPrice: 79.90,
+    originalPrice: 100.00,
+    validityStartDate: Timestamp.fromDate(new Date()),
+    validityEndDate: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 30))),
+    createdAt: Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() - 2))), // Recente
+    updatedAt: Timestamp.fromDate(new Date()),
+    offerType: 'padrao',
+    visibility: 'normal',
+    status: 'active',
+    pointsAwarded: 10,
+    createdBy: 'mock-merchant-14',
+    merchantIsVerified: false,
+    usersUsedCount: 60,
+    rating: 4.4,
+    reviews: 15,
+    tags: ['#carro', '#lavagem', '#automotivo']
   }
 ];
 
@@ -357,23 +412,20 @@ export default function FeedPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Temporarily use mock offers
         console.log("Usando dados mock para ofertas na home feed.");
         setAllOffers(mockPageOffers);
         
-        // Continue trying to fetch real merchants
         const merchants = await getAllMerchants();
         setFeaturedMerchants(merchants.slice(0,10).map(m => ({
           id: m.id,
           name: m.businessName || m.name,
-          logoUrl: m.businessLogoUrl || 'https://placehold.co/100x100.png?text=Logo',
+          logoUrl: m.businessLogoUrl || 'https://placehold.co/100x100.png',
           'data-ai-hint': m.businessLogoHint || 'store logo',
           category: m.businessCategory
         })));
 
       } catch (error) {
         console.error("Error fetching merchant data for feed:", error);
-        // If merchant fetch fails, featuredMerchants will remain empty, which is acceptable.
       }
       setLoading(false);
     };
@@ -381,7 +433,6 @@ export default function FeedPage() {
   }, []);
 
   const featuredOffers = useMemo(() => {
-    // Simulate featured: e.g., offers with visibility 'destaque' or most recent with images
     return allOffers
       .filter(offer => offer.visibility === 'destaque' || (offer.galleryImages && offer.galleryImages.length > 0))
       .sort((a,b) => {
@@ -389,7 +440,7 @@ export default function FeedPage() {
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
         return dateB - dateA;
       })
-      .slice(0, 8);
+      .slice(0, 8); // Aumentado para 8
   }, [allOffers]);
 
   const filteredOffers = useMemo(() => {
@@ -421,14 +472,14 @@ export default function FeedPage() {
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
         return dateB - dateA;
       })
-      .slice(0, 10); // Increased from 6 to 10
+      .slice(0, 10); 
   }, [filteredOffers]);
 
   const recommendedOffers = useMemo(() => {
     const recentAndFeaturedIds = new Set([...recentOffers.map(ro => ro.id), ...featuredOffers.map(fo => fo.id)]);
     return allOffers
       .filter(offer => !recentAndFeaturedIds.has(offer.id!))
-      .sort(() => 0.5 - Math.random()) // Simple shuffle for recommendation
+      .sort(() => 0.5 - Math.random()) 
       .slice(0, 8);
   }, [allOffers, recentOffers, featuredOffers]);
 
@@ -486,7 +537,7 @@ export default function FeedPage() {
           <FeaturedMerchantsList merchants={featuredMerchants.map(m => ({
             id: m.id!,
             name: m.businessName || m.name,
-            logoUrl: m.businessLogoUrl || `https://placehold.co/100x100.png?text=${(m.businessName || m.name).substring(0,1)}`,
+            logoUrl: m.businessLogoUrl || `https://placehold.co/100x100.png`,
             'data-ai-hint': m.businessLogoHint || 'store logo',
             category: m.businessCategory
            }))} />
@@ -497,7 +548,7 @@ export default function FeedPage() {
       {recentOffers.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Ofertas Recentes</h2>
-          <OfferList offers={recentOffers} />
+          <RecentOffersList offers={recentOffers} />
         </section>
       )}
        {recentOffers.length === 0 && searchTerm && selectedCategory && (
@@ -517,5 +568,3 @@ export default function FeedPage() {
     </div>
   );
 }
-
-    
