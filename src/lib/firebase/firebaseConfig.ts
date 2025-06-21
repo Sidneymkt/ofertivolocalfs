@@ -3,7 +3,8 @@ import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
-import { getAnalytics, type Analytics, isSupported } from "firebase/analytics";
+// Removing analytics imports to fix initialization error
+// import { getAnalytics, type Analytics, isSupported } from "firebase/analytics";
 
 // This is the recommended way to use environment variables.
 // It ensures that the app doesn't build if the variables are missing.
@@ -45,7 +46,7 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
-let analytics: Analytics | undefined;
+// let analytics: Analytics | undefined;
 
 
 if (missingKeys.length === 0 && !getApps().length) {
@@ -54,29 +55,17 @@ if (missingKeys.length === 0 && !getApps().length) {
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app); // Storage can often be initialized without the bucket in config
-    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID) {
-        isSupported().then((supported) => {
-            if (supported) {
-                analytics = getAnalytics(app);
-            }
-        });
-    }
+    // Analytics initialization has been removed to fix config fetch error.
 } else if (getApps().length > 0) {
   app = getApps()[0];
   auth = getAuth(app);
   db = getFirestore(app);
   storage = getStorage(app);
-  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID) {
-     isSupported().then((supported) => {
-        if (supported) {
-            analytics = getAnalytics(app);
-        }
-     });
-  }
+  // Analytics initialization has been removed to fix config fetch error.
 } else {
     console.error("Firebase not initialized due to missing configuration.");
 }
 
 
 // @ts-ignore: These will be undefined if initialization fails, which is handled by the checks above.
-export { app, auth, db, storage, analytics };
+export { app, auth, db, storage };
