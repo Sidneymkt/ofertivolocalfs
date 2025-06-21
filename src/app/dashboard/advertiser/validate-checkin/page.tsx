@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from "@/hooks/use-toast";
 import { KeyRound, CheckCircle, AlertTriangle, Loader2 as SpinnerIcon, Gift, UserCircle, ShoppingBag } from 'lucide-react';
-import { mockOffers, mockUser } from '@/types'; // For mock data
 
 const checkinValidationSchema = z.object({
   checkinCode: z.string()
@@ -48,22 +47,20 @@ export default function ValidateCheckinPage() {
     // Simulate API call / validation logic
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Mock validation: Code '123456' is valid for mockOffer[0] and mockUser
-    if (data.checkinCode === '123456') {
-      const offer = mockOffers[0];
-      const user = mockUser;
-      const points = offer.pointsAwarded || 10;
+    // Mock validation: Any code starting with '1' is valid for simulation
+    if (data.checkinCode.startsWith('1')) {
+      const points = 10; // Example points
 
       setValidationResult({
         success: true,
         message: 'Check-in validado com sucesso!',
-        offerTitle: offer.title,
-        userName: user.name,
+        offerTitle: "Oferta de Teste",
+        userName: "Usuário Exemplo",
         pointsAwarded: points,
       });
       toast({
         title: 'Check-in Validado!',
-        description: `${user.name} ganhou ${points} pontos pela oferta "${offer.title}".`,
+        description: `Usuário Exemplo ganhou ${points} pontos pela oferta "Oferta de Teste".`,
         variant: 'default',
       });
     } else {
