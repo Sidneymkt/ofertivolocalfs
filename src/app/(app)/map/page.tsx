@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Loader2, LayoutGrid, ArrowDownUp } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { type Offer, mockOffers } from '@/types';
 import GoogleMapDisplay from '@/components/map/GoogleMapDisplay';
 import { getAllOffers } from '@/lib/firebase/services/offerService';
@@ -111,15 +111,8 @@ export default function MapPage() {
       <div className="flex-shrink-0 bg-card border-t shadow-lg rounded-t-2xl -mt-4 z-10">
         <div className="p-4">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-bold font-headline">Local Deals Listings</h2>
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Grid View">
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Sort">
-                <ArrowDownUp className="h-4 w-4" />
-              </Button>
-            </div>
+            <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
+            {/* Further filtering/sorting buttons can be added here if needed */}
           </div>
           <MapOfferList offers={offers} />
         </div>
@@ -127,4 +120,3 @@ export default function MapPage() {
     </div>
   );
 }
-

@@ -113,7 +113,7 @@ const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
             alt="Foto de Capa" 
             layout="fill" 
             objectFit="cover"
-            className="transition-opacity duration-300" // Removed group-hover:opacity-80
+            className="transition-opacity duration-300"
             data-ai-hint={user.coverPhotoHint || "profile cover background"}
             key={coverPreviewUrl || 'cover-default'} // Add key to force re-render on change
           />

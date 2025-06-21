@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react'; // Added useState and useEffect
+import React, { useState, useEffect } from 'react';
 import type { User } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle, Share2, Ticket, Coins, MessageSquare, Building, CalendarDays, TrendingUp, TrendingDown, PlusCircle, MinusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
 
 interface ActivityHistoryCardProps {
   user: User;
@@ -17,17 +18,20 @@ interface ActivityHistoryCardProps {
 const ActivityItem: React.FC<{
   title: string;
   subtitle?: string;
-  timestamp: Date;
+  timestamp?: Date | Timestamp;
   points?: number;
   isGain?: boolean;
   icon: React.ElementType;
   iconColor?: string;
 }> = ({ title, subtitle, timestamp, points, isGain, icon: Icon, iconColor = 'text-primary' }) => {
-  const [formattedDate, setFormattedDate] = useState<string>('');
+  const [formattedDate, setFormattedDate] = useState<string>('Carregando data...');
 
   useEffect(() => {
-    // Format the date only on the client-side after hydration
-    setFormattedDate(format(timestamp, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
+    // Format the date only on the client-side after hydration to prevent mismatch
+    if (timestamp) {
+      const date = timestamp instanceof Timestamp ? timestamp.toDate() : timestamp;
+      setFormattedDate(format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
+    }
   }, [timestamp]); // Re-run if timestamp changes
 
   return (
@@ -40,7 +44,7 @@ const ActivityItem: React.FC<{
           <p className="font-semibold text-card-foreground text-sm">{title}</p>
           {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
           <span className="text-xs text-muted-foreground/80">
-            {formattedDate || 'Carregando data...'} {/* Display placeholder or formatted date */}
+            {formattedDate}
           </span>
         </div>
         {points !== undefined && (
@@ -62,7 +66,11 @@ const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
     ...(user.sharedOffersHistory || []).map(item => ({ ...item, type: 'share', pointsEarned: item.pointsEarned || 0, isGain: true, icon: Share2, iconColor: 'text-blue-500' })),
     ...(user.sweepstakeParticipations || []).map(item => ({ ...item, type: 'sweepstake', isGain: false, icon: Ticket, iconColor: 'text-orange-500' })),
     ...(user.commentsMade || []).filter(c => c.pointsEarned).map(item => ({ ...item, offerTitle: `Comentário em: ${item.offerTitle}`, type: 'comment', isGain: true, icon: MessageSquare, iconColor: 'text-purple-500' })),
-  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  ].sort((a, b) => {
+      const dateA = a.timestamp instanceof Timestamp ? a.timestamp.toMillis() : new Date(a.timestamp).getTime();
+      const dateB = b.timestamp instanceof Timestamp ? b.timestamp.toMillis() : new Date(b.timestamp).getTime();
+      return dateB - dateA;
+  });
 
 
   return (
@@ -103,7 +111,7 @@ const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
                       key={`${item.type}-${item.id}`}
                       title={item.type === 'sweepstake' ? item.sweepstakeTitle : item.offerTitle}
                       subtitle={item.type === 'checkin' ? `Em: ${item.merchantName}` : item.type === 'share' ? `Plataforma: ${item.platform}` : undefined}
-                      timestamp={new Date(item.timestamp)}
+                      timestamp={item.timestamp}
                       points={item.type === 'sweepstake' ? item.pointsSpent : item.pointsEarned}
                       isGain={item.isGain ?? false} // Ensure isGain has a default
                       icon={item.icon}
@@ -122,7 +130,7 @@ const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
                       key={item.id}
                       title={item.offerTitle}
                       subtitle={`Em: ${item.merchantName}`}
-                      timestamp={new Date(item.timestamp)}
+                      timestamp={item.timestamp}
                       points={item.pointsEarned}
                       isGain
                       icon={CheckCircle}
@@ -141,7 +149,7 @@ const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
                         key={item.id}
                         title={item.offerTitle}
                         subtitle={`Plataforma: ${item.platform}`}
-                        timestamp={new Date(item.timestamp)}
+                        timestamp={item.timestamp}
                         points={item.pointsEarned}
                         isGain
                         icon={Share2}
@@ -160,7 +168,7 @@ const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
                         key={item.id}
                         title={`Comentário em: ${item.offerTitle}`}
                         subtitle={`"${item.text.substring(0,50)}..."`}
-                        timestamp={new Date(item.timestamp)}
+                        timestamp={item.timestamp}
                         points={item.pointsEarned}
                         isGain
                         icon={MessageSquare}
@@ -178,7 +186,7 @@ const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
                     <ActivityItem
                         key={item.id}
                         title={item.sweepstakeTitle}
-                        timestamp={new Date(item.timestamp)}
+                        timestamp={item.timestamp}
                         points={item.pointsSpent}
                         isGain={false}
                         icon={Ticket}
