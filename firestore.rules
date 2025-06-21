@@ -1,13 +1,12 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // WARNING: These rules are open for development and are NOT secure.
+    // You must secure these rules before deploying to production.
+    // This rule allows anyone to read and write to your database.
     match /{document=**} {
-      // WARNING: These rules are open for development and are not secure.
-      // You must secure these rules before deploying to production.
-      // This rule allows anyone to read and write to your database until Dec 31, 2024.
-      allow read, write: if request.time < timestamp.date(2024, 12, 31);
+      allow read, write: if true;
     }
   }
 }
