@@ -59,15 +59,16 @@ export default function LoginPage() {
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      let errorMessage = "Ocorreu um erro ao tentar fazer login.";
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        errorMessage = "E-mail ou senha inválidos.";
+      let errorMessage = "Ocorreu um erro ao tentar fazer login. Tente novamente.";
+      // The 'auth/invalid-credential' code is the modern way Firebase signals a wrong email or password.
+      if (error.code === 'auth/invalid-credential') {
+        errorMessage = "E-mail ou senha inválidos. Por favor, verifique seus dados e tente novamente.";
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = "O formato do e-mail é inválido.";
       }
       toast({
         variant: "destructive",
-        title: "Erro no Login",
+        title: "Falha no Login",
         description: errorMessage,
       });
     } finally {
