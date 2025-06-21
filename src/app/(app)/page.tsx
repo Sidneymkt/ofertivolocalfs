@@ -8,13 +8,13 @@ import FeaturedOffersList from '@/components/offers/FeaturedOffersList';
 import CategoryPills from '@/components/offers/CategoryPills';
 import FeaturedMerchantsList from '@/components/merchants/FeaturedMerchantsList';
 import { Input } from '@/components/ui/input';
-import { Search as SearchIcon, Loader2, AlertTriangle } from 'lucide-react';
+import { Search as SearchIcon, Loader2 } from 'lucide-react';
 import RecommendedOffersList from '@/components/offers/RecommendedOffersList';
 import RecentOffersList from '@/components/offers/RecentOffersList';
 import { getAllOffers } from '@/lib/firebase/services/offerService';
 import { getAllMerchants } from '@/lib/firebase/services/userService';
 import { Timestamp } from 'firebase/firestore'; 
-import { Card, CardContent } from '@/components/ui/card';
+import { FirestoreConnectionError } from '@/components/common/FirestoreConnectionError';
 
 export default function FeedPage() {
   const [allOffers, setAllOffers] = useState<Offer[]>([]);
@@ -122,26 +122,7 @@ export default function FeedPage() {
   }
 
   if (error) {
-    return (
-       <div className="container mx-auto px-4 py-6">
-         <Card className="m-4 shadow-lg border-destructive/50 bg-destructive/5">
-          <CardContent className="p-6 text-center space-y-4">
-            <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
-            <h2 className="text-xl font-semibold text-destructive">Erro de Conexão com o Banco de Dados</h2>
-            <p className="text-destructive/90 max-w-xl mx-auto">
-              Não foi possível carregar os dados. Isso geralmente acontece por dois motivos:
-            </p>
-            <ol className="text-sm text-left list-decimal list-inside bg-destructive/10 p-3 rounded-md max-w-lg mx-auto">
-              <li>O `projectId` no arquivo <code className="font-mono bg-destructive/20 px-1 py-0.5 rounded">.env.local</code> está incorreto.</li>
-              <li>O banco de dados **Cloud Firestore** não foi criado ou ativado no seu projeto Firebase.</li>
-            </ol>
-             <p className="text-xs text-muted-foreground pt-4 border-t">
-              Por favor, verifique essas configurações no Console do Firebase e no seu ambiente. Após corrigir, reinicie o servidor de desenvolvimento.
-            </p>
-          </CardContent>
-        </Card>
-       </div>
-    );
+    return <FirestoreConnectionError />;
   }
 
   return (

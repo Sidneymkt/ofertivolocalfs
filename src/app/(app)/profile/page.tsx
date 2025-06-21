@@ -12,11 +12,11 @@ import { getUserProfile, updateUserProfile } from '@/lib/firebase/services/userS
 import { getOffer } from '@/lib/firebase/services/offerService'; // For fetching favorite offer details
 import type { Offer, User as AppUser, Comment } from '@/types';
 import { auth } from '@/lib/firebase/firebaseConfig';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { FollowedMerchantDisplayItem } from '@/components/profile/FollowedMerchantsList';
 import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
+import { FirestoreConnectionError } from '@/components/common/FirestoreConnectionError';
 
 export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -112,26 +112,7 @@ export default function ProfilePage() {
   }
 
   if (error) {
-     return (
-       <div className="container mx-auto px-4 py-6">
-         <Card className="m-4 shadow-lg border-destructive/50 bg-destructive/5">
-          <CardContent className="p-6 text-center space-y-4">
-            <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
-            <h2 className="text-xl font-semibold text-destructive">Erro de Conexão com o Banco de Dados</h2>
-            <p className="text-destructive/90 max-w-xl mx-auto">
-             {error}
-            </p>
-            <ol className="text-sm text-left list-decimal list-inside bg-destructive/10 p-3 rounded-md max-w-lg mx-auto">
-              <li>O `projectId` no arquivo <code className="font-mono bg-destructive/20 px-1 py-0.5 rounded">.env.local</code> está incorreto.</li>
-              <li>O banco de dados **Cloud Firestore** não foi criado ou ativado no seu projeto Firebase.</li>
-            </ol>
-             <p className="text-xs text-muted-foreground pt-4 border-t">
-              Por favor, verifique essas configurações no Console do Firebase e no seu ambiente. Após corrigir, reinicie o servidor de desenvolvimento.
-            </p>
-          </CardContent>
-        </Card>
-       </div>
-    );
+     return <FirestoreConnectionError message={error} />;
   }
 
   if (!currentUser) {
