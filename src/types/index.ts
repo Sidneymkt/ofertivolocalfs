@@ -179,10 +179,10 @@ export interface User {
   followedMerchants?: string[]; // Array of merchant (User) IDs
   
   // History might be better as subcollections for scalability
-  // checkInHistory?: CheckIn[]; 
-  // sharedOffersHistory?: SharedOffer[];
-  // sweepstakeParticipations?: SweepstakeParticipation[];
-  // commentsMade?: Comment[]; 
+  checkInHistory?: CheckIn[]; 
+  sharedOffersHistory?: SharedOffer[];
+  sweepstakeParticipations?: SweepstakeParticipation[];
+  commentsMade?: Comment[]; 
 
   joinDate: Timestamp; 
   status?: UserStatus; 
@@ -320,6 +320,199 @@ export const adminModules = [
 
 export const serverTimestamp = fsServerTimestamp;
     
-    
-    
+// --- MOCK DATA ---
+
+export const mockUser: User = {
+  id: 'user-mock-123',
+  name: 'Bruno Costa',
+  email: 'bruno.costa@example.com',
+  avatarUrl: 'https://placehold.co/100x100.png?text=BC',
+  avatarHint: 'person avatar',
+  points: 1250,
+  level: 'Prata',
+  currentXp: 750,
+  xpToNextLevel: 1500,
+  joinDate: new Timestamp(1672531200, 0), // Jan 1, 2023
+  isAdvertiser: false,
+  status: 'active',
+  isProfileComplete: true,
+  address: 'Rua das Flores, 123',
+  city: 'Manaus',
+  favoriteOffers: ['offer-pizza-1', 'offer-barber-2'],
+  followedMerchants: ['advertiser-pizzaria-123'],
+  badges: [
+    { id: 'b1', name: 'Explorador', icon: 'Star', description: 'Realizou o primeiro check-in!', unlockedDate: new Date(), 'data-ai-hint': 'star badge' },
+    { id: 'b2', name: 'Social', icon: 'Users', description: 'Compartilhou 5 ofertas!', unlockedDate: new Date(), 'data-ai-hint': 'people group' },
+  ],
+  checkInHistory: [
+      { id: 'chk1', userId: 'user-mock-123', offerId: 'offer-barber-2', offerTitle: 'Corte + Barba por Preço Especial', merchantId: 'adv-mock-2', merchantName: 'Barbearia Navalha', timestamp: Timestamp.fromDate(new Date()), pointsEarned: 10 },
+  ],
+  sharedOffersHistory: [
+      { id: 'shr1', userId: 'user-mock-123', offerId: 'offer-pizza-1', offerTitle: '🍕 Pizza Gigante 50% OFF + Refri Grátis!', platform: 'WhatsApp', timestamp: Timestamp.fromDate(new Date()), pointsEarned: 5 },
+  ],
+   sweepstakeParticipations: [
+      { id: 'swp1', userId: 'user-mock-123', sweepstakeId: 'sweep-1', sweepstakeTitle: 'Sorteio de Verão', timestamp: Timestamp.fromDate(new Date()), pointsSpent: 50 }
+  ],
+  commentsMade: [
+      { id: 'cmt1', userId: 'user-mock-123', offerId: 'offer-pizza-1', offerTitle: '🍕 Pizza Gigante 50% OFF + Refri Grátis!', rating: 5, text: 'Pizza maravilhosa, valeu muito a pena!', timestamp: Timestamp.fromDate(new Date()), pointsEarned: 2 }
+  ]
+};
+
+export const mockAdvertiserUser: User = {
+  id: 'advertiser-pizzaria-123',
+  name: 'Roberto Silva',
+  email: 'contato@pizzariadivina.com',
+  isAdvertiser: true,
+  businessName: 'Pizzaria Divina',
+  businessAddress: 'Av. Djalma Batista, 500, Manaus',
+  businessLogoUrl: 'https://placehold.co/100x100.png?text=PD',
+  businessLogoHint: 'pizza restaurant',
+  advertiserStatus: 'active',
+  advertiserPlan: 'pro',
+  points: 0, // Advertisers don't usually have points
+  level: '',
+  currentXp: 0,
+  xpToNextLevel: 0,
+  joinDate: new Timestamp(1675209600, 0), // Feb 1, 2023
+};
+
+export const mockOffers: Offer[] = [
+    {
+      id: 'offer-pizza-1',
+      title: '🍕 Pizza Gigante 50% OFF + Refri Grátis!',
+      description: 'Aproveite nossa pizza gigante de qualquer sabor com 50% de desconto e leve um refrigerante de 2L na faixa. Perfeito para a galera!',
+      merchantName: 'Pizzaria Divina',
+      merchantId: 'advertiser-pizzaria-123',
+      merchantIsVerified: true,
+      imageUrl: 'https://placehold.co/600x400.png',
+      'data-ai-hint': 'gourmet pizza',
+      galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'],
+      galleryImageHints: ['pizza slice', 'restaurant interior'],
+      offerType: 'combo',
+      category: 'Alimentação',
+      originalPrice: 70.00,
+      discountedPrice: 35.00,
+      tags: ['#pizza', '#promocao', '#combo'],
+      validityStartDate: new Date(),
+      validityEndDate: new Date(new Date().setDate(new Date().getDate() + 15)),
+      status: 'active',
+      visibility: 'destaque',
+      latitude: -3.0901,
+      longitude: -60.0182,
+      rating: 4.8,
+      reviews: 125,
+      usersUsedCount: 310,
+      pointsAwarded: 15,
+      createdBy: 'advertiser-pizzaria-123',
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    },
+    {
+      id: 'offer-barber-2',
+      title: '💇‍♂️ Corte + Barba por Preço Especial',
+      description: 'Dê um tapa no visual! Corte de cabelo moderno e barba modelada com nossos melhores profissionais. Agende seu horário!',
+      merchantName: 'Barbearia Navalha',
+      merchantId: 'advertiser-barber-456',
+      merchantIsVerified: true,
+      imageUrl: 'https://placehold.co/600x400.png',
+      'data-ai-hint': 'barber shop',
+      offerType: 'padrao',
+      category: 'Serviços',
+      originalPrice: 70.00,
+      discountedPrice: 45.00,
+      tags: ['#barbearia', '#visual', '#corte'],
+      validityStartDate: new Date(),
+      validityEndDate: new Date(new Date().setDate(new Date().getDate() + 30)),
+      status: 'active',
+      visibility: 'normal',
+      latitude: -3.1019,
+      longitude: -60.025,
+      rating: 4.9,
+      reviews: 98,
+      usersUsedCount: 150,
+      pointsAwarded: 10,
+      createdBy: 'advertiser-barber-456',
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    },
+    {
+      id: 'offer-acai-3',
+      title: '⚡ Açaí 500ml em Dobro!',
+      description: 'Compre um açaí de 500ml turbinado com seus acompanhamentos favoritos e ganhe outro totalmente grátis. Oferta relâmpago, válida somente hoje!',
+      merchantName: 'Point do Açaí',
+      merchantId: 'advertiser-acai-789',
+      merchantIsVerified: false,
+      imageUrl: 'https://placehold.co/600x400.png',
+      'data-ai-hint': 'acai bowl',
+      offerType: 'relampago',
+      category: 'Alimentação',
+      originalPrice: 20.00,
+      discountedPrice: 10.00, // Effective price per unit
+      tags: ['#acai', '#relampago', '#dobro'],
+      validityStartDate: new Date(),
+      validityEndDate: new Date(),
+      status: 'active',
+      visibility: 'destaque',
+      latitude: -3.0955,
+      longitude: -60.0221,
+      rating: 4.7,
+      reviews: 210,
+      usersUsedCount: 450,
+      pointsAwarded: 5,
+      createdBy: 'advertiser-acai-789',
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    },
+    {
+      id: 'offer-sushi-4',
+      title: '🍣 Festival de Sushi Exclusivo no App',
+      description: 'Apresente o QR Code no app e participe do nosso festival de sushi com preço fixo. Rodízio completo com peças especiais!',
+      merchantName: 'Sushi House',
+      merchantId: 'advertiser-sushi-101',
+      merchantIsVerified: true,
+      imageUrl: 'https://placehold.co/600x400.png',
+      'data-ai-hint': 'sushi platter',
+      offerType: 'exclusiva_app',
+      category: 'Alimentação',
+      originalPrice: 120.00,
+      discountedPrice: 89.90,
+      tags: ['#sushi', '#rodizio', '#japa'],
+      validityStartDate: new Date(),
+      validityEndDate: new Date(new Date().setDate(new Date().getDate() + 7)),
+      status: 'active',
+      visibility: 'normal',
+      latitude: -3.119,
+      longitude: -60.0211,
+      rating: 4.8,
+      reviews: 150,
+      usersUsedCount: 200,
+      pointsAwarded: 20,
+      createdBy: 'advertiser-sushi-101',
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }
+];
+
+export const mockUserList: User[] = [
+    { ...mockUser, id: 'user-mock-1', name: 'Ana Clara Explorer', email: 'anaclara@exemplo.com', avatarUrl: 'https://placehold.co/100x100.png?text=AE', points: 2500, level: 'Ouro', status: 'active', joinDate: new Timestamp(1672531200, 0)},
+    { ...mockUser, id: 'user-mock-2', name: 'Daniela Silva', email: 'daniela.s@test.dev', avatarUrl: 'https://placehold.co/100x100.png?text=DS', points: 800, level: 'Prata', status: 'active', joinDate: new Timestamp(1675209600, 0)},
+    { ...mockUser, id: 'user-mock-3', name: 'Fernando Lima', email: 'fernando.lima@email.com', avatarUrl: 'https://placehold.co/100x100.png?text=FL', points: 150, level: 'Bronze', status: 'suspended', joinDate: new Timestamp(1677628800, 0)},
+    { ...mockUser, id: 'user-mock-4', name: 'Gabriela Souza', email: 'gabriela.s@provider.com', avatarUrl: 'https://placehold.co/100x100.png?text=GS', points: 4500, level: 'Ouro', status: 'active', joinDate: new Timestamp(1680307200, 0) },
+];
+
+export const mockAdvertiserList: User[] = [
+    { ...mockAdvertiserUser, id: 'adv-mock-1', businessName: 'Pizzaria Divina', responsibleName: 'Roberto Silva', advertiserStatus: 'active', advertiserPlan: 'pro', joinDate: new Timestamp(1672531200, 0) },
+    { ...mockAdvertiserUser, id: 'adv-mock-2', businessName: 'Barbearia Navalha', responsibleName: 'Marcos Andrade', advertiserStatus: 'pending_verification', advertiserPlan: 'trial', joinDate: new Timestamp(1675209600, 0) },
+    { ...mockAdvertiserUser, id: 'adv-mock-3', businessName: 'Sushi House', responsibleName: 'Juliana Tanaka', advertiserStatus: 'active', advertiserPlan: 'premium', joinDate: new Timestamp(1677628800, 0) },
+    { ...mockAdvertiserUser, id: 'adv-mock-4', businessName: 'Point do Açaí', responsibleName: 'Lucas Ferreira', advertiserStatus: 'suspended', advertiserPlan: 'basic', joinDate: new Timestamp(1680307200, 0) },
+];
+
+export const mockAdminMetrics: AdminMetricItem[] = [
+    { title: "Usuários Ativos (Mês)", value: "1,254", icon: Users, change: "+12.5%", bgColorClass: 'bg-blue-500/10' },
+    { title: "Novos Anunciantes", value: "28", icon: Building2, change: "+5", bgColorClass: 'bg-green-500/10' },
+    { title: "Ofertas Criadas (Hoje)", value: "72", icon: Package, change: "-3.2%", bgColorClass: 'bg-orange-500/10' },
+    { title: "Check-ins (Hoje)", value: "1,489", icon: CheckCircle, change: "+21%", bgColorClass: 'bg-teal-500/10' },
+    { title: "Receita (Mês)", value: "R$ 4,520", icon: DollarSign, change: "+8%", bgColorClass: 'bg-indigo-500/10' },
+    { title: "Tickets de Suporte", value: "12", icon: HelpCircle, change: "2 Abertos", bgColorClass: 'bg-red-500/10' },
+];
     

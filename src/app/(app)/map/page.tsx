@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -5,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ListFilter, AlertTriangle, Loader2 } from 'lucide-react';
-import { categories, type Offer } from '@/types';
+import { categories, type Offer, mockOffers } from '@/types'; // Import mockOffers
 import CategoryPills from '@/components/offers/CategoryPills';
 import {
   Sheet,
@@ -19,6 +20,7 @@ import AdvancedFiltersSheet from '@/components/map/AdvancedFiltersSheet';
 import GoogleMapDisplay from '@/components/map/GoogleMapDisplay';
 import { getAllOffers } from '@/lib/firebase/services/offerService';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function MapPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -28,7 +30,6 @@ export default function MapPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isFiltersSheetOpen, setIsFiltersSheetOpen] = useState(false);
   
-  // Directly read the environment variable here to decide rendering logic
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
@@ -37,10 +38,16 @@ export default function MapPage() {
       setError(null);
       try {
         const fetchedOffers = await getAllOffers();
-        setOffers(fetchedOffers);
+        if (fetchedOffers.length === 0) {
+            setError("Nenhuma oferta real encontrada. Exibindo dados de exemplo.");
+            setOffers(mockOffers); // Use mock data if fetch is successful but returns empty
+        } else {
+            setOffers(fetchedOffers);
+        }
       } catch (err: any) {
         console.error("Error fetching offers for map:", err);
-        setError("Não foi possível carregar os dados das ofertas.");
+        setError("Não foi possível carregar os dados das ofertas. Exibindo dados de exemplo para demonstração.");
+        setOffers(mockOffers); // Fallback to mock data on error
       }
       setLoading(false);
     };
@@ -111,8 +118,18 @@ export default function MapPage() {
     }));
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-grow relative shadow-lg rounded-lg overflow-hidden border">
+    <div className="flex flex-col h-full space-y-4">
+       {error && (
+          <Alert variant="destructive" className="mx-4 flex-shrink-0">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Aviso de Carregamento</AlertTitle>
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
+       )}
+
+      <div className="flex-grow relative shadow-lg rounded-lg overflow-hidden border mx-4">
         <GoogleMapDisplay 
           apiKey={googleMapsApiKey}
           mapCenter={mapCenter}
@@ -136,7 +153,7 @@ export default function MapPage() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="shrink-0"
+                  className="shrink-0 mr-4"
                   aria-label="Abrir filtros avançados"
                 >
                   <ListFilter size={20} />
@@ -159,9 +176,7 @@ export default function MapPage() {
 
         <div className="py-3 border-t">
           <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas</h3>
-          {error ? (
-             <p className="px-4 text-sm text-destructive">{error}</p>
-          ) : offers.length > 0 ? (
+          {offers.length > 0 ? (
              <p className="px-4 text-sm text-muted-foreground">{offers.length} ofertas encontradas.</p>
           ) : (
              <p className="px-4 text-sm text-muted-foreground">Nenhuma oferta encontrada na área.</p>

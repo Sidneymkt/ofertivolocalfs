@@ -6,7 +6,9 @@ import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from '@react-google-m
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { calculateDistance } from '@/lib/utils'; 
+import { calculateDistance } from '@/lib/utils';
+import { Card, CardContent } from '../ui/card';
+import { AlertTriangle } from 'lucide-react';
 
 interface MapMarker {
   id: string;
@@ -19,7 +21,7 @@ interface MapMarker {
 }
 
 interface GoogleMapDisplayProps {
-  apiKey: string; // Made required
+  apiKey: string; 
   mapCenter: { lat: number; lng: number };
   zoom?: number;
   markers: MapMarker[];
@@ -28,7 +30,6 @@ interface GoogleMapDisplayProps {
 const mapContainerStyle = {
   width: '100%',
   height: '100%',
-  borderRadius: '0.5rem', 
 };
 
 const getMarkerIcon = (
@@ -94,7 +95,7 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
   const mapRef = React.useRef<google.maps.Map | null>(null);
 
   useEffect(() => {
-    console.log("[DEBUG] GoogleMapDisplay Component: apiKey prop received:", apiKey ? "SET (masked)" : "MISSING or undefined");
+    console.log("[DEBUG] GoogleMapDisplay Component: apiKey prop received:", apiKey ? "SET (masked for security)" : "MISSING or undefined");
   }, [apiKey]);
 
   const { isLoaded, loadError } = useJsApiLoader({
@@ -157,32 +158,35 @@ const GoogleMapDisplay: React.FC<GoogleMapDisplayProps> = ({ apiKey, mapCenter, 
 
   if (loadError) {
     const isInvalidKeyError = loadError.message.includes('InvalidKeyMapError') || loadError.message.toLowerCase().includes('api key not valid');
+    const isBillingError = loadError.message.includes('BillingNotEnabledMapError');
+    const isApiNotActivatedError = loadError.message.includes('ApiNotActivatedMapError');
+
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-muted border border-destructive/50 rounded-md p-4 text-center">
-        <p className="text-destructive font-semibold text-lg mb-2">Erro ao carregar o Google Maps</p>
-        {isInvalidKeyError && (
-            <p className="text-destructive text-md mb-2">
-                <strong>Causa provável: Chave de API inválida ou mal configurada.</strong>
-            </p>
-        )}
-        <p className="text-destructive text-sm mb-1">Mensagem: {loadError.message}</p>
-        <p className="text-xs text-muted-foreground mb-3">
-          Consulte o console do navegador para detalhes técnicos.
-        </p>
-        <ul className="text-xs text-muted-foreground list-disc list-inside text-left mt-2 space-y-1 max-w-md">
-          <li><strong>Verifique `.env.local`</strong>: Garanta que `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` está correta e que o servidor foi reiniciado.</li>
-          <li><strong>Console Google Cloud</strong>:
-            <ul className="pl-4">
-                <li>A API "Maps JavaScript API" deve estar ativada.</li>
-                <li>Verifique se há uma conta de faturamento válida e ativa associada ao projeto.</li>
-                <li>Confirme se as restrições da chave (Referenciadores HTTP, APIs permitidas) não estão bloqueando o uso.</li>
-            </ul>
-          </li>
-          <li>
-            Link útil: <a href="https://developers.google.com/maps/documentation/javascript/error-messages#invalid-key-map-error" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Guia de Erros do Google Maps</a>
-          </li>
-        </ul>
-      </div>
+      <Card className="w-full h-full flex flex-col items-center justify-center bg-muted border-destructive/50 rounded-md p-4 text-center">
+        <CardContent className="p-6 text-center space-y-4">
+          <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+          <h2 className="text-xl font-semibold text-destructive">Erro ao Carregar o Google Maps</h2>
+          <p className="text-destructive/90">Não foi possível exibir o mapa. Verifique os problemas comuns abaixo.</p>
+
+          <div className="text-sm bg-destructive/10 p-3 rounded-md text-left space-y-2">
+            {isInvalidKeyError && <p><strong>Causa provável:</strong> Chave de API inválida ou mal configurada.</p>}
+            {isBillingError && <p><strong>Causa provável:</strong> O faturamento não está ativado para este projeto no Google Cloud.</p>}
+            {isApiNotActivatedError && <p><strong>Causa provável:</strong> A API "Maps JavaScript API" não está habilitada para este projeto.</p>}
+            <p className="text-xs">Mensagem do Google: <code className="bg-destructive/20 px-1 rounded">{loadError.message}</code></p>
+          </div>
+
+          <ul className="text-xs text-muted-foreground list-disc list-inside text-left mt-2 space-y-1 max-w-md mx-auto">
+            <li><strong>Verifique seu arquivo `.env.local`</strong>: Garanta que `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` está correta e que o servidor foi reiniciado.</li>
+            <li><strong>Verifique seu projeto no Google Cloud Console</strong>:
+              <ul className="pl-4">
+                  <li>A API "Maps JavaScript API" deve estar **ativada**.</li>
+                  <li>Uma conta de **faturamento** válida deve estar associada ao projeto.</li>
+                  <li>As **restrições da chave** (Referenciadores HTTP, etc.) devem permitir seu domínio de desenvolvimento.</li>
+              </ul>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
     );
   }
 
