@@ -108,8 +108,8 @@ export interface Offer {
   reviews?: number; // Number of reviews/comments
 
   createdBy: string; // advertiserId, should match merchantId
-  createdAt: Timestamp; // Use Firestore Timestamp
-  updatedAt: Timestamp; // Use Firestore Timestamp
+  createdAt: Date | Timestamp;
+  updatedAt: Date | Timestamp;
   // comments subcollection will be used instead of embedding
 }
 
@@ -121,7 +121,7 @@ export interface CheckIn {
   offerTitle: string; // Denormalized
   merchantId: string;
   merchantName: string; // Denormalized
-  timestamp: Timestamp;
+  timestamp: Date | Timestamp;
   pointsEarned: number;
 }
 
@@ -131,7 +131,7 @@ export interface SharedOffer {
   offerId: string;
   offerTitle: string; // Denormalized
   platform: string;
-  timestamp: Timestamp;
+  timestamp: Date | Timestamp;
   pointsEarned?: number;
 }
 
@@ -140,7 +140,7 @@ export interface SweepstakeParticipation {
   userId: string;
   sweepstakeId: string;
   sweepstakeTitle: string; // Denormalized
-  timestamp: Timestamp;
+  timestamp: Date | Timestamp;
   pointsSpent: number;
 }
 
@@ -184,7 +184,7 @@ export interface User {
   sweepstakeParticipations?: SweepstakeParticipation[];
   commentsMade?: Comment[]; 
 
-  joinDate: Timestamp; 
+  joinDate: Date | Timestamp; 
   status?: UserStatus; 
 
   isAdvertiser?: boolean;
@@ -216,7 +216,7 @@ export interface SweepstakeParticipant {
   name: string;
   avatarUrl?: string;
   avatarHint?: string;
-  entryDate: Timestamp; // Date of entry
+  entryDate: Date | Timestamp;
 }
 
 export interface SweepstakeWinner {
@@ -234,8 +234,8 @@ export interface Sweepstake {
   'data-ai-hint'?: string;
   prizeDetails: string;
   pointsToEnter: number;
-  startDate: Timestamp;
-  endDate: Timestamp;
+  startDate: Date | Timestamp;
+  endDate: Date | Timestamp;
   numberOfWinners: number;
   maxParticipants?: number;
   rules?: string;
@@ -243,7 +243,7 @@ export interface Sweepstake {
   status: 'upcoming' | 'active' | 'ended' | 'drawing_complete' | 'cancelled';
   
   isDrawn?: boolean;
-  drawDate?: Timestamp;
+  drawDate?: Date | Timestamp;
   // winners and participants might be better as subcollections for scalability
   // winners?: SweepstakeWinner[];
   // participants?: SweepstakeParticipant[];
