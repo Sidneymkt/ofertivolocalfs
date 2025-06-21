@@ -5,14 +5,18 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getAnalytics, type Analytics, isSupported } from "firebase/analytics";
 
+// --- FOR DEBUGGING PURPOSES ---
+// This configuration is hardcoded to diagnose the "400 INVALID_ARGUMENT" error.
+// This is NOT recommended for production. The values should be in a .env.local file.
+// A common error in the storageBucket value was also corrected below.
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyD81cqvN61kCehxxfRsHIoq5h1JU2_UL2I",
+  authDomain: "ofertivo-local.firebaseapp.com",
+  projectId: "ofertivo-local",
+  storageBucket: "ofertivo-local.appspot.com", // Corrected from .firebasestorage.app
+  messagingSenderId: "813157622357",
+  appId: "1:813157622357:web:6fd20da9c9964e92cdeadc",
+  measurementId: "G-13G8X9QXP6"
 };
 
 let app: FirebaseApp;
@@ -22,11 +26,8 @@ let storage: FirebaseStorage;
 let analytics: Analytics | undefined;
 
 // Check for the essential config keys
-const hasRequiredConfig = firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId;
-
 if (!getApps().length) {
-  if (hasRequiredConfig) {
-    console.log("Firebase config detected. Initializing Firebase...");
+    console.log("Initializing Firebase with hardcoded config for debugging...");
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
@@ -38,9 +39,6 @@ if (!getApps().length) {
             }
         });
     }
-  } else {
-    console.error("CRITICAL: Firebase configuration is INCOMPLETE. Please check that NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_PROJECT_ID, and NEXT_PUBLIC_FIREBASE_APP_ID are all set correctly in your .env file. Firebase services will not be initialized.");
-  }
 } else {
   app = getApps()[0];
   auth = getAuth(app);
