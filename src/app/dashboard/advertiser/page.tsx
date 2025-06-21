@@ -1,96 +1,100 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { auth } from '@/lib/firebase/firebaseConfig';
+import { getUserProfile } from '@/lib/firebase/services/userService';
+import { getOffersByMerchant } from '@/lib/firebase/services/offerService';
+import type { User, Offer, AdvertiserMetricItem, PublishedOfferSummary } from '@/types';
+import { ADVERTISER_PLAN_DETAILS } from '@/types';
+
 import AdvertiserMetricsGrid from '@/components/dashboard/advertiser/AdvertiserMetricsGrid';
-import OfferPerformanceChart from '@/components/dashboard/advertiser/OfferPerformanceChart'; // Ensured import path matches the new filename
+import OfferPerformanceChart from '@/components/dashboard/advertiser/OfferPerformanceChart';
 import QuickActionsCard from '@/components/dashboard/advertiser/QuickActionsCard';
 import PublishedOffersSection from '@/components/dashboard/advertiser/PublishedOffersSection';
 import GenericDashboardSection from '@/components/dashboard/advertiser/GenericDashboardSection';
 import AdvertiserProfileSettingsCard from '@/components/dashboard/advertiser/AdvertiserProfileSettingsCard';
-import { mockAdvertiserUser, type AdvertiserMetricItem, type PublishedOfferSummary, ADVERTISER_PLAN_DETAILS } from '@/types'; 
-import { BarChart2, Eye, MousePointerClick, CheckCircle, Users, Coins, TrendingUp, ShoppingBag, Settings, Bell, Gift, ListFilter, FileText, DollarSign, AlertCircle, ArrowRight } from 'lucide-react';
+import { Eye, MousePointerClick, CheckCircle, Users, Coins, TrendingUp, Settings, Bell, Gift, ListFilter, FileText, DollarSign, AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-
-const advertiserName = mockAdvertiserUser.businessName || "Meu Negócio"; 
-
-const advertiserPlan = {
-  name: mockAdvertiserUser.advertiserPlan ? ADVERTISER_PLAN_DETAILS[mockAdvertiserUser.advertiserPlan].name : "Não Definido",
-  monthlyPointsLimit: 1000, // This could also come from ADVERTISER_PLAN_DETAILS if defined there
-  pointsDistributedThisMonth: 650, 
-};
-
-const pointsUsagePercentage = (advertiserPlan.pointsDistributedThisMonth / advertiserPlan.monthlyPointsLimit) * 100;
-
-
-const metrics: AdvertiserMetricItem[] = [
-  { title: 'Visualizações do Perfil', value: '1.2K', icon: Eye, trend: '+15%' },
-  { title: 'Cliques em Ofertas', value: '850', icon: MousePointerClick, trend: '+8%' },
-  { title: 'Check-ins Validados', value: '120', icon: CheckCircle, trend: '+5%' },
-  { title: 'Seguidores', value: '350', icon: Users, trend: '+20' },
-  { title: 'Pontos Distribuídos (Mês)', value: `${advertiserPlan.pointsDistributedThisMonth} / ${advertiserPlan.monthlyPointsLimit}`, icon: Coins, description: `Plano: ${advertiserPlan.name}` },
-  { title: 'ROI Estimado (Mês)', value: 'R$ 1.500', icon: TrendingUp, trend: '+10%' },
-];
-
-const publishedOffers: PublishedOfferSummary[] = [
-  { 
-    id: 'offer-pizza-1', 
-    title: '50% Off Pizza Gigante + Refri Grátis HOJE!', 
-    status: 'active', 
-    views: 1200, clicks: 300, 
-    isFeatured: true, 
-    dataAiHint: 'pizza food', 
-    imageUrl: 'https://placehold.co/64x64.png?text=PZ',
-    visibility: 'destaque',
-    discountedPrice: 35.00,
-    originalPrice: 70.00,
-    category: 'Alimentação',
-    usersUsedCount: 138,
-  },
-  { 
-    id: 'offer-barber-2', 
-    title: 'Corte Masculino + Barba Modelada', 
-    status: 'active', 
-    views: 800, clicks: 150, 
-    isFeatured: false, 
-    dataAiHint: 'barber shop',
-    imageUrl: 'https://placehold.co/64x64.png?text=BB',
-    visibility: 'normal',
-    discountedPrice: 45.00,
-    originalPrice: 70.00,
-    category: 'Serviços',
-    usersUsedCount: 72,
-  },
-  { 
-    id: 'new-offer-pending', 
-    title: 'Nova Super Oferta de Teste (Pendente)', 
-    status: 'pending', 
-    views: 0, clicks: 0, 
-    isFeatured: false, 
-    dataAiHint: 'generic offer',
-    imageUrl: 'https://placehold.co/64x64.png?text=NO',
-    visibility: 'normal',
-    discountedPrice: 19.99,
-    category: 'Outros',
-  },
-    { 
-    id: 'expired-offer-sample', 
-    title: 'Oferta Expirada Exemplo', 
-    status: 'expired', 
-    views: 500, clicks: 50, 
-    isFeatured: false, 
-    dataAiHint: 'old paper',
-    imageUrl: 'https://placehold.co/64x64.png?text=EX',
-    visibility: 'normal',
-    discountedPrice: 10.00,
-    category: 'Diversos',
-  },
-];
+import { useRouter } from 'next/navigation';
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdvertiserDashboardPage() {
-  const currentPlanDetails = mockAdvertiserUser.advertiserPlan ? ADVERTISER_PLAN_DETAILS[mockAdvertiserUser.advertiserPlan] : null;
+  const router = useRouter();
+  const { toast } = useToast();
+  const [advertiser, setAdvertiser] = useState<User | null>(null);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (userAuth) => {
+      if (userAuth) {
+        setLoading(true);
+        try {
+          const userProfile = await getUserProfile(userAuth.uid);
+          if (userProfile && userProfile.isAdvertiser) {
+            setAdvertiser(userProfile);
+            const merchantOffers = await getOffersByMerchant(userAuth.uid);
+            setOffers(merchantOffers);
+          } else {
+            toast({ title: "Acesso Negado", description: "Você precisa ser um anunciante para acessar esta página.", variant: "destructive" });
+            router.push('/');
+          }
+        } catch (error) {
+          console.error("Error fetching advertiser dashboard data:", error);
+          toast({ title: "Erro ao Carregar Painel", description: "Não foi possível buscar seus dados.", variant: "destructive" });
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        router.push('/login');
+      }
+    });
+    return () => unsubscribe();
+  }, [router, toast]);
+
+
+  if (loading || !advertiser) {
+    return (
+      <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const advertiserName = advertiser.businessName || "Meu Negócio";
+  const currentPlan = advertiser.advertiserPlan || 'trial';
+  const currentPlanDetails = ADVERTISER_PLAN_DETAILS[currentPlan];
+
+  // Derive metrics from real data where possible
+  const checkInsValidated = offers.reduce((sum, offer) => sum + (offer.usersUsedCount || 0), 0);
+  const clicksInOffers = offers.reduce((sum, offer) => sum + (offer.reviews || 0) * 3, 0); // Mocking clicks based on reviews
+  
+  const metrics: AdvertiserMetricItem[] = [
+    { title: 'Visualizações do Perfil', value: '1.2K', icon: Eye, trend: '+15%' }, // Placeholder
+    { title: 'Cliques em Ofertas', value: clicksInOffers, icon: MousePointerClick, trend: '+8%' }, // Semi-real
+    { title: 'Check-ins Validados', value: checkInsValidated, icon: CheckCircle, trend: '+5%' }, // Real
+    { title: 'Seguidores', value: '350', icon: Users, trend: '+20' }, // Placeholder
+    { title: 'Pontos Distribuídos (Mês)', value: '650 / 1000', icon: Coins, description: `Plano: ${currentPlanDetails.name}` }, // Placeholder
+    { title: 'ROI Estimado (Mês)', value: 'R$ 1.500', icon: TrendingUp, trend: '+10%' }, // Placeholder
+  ];
+
+  const publishedOffers: PublishedOfferSummary[] = offers.map(offer => ({
+    id: offer.id!,
+    title: offer.title,
+    status: offer.status,
+    imageUrl: offer.imageUrl,
+    'data-ai-hint': offer['data-ai-hint'],
+    visibility: offer.visibility,
+    discountedPrice: offer.discountedPrice,
+    originalPrice: offer.originalPrice,
+    usersUsedCount: offer.usersUsedCount,
+    category: offer.category,
+  }));
+  
+  const pointsUsagePercentage = (650 / 1000) * 100; // Placeholder
 
   return (
     <div className="space-y-8 p-4 md:p-6 lg:p-8 selection:bg-primary selection:text-primary-foreground">
@@ -124,7 +128,7 @@ export default function AdvertiserDashboardPage() {
       <GenericDashboardSection 
         title="Uso de Pontos do Plano Mensal" 
         icon={Coins}
-        description={`Você distribuiu ${advertiserPlan.pointsDistributedThisMonth} de ${advertiserPlan.monthlyPointsLimit} pontos este mês.`}
+        description={`Você distribuiu 650 de 1000 pontos este mês.`}
       >
         <Progress value={pointsUsagePercentage} className="h-4 [&>div]:bg-gradient-to-r [&>div]:from-primary [&>div]:to-blue-400" />
         {pointsUsagePercentage > 85 && (
@@ -134,14 +138,14 @@ export default function AdvertiserDashboardPage() {
             </div>
         )}
         <p className="text-xs text-muted-foreground mt-2 text-right">
-            {advertiserPlan.monthlyPointsLimit - advertiserPlan.pointsDistributedThisMonth} pontos restantes.
+            350 pontos restantes.
         </p>
       </GenericDashboardSection>
 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <OfferPerformanceChart /> {/* Updated component */}
+          <OfferPerformanceChart />
         </div>
         <div>
           <QuickActionsCard />
@@ -171,7 +175,7 @@ export default function AdvertiserDashboardPage() {
           </Button>
       </GenericDashboardSection>
 
-      <AdvertiserProfileSettingsCard advertiserUser={mockAdvertiserUser} />
+      <AdvertiserProfileSettingsCard advertiserUser={advertiser} />
 
        <GenericDashboardSection title="Notificações" icon={Bell} description="Fique por dentro das novidades e alertas.">
         <p className="text-muted-foreground text-center py-10">Central de notificações em breve.</p>
