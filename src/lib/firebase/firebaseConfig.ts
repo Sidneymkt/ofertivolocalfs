@@ -3,7 +3,7 @@ import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
-import { getAnalytics, type Analytics } from "firebase/analytics";
+import { getAnalytics, type Analytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,17 +21,25 @@ let db: Firestore;
 let storage: FirebaseStorage;
 let analytics: Analytics | undefined;
 
+// Check for the essential config keys
+const hasRequiredConfig = firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId;
+
 if (!getApps().length) {
-  if (firebaseConfig.projectId) {
+  if (hasRequiredConfig) {
+    console.log("Firebase config detected. Initializing Firebase...");
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
     if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
-      analytics = getAnalytics(app);
+        isSupported().then((supported) => {
+            if (supported) {
+                analytics = getAnalytics(app);
+            }
+        });
     }
   } else {
-    console.error("CRITICAL: Firebase Project ID is MISSING from your environment variables. Firebase services will not be initialized.");
+    console.error("CRITICAL: Firebase configuration is INCOMPLETE. Please check that NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_PROJECT_ID, and NEXT_PUBLIC_FIREBASE_APP_ID are all set correctly in your .env file. Firebase services will not be initialized.");
   }
 } else {
   app = getApps()[0];
@@ -39,7 +47,11 @@ if (!getApps().length) {
   db = getFirestore(app);
   storage = getStorage(app);
   if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
-    analytics = getAnalytics(app);
+     isSupported().then((supported) => {
+        if (supported) {
+            analytics = getAnalytics(app);
+        }
+     });
   }
 }
 
