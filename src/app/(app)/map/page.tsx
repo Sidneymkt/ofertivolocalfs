@@ -24,14 +24,15 @@ export default function MapPage() {
       setError(null);
       try {
         const fetchedOffers = await getAllOffers();
-        if (fetchedOffers.length === 0) {
-            setError("Nenhuma oferta encontrada na área. Tente explorar o mapa.");
-        }
         setOffers(fetchedOffers);
       } catch (err: any) {
         console.error("Error fetching offers for map:", err);
-        setError("Não foi possível carregar os dados das ofertas. Verifique sua conexão e tente novamente.");
-        setOffers([]); // Ensure offers is empty on error
+        if (err.message.includes("offline") || err.message.includes("Failed to get document")) {
+            setError("Não foi possível conectar ao banco de dados. Verifique suas configurações do Firebase.");
+        } else {
+            setError("Não foi possível carregar os dados das ofertas. Verifique sua conexão e tente novamente.");
+        }
+        setOffers([]);
       }
       setLoading(false);
     };
@@ -39,6 +40,37 @@ export default function MapPage() {
     fetchOffers();
   }, []);
 
+  if (error) {
+     return (
+       <div className="container mx-auto px-4 py-6">
+         <Card className="m-4 shadow-lg border-destructive/50 bg-destructive/5">
+          <CardContent className="p-6 text-center space-y-4">
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+            <h2 className="text-xl font-semibold text-destructive">Erro de Conexão com o Banco de Dados</h2>
+            <p className="text-destructive/90 max-w-xl mx-auto">
+              Não foi possível carregar os dados das ofertas. Isso geralmente acontece por dois motivos:
+            </p>
+            <ol className="text-sm text-left list-decimal list-inside bg-destructive/10 p-3 rounded-md max-w-lg mx-auto">
+              <li>O `projectId` no arquivo <code className="font-mono bg-destructive/20 px-1 py-0.5 rounded">.env.local</code> está incorreto.</li>
+              <li>O banco de dados **Cloud Firestore** não foi criado ou ativado no seu projeto Firebase.</li>
+            </ol>
+             <p className="text-xs text-muted-foreground pt-4 border-t">
+              Por favor, verifique essas configurações no Console do Firebase e no seu ambiente. Após corrigir, reinicie o servidor de desenvolvimento.
+            </p>
+          </CardContent>
+        </Card>
+       </div>
+    );
+  }
+
+  if (loading) {
+     return (
+      <div className="flex justify-center items-center flex-grow">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
   if (!googleMapsApiKey) {
     return (
       <div className="container mx-auto px-4 py-6">
@@ -64,13 +96,6 @@ export default function MapPage() {
     );
   }
 
-  if (loading) {
-     return (
-      <div className="flex justify-center items-center flex-grow">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   const mapCenter = { lat: -3.0993, lng: -59.9839 }; // Default to Manaus center
   const markers = offers
@@ -86,18 +111,7 @@ export default function MapPage() {
     }));
 
   return (
-    <div className="flex flex-col flex-grow">
-      {/* Show a general error alert only if fetching failed, not if it's just empty */}
-      {error && offers.length === 0 && !error.includes("Nenhuma oferta encontrada") && (
-        <Alert variant="destructive" className="mx-4 my-2 flex-shrink-0">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Falha ao Carregar</AlertTitle>
-            <AlertDescription>
-                {error}
-            </AlertDescription>
-        </Alert>
-      )}
-
+    <div className="flex flex-col h-full">
       {/* Map Section */}
       <div className="flex-grow relative">
         <GoogleMapDisplay
@@ -119,7 +133,7 @@ export default function MapPage() {
           ) : (
              <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-3">
                 <MapPinned className="h-10 w-10 text-primary/50" />
-                <p>{error || "Nenhuma oferta encontrada nesta área."}</p>
+                <p>Nenhuma oferta encontrada nesta área.</p>
                 <p className="text-xs">Tente navegar ou ampliar o mapa para buscar em outros locais.</p>
             </div>
           )}

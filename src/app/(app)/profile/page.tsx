@@ -12,10 +12,11 @@ import { getUserProfile, updateUserProfile } from '@/lib/firebase/services/userS
 import { getOffer } from '@/lib/firebase/services/offerService'; // For fetching favorite offer details
 import type { Offer, User as AppUser, Comment } from '@/types';
 import { auth } from '@/lib/firebase/firebaseConfig';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { FollowedMerchantDisplayItem } from '@/components/profile/FollowedMerchantsList';
 import Link from 'next/link';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -23,12 +24,14 @@ export default function ProfilePage() {
   const [followedMerchantsDetails, setFollowedMerchantsDetails] = useState<FollowedMerchantDisplayItem[]>([]);
   const [commentsMadeDetails, setCommentsMadeDetails] = useState<Comment[]>([]); // Assuming comments are part of User or fetched separately
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (userAuth) => {
       if (userAuth) {
         setLoading(true);
+        setError(null);
         try {
           const userProfile = await getUserProfile(userAuth.uid);
           setCurrentUser(userProfile);
@@ -66,16 +69,18 @@ export default function ProfilePage() {
             // For now, using placeholder if available on user object (which it isn't yet ideally)
              setCommentsMadeDetails(userProfile.commentsMade || []); 
           }
-        } catch (error) {
-          console.error("Error fetching profile data:", error);
-          toast({ title: "Erro ao Carregar Perfil", description: "Não foi possível buscar seus dados.", variant: "destructive" });
+        } catch (err: any) {
+          console.error("Error fetching profile data:", err);
+          if (err.message.includes("offline") || err.message.includes("Failed to get document")) {
+            setError("Não foi possível conectar ao banco de dados para carregar seu perfil. Verifique sua configuração do Firebase.");
+          } else {
+            setError("Ocorreu um erro ao carregar seus dados. Tente novamente mais tarde.");
+          }
         } finally {
           setLoading(false);
         }
       } else {
         setCurrentUser(null);
-        // Optionally redirect to login if no user is authenticated
-        // router.push('/login');
         setLoading(false);
       }
     });
@@ -100,9 +105,32 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
+      <div className="flex justify-center items-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (error) {
+     return (
+       <div className="container mx-auto px-4 py-6">
+         <Card className="m-4 shadow-lg border-destructive/50 bg-destructive/5">
+          <CardContent className="p-6 text-center space-y-4">
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+            <h2 className="text-xl font-semibold text-destructive">Erro de Conexão com o Banco de Dados</h2>
+            <p className="text-destructive/90 max-w-xl mx-auto">
+             {error}
+            </p>
+            <ol className="text-sm text-left list-decimal list-inside bg-destructive/10 p-3 rounded-md max-w-lg mx-auto">
+              <li>O `projectId` no arquivo <code className="font-mono bg-destructive/20 px-1 py-0.5 rounded">.env.local</code> está incorreto.</li>
+              <li>O banco de dados **Cloud Firestore** não foi criado ou ativado no seu projeto Firebase.</li>
+            </ol>
+             <p className="text-xs text-muted-foreground pt-4 border-t">
+              Por favor, verifique essas configurações no Console do Firebase e no seu ambiente. Após corrigir, reinicie o servidor de desenvolvimento.
+            </p>
+          </CardContent>
+        </Card>
+       </div>
     );
   }
 
@@ -115,7 +143,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-8 pb-4">
+    <div className="space-y-8 pb-4">
       <UserInfo user={currentUser} />
       <PersonalDataCard user={currentUser} onSaveChanges={handleSaveChanges} />
       <GamificationCard user={currentUser} />

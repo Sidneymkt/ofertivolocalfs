@@ -31,7 +31,8 @@ export default function FeedPage() {
       try {
         const offers = await getAllOffers();
         // Shuffle offers once on load for stable "recommended" list
-        setAllOffers([...offers].sort(() => 0.5 - Math.random()));
+        const shuffledOffers = [...offers].sort(() => 0.5 - Math.random());
+        setAllOffers(shuffledOffers);
         
         const merchants = await getAllMerchants();
         setFeaturedMerchants(merchants.slice(0, 10).map(m => ({
@@ -113,7 +114,7 @@ export default function FeedPage() {
 
   if (loading) { 
     return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
+      <div className="flex justify-center items-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <p className="ml-3 text-muted-foreground">Carregando ofertas...</p>
       </div>
@@ -126,10 +127,16 @@ export default function FeedPage() {
          <Card className="m-4 shadow-lg border-destructive/50 bg-destructive/5">
           <CardContent className="p-6 text-center space-y-4">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
-            <h2 className="text-xl font-semibold text-destructive">Erro de Conexão</h2>
-            <p className="text-destructive/90">{error}</p>
+            <h2 className="text-xl font-semibold text-destructive">Erro de Conexão com o Banco de Dados</h2>
+            <p className="text-destructive/90 max-w-xl mx-auto">
+              Não foi possível carregar os dados. Isso geralmente acontece por dois motivos:
+            </p>
+            <ol className="text-sm text-left list-decimal list-inside bg-destructive/10 p-3 rounded-md max-w-lg mx-auto">
+              <li>O `projectId` no arquivo <code className="font-mono bg-destructive/20 px-1 py-0.5 rounded">.env.local</code> está incorreto.</li>
+              <li>O banco de dados **Cloud Firestore** não foi criado ou ativado no seu projeto Firebase.</li>
+            </ol>
              <p className="text-xs text-muted-foreground pt-4 border-t">
-              Por favor, verifique suas variáveis de ambiente no arquivo `.env.local` e as configurações no console do Firebase. Após corrigir, reinicie o servidor de desenvolvimento.
+              Por favor, verifique essas configurações no Console do Firebase e no seu ambiente. Após corrigir, reinicie o servidor de desenvolvimento.
             </p>
           </CardContent>
         </Card>
@@ -138,7 +145,7 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6 md:space-y-8 pb-4">
+    <div className="space-y-6 md:space-y-8 pb-4">
       {featuredOffers.length > 0 && (
         <section className="space-y-3">
            <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Destaques Imperdíveis</h2>
