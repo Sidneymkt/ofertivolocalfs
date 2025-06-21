@@ -11,8 +11,7 @@ export default function AppLayout({
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex flex-col flex-grow container mx-auto px-4 py-6 pb-20"> 
-        {/* Added flex flex-col; flex-grow was already there */}
+      <main className="flex flex-col flex-grow pb-20"> 
         {children}
       </main>
       <BottomNavigationBar />

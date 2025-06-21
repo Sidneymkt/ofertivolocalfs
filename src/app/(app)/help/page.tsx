@@ -37,7 +37,7 @@ const faqs = [
 
 export default function HelpPage() {
   return (
-    <div className="space-y-8 pb-8">
+    <div className="container mx-auto px-4 py-6 space-y-8 pb-8">
       <header className="text-center py-6 bg-card shadow-sm rounded-lg">
         <h1 className="text-3xl font-headline font-bold text-foreground flex items-center justify-center gap-3">
           <LifeBuoy className="h-8 w-8 text-primary" />

@@ -150,7 +150,7 @@ export default function SweepstakeDetailPage() {
 
   if (!sweepstake) {
     return (
-      <div className="text-center py-10">
+      <div className="container mx-auto px-4 py-6 text-center">
         <p className="text-destructive text-lg">Sorteio não encontrado.</p>
         <Button asChild variant="link" className="mt-4">
           <Link href="/rewards">Voltar para Recompensas</Link>
@@ -166,7 +166,7 @@ export default function SweepstakeDetailPage() {
   };
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="container mx-auto px-4 py-6 space-y-6 pb-8">
       <Button variant="outline" size="sm" onClick={() => router.back()} className="mt-4 ml-4 md:ml-0">
         <ArrowLeft size={16} className="mr-2" /> Voltar
       </Button>

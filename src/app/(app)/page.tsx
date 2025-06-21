@@ -30,7 +30,8 @@ export default function FeedPage() {
       setError(null);
       try {
         const offers = await getAllOffers();
-        setAllOffers(offers);
+        // Shuffle offers once on load for stable "recommended" list
+        setAllOffers([...offers].sort(() => 0.5 - Math.random()));
         
         const merchants = await getAllMerchants();
         setFeaturedMerchants(merchants.slice(0, 10).map(m => ({
@@ -99,9 +100,9 @@ export default function FeedPage() {
 
   const recommendedOffers = useMemo(() => {
     const recentAndFeaturedIds = new Set([...recentOffers.map(ro => ro.id), ...featuredOffers.map(fo => fo.id)]);
+    // Use the pre-shuffled allOffers list for stable recommendations
     return allOffers
       .filter(offer => !recentAndFeaturedIds.has(offer.id!))
-      .sort(() => 0.5 - Math.random()) 
       .slice(0, 8);
   }, [allOffers, recentOffers, featuredOffers]);
 
@@ -121,21 +122,23 @@ export default function FeedPage() {
 
   if (error) {
     return (
-       <Card className="m-4 shadow-lg border-destructive/50 bg-destructive/5">
-        <CardContent className="p-6 text-center space-y-4">
-          <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
-          <h2 className="text-xl font-semibold text-destructive">Erro de Conexão</h2>
-          <p className="text-destructive/90">{error}</p>
-           <p className="text-xs text-muted-foreground pt-4 border-t">
-            Por favor, verifique suas variáveis de ambiente no arquivo `.env.local` e as configurações no console do Firebase. Após corrigir, reinicie o servidor de desenvolvimento.
-          </p>
-        </CardContent>
-      </Card>
+       <div className="container mx-auto px-4 py-6">
+         <Card className="m-4 shadow-lg border-destructive/50 bg-destructive/5">
+          <CardContent className="p-6 text-center space-y-4">
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+            <h2 className="text-xl font-semibold text-destructive">Erro de Conexão</h2>
+            <p className="text-destructive/90">{error}</p>
+             <p className="text-xs text-muted-foreground pt-4 border-t">
+              Por favor, verifique suas variáveis de ambiente no arquivo `.env.local` e as configurações no console do Firebase. Após corrigir, reinicie o servidor de desenvolvimento.
+            </p>
+          </CardContent>
+        </Card>
+       </div>
     );
   }
 
   return (
-    <div className="space-y-6 md:space-y-8 pb-4">
+    <div className="container mx-auto px-4 py-6 space-y-6 md:space-y-8 pb-4">
       {featuredOffers.length > 0 && (
         <section className="space-y-3">
            <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Destaques Imperdíveis</h2>

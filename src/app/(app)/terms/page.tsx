@@ -26,7 +26,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
     *   Disputas sobre ofertas devem ser resolvidas diretamente com o anunciante.
 5.  **Propriedade Intelectual:**
     *   O conteúdo do Ofertivo (excluindo conteúdo do usuário) é propriedade do Ofertivo e protegido por leis de direitos autorais.
-6.  **Limitação de Responsabilidade:** O Ofertivo não será responsável por quaisquer danos indiretos, incidentais ou consequenciais.
+6.  **Limitação de Responsabilidade:** Ofertivo não será responsável por quaisquer danos indiretos, incidentais ou consequenciais.
 7.  **Modificações nos Termos:** Podemos modificar estes termos a qualquer momento. Notificaremos sobre mudanças significativas.
 8.  **Lei Aplicável:** Estes termos serão regidos pelas leis do Brasil.
 
@@ -59,7 +59,7 @@ Sua privacidade é importante para nós. Esta Política de Privacidade explica c
 
 
   return (
-    <div className="space-y-8 pb-8">
+    <div className="container mx-auto px-4 py-6 space-y-8 pb-8">
       <header className="text-center py-6 bg-card shadow-sm rounded-lg">
         <h1 className="text-3xl font-headline font-bold text-foreground flex items-center justify-center gap-3">
           <ShieldCheck className="h-8 w-8 text-primary" />

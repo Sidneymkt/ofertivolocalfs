@@ -59,7 +59,7 @@ export default function RewardsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto px-4 py-6 space-y-8">
       {currentUser && <PointsDisplay points={currentUser.points} />}
       
       <Card className="shadow-lg">

@@ -282,6 +282,13 @@ export type AdminMetricItem = {
   bgColorClass?: string;
 };
 
+export interface FeaturedMerchant {
+  id: string;
+  name: string;
+  logoUrl: string;
+  'data-ai-hint'?: string;
+  category?: string;
+}
 
 export const POINTS_CHECKIN = 5;
 export const POINTS_SHARE_OFFER = 3;
@@ -376,122 +383,6 @@ export const mockAdvertiserUser: User = {
   joinDate: new Timestamp(1675209600, 0), // Feb 1, 2023
 };
 
-export const mockOffers: Offer[] = [
-    {
-      id: 'offer-pizza-1',
-      title: '🍕 Pizza Gigante 50% OFF + Refri Grátis!',
-      description: 'Aproveite nossa pizza gigante de qualquer sabor com 50% de desconto e leve um refrigerante de 2L na faixa. Perfeito para a galera!',
-      merchantName: 'Pizzaria Divina',
-      merchantId: 'advertiser-pizzaria-123',
-      merchantIsVerified: true,
-      imageUrl: 'https://placehold.co/600x400.png',
-      'data-ai-hint': 'gourmet pizza',
-      galleryImages: ['https://placehold.co/800x450.png', 'https://placehold.co/800x450.png'],
-      galleryImageHints: ['pizza slice', 'restaurant interior'],
-      offerType: 'combo',
-      category: 'Alimentação',
-      originalPrice: 70.00,
-      discountedPrice: 35.00,
-      tags: ['#pizza', '#promocao', '#combo'],
-      validityStartDate: new Date(),
-      validityEndDate: new Date(new Date().setDate(new Date().getDate() + 15)),
-      status: 'active',
-      visibility: 'destaque',
-      latitude: -3.0901,
-      longitude: -60.0182,
-      rating: 4.8,
-      reviews: 125,
-      usersUsedCount: 310,
-      pointsAwarded: 15,
-      createdBy: 'advertiser-pizzaria-123',
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    },
-    {
-      id: 'offer-barber-2',
-      title: '💇‍♂️ Corte + Barba por Preço Especial',
-      description: 'Dê um tapa no visual! Corte de cabelo moderno e barba modelada com nossos melhores profissionais. Agende seu horário!',
-      merchantName: 'Barbearia Navalha',
-      merchantId: 'advertiser-barber-456',
-      merchantIsVerified: true,
-      imageUrl: 'https://placehold.co/600x400.png',
-      'data-ai-hint': 'barber shop',
-      offerType: 'padrao',
-      category: 'Serviços',
-      originalPrice: 70.00,
-      discountedPrice: 45.00,
-      tags: ['#barbearia', '#visual', '#corte'],
-      validityStartDate: new Date(),
-      validityEndDate: new Date(new Date().setDate(new Date().getDate() + 30)),
-      status: 'active',
-      visibility: 'normal',
-      latitude: -3.1019,
-      longitude: -60.025,
-      rating: 4.9,
-      reviews: 98,
-      usersUsedCount: 150,
-      pointsAwarded: 10,
-      createdBy: 'advertiser-barber-456',
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    },
-    {
-      id: 'offer-acai-3',
-      title: '⚡ Açaí 500ml em Dobro!',
-      description: 'Compre um açaí de 500ml turbinado com seus acompanhamentos favoritos e ganhe outro totalmente grátis. Oferta relâmpago, válida somente hoje!',
-      merchantName: 'Point do Açaí',
-      merchantId: 'advertiser-acai-789',
-      merchantIsVerified: false,
-      imageUrl: 'https://placehold.co/600x400.png',
-      'data-ai-hint': 'acai bowl',
-      offerType: 'relampago',
-      category: 'Alimentação',
-      originalPrice: 20.00,
-      discountedPrice: 10.00, // Effective price per unit
-      tags: ['#acai', '#relampago', '#dobro'],
-      validityStartDate: new Date(),
-      validityEndDate: new Date(),
-      status: 'active',
-      visibility: 'destaque',
-      latitude: -3.0955,
-      longitude: -60.0221,
-      rating: 4.7,
-      reviews: 210,
-      usersUsedCount: 450,
-      pointsAwarded: 5,
-      createdBy: 'advertiser-acai-789',
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    },
-    {
-      id: 'offer-sushi-4',
-      title: '🍣 Festival de Sushi Exclusivo no App',
-      description: 'Apresente o QR Code no app e participe do nosso festival de sushi com preço fixo. Rodízio completo com peças especiais!',
-      merchantName: 'Sushi House',
-      merchantId: 'advertiser-sushi-101',
-      merchantIsVerified: true,
-      imageUrl: 'https://placehold.co/600x400.png',
-      'data-ai-hint': 'sushi platter',
-      offerType: 'exclusiva_app',
-      category: 'Alimentação',
-      originalPrice: 120.00,
-      discountedPrice: 89.90,
-      tags: ['#sushi', '#rodizio', '#japa'],
-      validityStartDate: new Date(),
-      validityEndDate: new Date(new Date().setDate(new Date().getDate() + 7)),
-      status: 'active',
-      visibility: 'normal',
-      latitude: -3.119,
-      longitude: -60.0211,
-      rating: 4.8,
-      reviews: 150,
-      usersUsedCount: 200,
-      pointsAwarded: 20,
-      createdBy: 'advertiser-sushi-101',
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    }
-];
 
 export const mockUserList: User[] = [
     { ...mockUser, id: 'user-mock-1', name: 'Ana Clara Explorer', email: 'anaclara@exemplo.com', avatarUrl: 'https://placehold.co/100x100.png?text=AE', points: 2500, level: 'Ouro', status: 'active', joinDate: new Timestamp(1672531200, 0)},
@@ -516,3 +407,4 @@ export const mockAdminMetrics: AdminMetricItem[] = [
     { title: "Tickets de Suporte", value: "12", icon: HelpCircle, change: "2 Abertos", bgColorClass: 'bg-red-500/10' },
 ];
     
+

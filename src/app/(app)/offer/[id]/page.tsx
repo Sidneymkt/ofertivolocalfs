@@ -162,7 +162,7 @@ export default function OfferDetailPage() {
 
   if (error) {
     return (
-      <div className="text-center py-10">
+      <div className="container mx-auto px-4 py-6 text-center">
         <p className="text-destructive text-lg">{error}</p>
         <Button asChild variant="link" className="mt-4">
           <Link href="/">Voltar para Ofertas</Link>
@@ -172,11 +172,11 @@ export default function OfferDetailPage() {
   }
 
   if (!offer) {
-    return <div className="text-center py-10 text-muted-foreground">Oferta não encontrada.</div>;
+    return <div className="container mx-auto px-4 py-6 text-center text-muted-foreground">Oferta não encontrada.</div>;
   }
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="container mx-auto px-4 py-6 space-y-6 pb-8">
       <OfferImageGallery 
         images={offer.galleryImages && offer.galleryImages.length > 0 ? offer.galleryImages : [offer.imageUrl]} 
         imageHints={offer.galleryImageHints || [offer['data-ai-hint'] || 'offer image']} 

@@ -15,6 +15,7 @@ import { auth } from '@/lib/firebase/firebaseConfig';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { FollowedMerchantDisplayItem } from '@/components/profile/FollowedMerchantsList';
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -107,14 +108,14 @@ export default function ProfilePage() {
 
   if (!currentUser) {
     return (
-      <div className="text-center py-10 text-muted-foreground">
+      <div className="container mx-auto px-4 py-6 text-center text-muted-foreground">
         Por favor, <Link href="/login" className="text-primary hover:underline">faça login</Link> para ver seu perfil.
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 pb-4">
+    <div className="container mx-auto px-4 py-6 space-y-8 pb-4">
       <UserInfo user={currentUser} />
       <PersonalDataCard user={currentUser} onSaveChanges={handleSaveChanges} />
       <GamificationCard user={currentUser} />

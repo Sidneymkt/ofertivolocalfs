@@ -102,8 +102,8 @@ export default function AllSweepstakesPage() {
   }
 
   return (
-    <div className="space-y-8 pb-8">
-      <div className="flex items-center justify-between mt-4 mb-6 px-4 md:px-0">
+    <div className="container mx-auto px-4 py-6 space-y-8 pb-8">
+      <div className="flex items-center justify-between mt-4 mb-6">
         <Button variant="outline" size="sm" onClick={() => router.back()}>
           <ArrowLeft size={16} className="mr-2" /> Voltar
         </Button>
@@ -116,7 +116,7 @@ export default function AllSweepstakesPage() {
       {sweepstakes.length === 0 ? (
         <p className="text-center text-muted-foreground py-10">Nenhum sorteio disponível no momento.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 md:px-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {sweepstakes.map((item) => (
             <Card key={item.id} className="overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out flex flex-col bg-card group">
               <Link href={`/sweepstake/${item.id}`} className="flex flex-col flex-grow">
