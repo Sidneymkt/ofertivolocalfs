@@ -7,19 +7,22 @@ import { getAnalytics, type Analytics, isSupported } from "firebase/analytics";
 
 // This is the recommended way to use environment variables.
 // It ensures that the app doesn't build if the variables are missing.
+// We are using a MINIMAL config to debug the "INVALID_ARGUMENT" error.
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+  // The following are optional and can sometimes cause init errors if incorrect.
+  // They are temporarily commented out for debugging.
+  // storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  // messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  // measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 // --- Robust check for environment variables ---
 const essentialKeys: (keyof typeof firebaseConfig)[] = [
-  'apiKey', 'authDomain', 'projectId', 'storageBucket', 'appId'
+  'apiKey', 'authDomain', 'projectId', 'appId'
 ];
 
 const missingKeys = essentialKeys.filter(key => !firebaseConfig[key]);
@@ -46,12 +49,12 @@ let analytics: Analytics | undefined;
 
 
 if (missingKeys.length === 0 && !getApps().length) {
-    console.log("Initializing Firebase...");
+    console.log("Initializing Firebase with minimal config...");
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
-    storage = getStorage(app);
-    if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+    storage = getStorage(app); // Storage can often be initialized without the bucket in config
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID) {
         isSupported().then((supported) => {
             if (supported) {
                 analytics = getAnalytics(app);
@@ -63,7 +66,7 @@ if (missingKeys.length === 0 && !getApps().length) {
   auth = getAuth(app);
   db = getFirestore(app);
   storage = getStorage(app);
-  if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID) {
      isSupported().then((supported) => {
         if (supported) {
             analytics = getAnalytics(app);
