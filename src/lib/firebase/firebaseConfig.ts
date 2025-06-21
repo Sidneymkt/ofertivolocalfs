@@ -5,16 +5,27 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getAnalytics, type Analytics, isSupported } from "firebase/analytics";
 
+// Helper function to check for environment variables and log errors
+const checkEnvVar = (varName: string): string => {
+    const value = process.env[varName];
+    if (!value) {
+        const errorMessage = `Firebase config error: Environment variable ${varName} is missing. Please add it to your .env.local file and your Firebase App Hosting backend settings.`;
+        console.error(errorMessage);
+    }
+    return value || ''; // Return empty string to prevent crashing
+};
+
+
 // These environment variables are now expected to be in your .env.local file
 // and also configured in your Firebase App Hosting backend settings.
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+  apiKey: checkEnvVar('NEXT_PUBLIC_FIREBASE_API_KEY'),
+  authDomain: checkEnvVar('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'),
+  projectId: checkEnvVar('NEXT_PUBLIC_FIREBASE_PROJECT_ID'),
+  storageBucket: checkEnvVar('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: checkEnvVar('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: checkEnvVar('NEXT_PUBLIC_FIREBASE_APP_ID'),
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID // Optional
 };
 
 let app: FirebaseApp;
