@@ -9,10 +9,19 @@ import { getAnalytics, type Analytics, isSupported } from "firebase/analytics";
 const checkEnvVar = (varName: string): string => {
     const value = process.env[varName];
     if (!value) {
-        const errorMessage = `Firebase config error: Environment variable ${varName} is missing. Please add it to your .env.local file and your Firebase App Hosting backend settings.`;
+        const errorMessage = `
+        ================================================================================
+        Firebase Config Error: A variável de ambiente ${varName} está faltando.
+
+        AÇÃO NECESSÁRIA:
+        1. Verifique se o arquivo '.env.local' existe no diretório raiz do seu projeto.
+        2. Garanta que ele contém a linha: ${varName}="SEU_VALOR_AQUI"
+        3. **IMPORTANTE: Você deve REINICIAR seu servidor de desenvolvimento depois de criar ou alterar o arquivo '.env.local'.**
+        ================================================================================
+        `;
         console.error(errorMessage);
     }
-    return value || ''; // Return empty string to prevent crashing
+    return value || ''; // Retorna string vazia para evitar crash, deixando o SDK do Firebase lidar com o erro final.
 };
 
 
