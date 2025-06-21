@@ -1,35 +1,21 @@
 
 'use client';
 
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { ListFilter, AlertTriangle, Loader2 } from 'lucide-react';
-import { categories, type Offer, mockOffers } from '@/types'; // Import mockOffers
-import CategoryPills from '@/components/offers/CategoryPills';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import AdvancedFiltersSheet from '@/components/map/AdvancedFiltersSheet';
+import { AlertTriangle, Loader2, LayoutGrid, ArrowDownUp } from 'lucide-react';
+import { type Offer, mockOffers } from '@/types';
 import GoogleMapDisplay from '@/components/map/GoogleMapDisplay';
 import { getAllOffers } from '@/lib/firebase/services/offerService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import MapOfferList from '@/components/offers/MapOfferList';
 
 export default function MapPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [isFiltersSheetOpen, setIsFiltersSheetOpen] = useState(false);
-  
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
@@ -55,24 +41,6 @@ export default function MapPage() {
     fetchOffers();
   }, []);
 
-  const handleApplyFilters = (filters: any) => {
-    console.log('Aplicando filtros avançados:', filters);
-    // TODO: Implement actual filtering logic
-    setIsFiltersSheetOpen(false);
-  };
-  
-  const handleClearFilters = () => {
-    console.log('Limpando filtros avançados');
-    setSelectedCategory(''); 
-    // TODO: Clear other filters
-    setIsFiltersSheetOpen(false);
-  };
-
-  const handleSelectCategory = (categoryName: string) => {
-    setSelectedCategory(categoryName);
-    // TODO: Implement filtering by category
-  };
-  
   if (!googleMapsApiKey) {
     return (
       <Card className="m-4 shadow-lg border-destructive/50 bg-destructive/5">
@@ -118,71 +86,45 @@ export default function MapPage() {
     }));
 
   return (
-    <div className="flex flex-col h-full space-y-4">
-       {error && (
-          <Alert variant="destructive" className="mx-4 flex-shrink-0">
+    <div className="flex flex-col h-full bg-background">
+      {error && (
+        <Alert variant="destructive" className="mx-4 my-2 flex-shrink-0">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Aviso de Carregamento</AlertTitle>
             <AlertDescription>
-              {error}
+                {error}
             </AlertDescription>
-          </Alert>
-       )}
+        </Alert>
+      )}
 
-      <div className="flex-grow relative shadow-lg rounded-lg overflow-hidden border mx-4">
-        <GoogleMapDisplay 
+      {/* Map Section */}
+      <div className="flex-grow relative">
+        <GoogleMapDisplay
           apiKey={googleMapsApiKey}
           mapCenter={mapCenter}
           zoom={13}
           markers={markers}
         />
       </div>
-
-      <div className="flex-shrink-0 bg-background border-t">
-        <div className="px-1 py-3 md:px-3 md:py-3">
-          <div className="flex items-center gap-2">
-            <div className="flex-grow">
-              <CategoryPills
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onSelectCategory={handleSelectCategory}
-              />
+      
+      {/* Listings Section */}
+      <div className="flex-shrink-0 bg-card border-t shadow-lg rounded-t-2xl -mt-4 z-10">
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-lg font-bold font-headline">Local Deals Listings</h2>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Grid View">
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Sort">
+                <ArrowDownUp className="h-4 w-4" />
+              </Button>
             </div>
-            <Sheet open={isFiltersSheetOpen} onOpenChange={setIsFiltersSheetOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="shrink-0 mr-4"
-                  aria-label="Abrir filtros avançados"
-                >
-                  <ListFilter size={20} />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="h-[85vh] flex flex-col rounded-t-2xl p-0">
-                <SheetHeader className="px-4 py-3 border-b">
-                  <SheetTitle className="text-lg">Filtros Avançados</SheetTitle>
-                  <SheetDescription>
-                    Refine sua busca para encontrar as melhores ofertas.
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="flex-grow overflow-y-auto">
-                  <AdvancedFiltersSheet onApplyFilters={handleApplyFilters} onClearFilters={handleClearFilters} />
-                </div>
-              </SheetContent>
-            </Sheet>
           </div>
-        </div>
-
-        <div className="py-3 border-t">
-          <h3 className="text-md font-semibold px-4 mb-2">Ofertas Próximas</h3>
-          {offers.length > 0 ? (
-             <p className="px-4 text-sm text-muted-foreground">{offers.length} ofertas encontradas.</p>
-          ) : (
-             <p className="px-4 text-sm text-muted-foreground">Nenhuma oferta encontrada na área.</p>
-          )}
+          <MapOfferList offers={offers} />
         </div>
       </div>
     </div>
   );
 }
+
