@@ -78,7 +78,7 @@ export const createOffer = async (offerData: Omit<Offer, 'id' | 'createdAt' | 'u
 export const getOffer = async (offerId: string): Promise<Offer | null> => {
   if (USE_MOCK_DATA) {
     const offer = mockOfferList.find(o => o.id === offerId) || null;
-    return Promise.resolve(offer);
+    return Promise.resolve(offer ? convertOfferTimestamps(offer) : null);
   }
   // Real implementation
   if (!offerId) return null;
@@ -106,7 +106,7 @@ export const getAllOffers = async (filters?: { category?: string; merchantId?: s
     if (filters?.merchantId) {
         offers = offers.filter(o => o.merchantId === filters.merchantId);
     }
-    return Promise.resolve(offers);
+    return Promise.resolve(offers.map(convertOfferTimestamps));
   }
   // Real implementation
   try {

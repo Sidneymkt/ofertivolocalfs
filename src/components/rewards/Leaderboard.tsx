@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -7,8 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Trophy, TrendingUp, Star, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { User } from '@/types';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase/firebaseConfig';
+import { getLeaderboardUsers } from '@/lib/firebase/services/userService';
 
 interface LeaderboardProps {
   currentUser: User | null; // Pass the current user
@@ -22,33 +20,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
     const fetchLeaderboard = async () => {
       setLoading(true);
       try {
-        const usersRef = collection(db, "users");
-        // Query for top users by points. You might want to add more complex logic for levels too.
-        const q = query(usersRef, orderBy("points", "desc"), limit(10)); // Get top 10
-        const querySnapshot = await getDocs(q);
-        const users: User[] = [];
-        querySnapshot.forEach((doc) => {
-          users.push({ id: doc.id, ...doc.data() } as User);
-        });
+        const topUsers = await getLeaderboardUsers(10);
         
         // Ensure current user is in the list if they are in top N or add them for display
-        if (currentUser && !users.find(u => u.id === currentUser.id)) {
-            // For simplicity, if current user is not in top N, we might fetch them separately
-            // or decide not to show them if they are too far down.
-            // Here, let's try to include them if they exist.
-            // This could be optimized.
-            const currentUserInList = users.find(u => u.id === currentUser.id);
-            if (!currentUserInList) {
-                // A more robust way would be to fetch the user's rank separately.
-                // For now, if they are not in top 10, we just add them to the list to be sorted.
-                // This is a simplified approach.
-                 const tempLeaderboard = [...users, currentUser].sort((a, b) => b.points - a.points);
-                 setLeaderboardData(tempLeaderboard.slice(0,10)); // Still show top N
-            } else {
-                 setLeaderboardData(users);
-            }
+        if (currentUser && !topUsers.find(u => u.id === currentUser.id)) {
+            const tempLeaderboard = [...topUsers, currentUser].sort((a, b) => b.points - a.points);
+            setLeaderboardData(tempLeaderboard.slice(0,10)); // Still show top N
         } else {
-            setLeaderboardData(users);
+            setLeaderboardData(topUsers);
         }
 
       } catch (error) {

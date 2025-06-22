@@ -70,7 +70,7 @@ export const createSweepstake = async (sweepstakeData: Omit<Sweepstake, 'id' | '
 export const getSweepstake = async (sweepstakeId: string): Promise<Sweepstake | null> => {
   if (USE_MOCK_DATA) {
       const sweepstake = mockSweepstakeList.find(s => s.id === sweepstakeId) || null;
-      return Promise.resolve(sweepstake);
+      return Promise.resolve(sweepstake ? convertSweepstakeTimestamps(sweepstake) : null);
   }
   // Real implementation
   if (!sweepstakeId) return null;
@@ -95,7 +95,7 @@ export const getAllSweepstakes = async (filters?: { status?: Sweepstake['status'
     if (filters?.status) {
         sweepstakes = sweepstakes.filter(s => s.status === filters.status);
     }
-    return Promise.resolve(sweepstakes);
+    return Promise.resolve(sweepstakes.map(convertSweepstakeTimestamps));
   }
   // Real implementation
   try {

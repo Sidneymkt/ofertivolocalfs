@@ -1,9 +1,36 @@
 
 import { db } from '@/lib/firebase/firebaseConfig';
 import type { User } from '@/types';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, getDocs, query, where, Timestamp, orderBy, limit } from 'firebase/firestore';
 
 const usersCollection = collection(db, 'users');
+
+const convertUserDocumentData = (data: any): User => {
+  const newUserData = { ...data };
+
+  const convertTimestampsInArray = (arr: any[], dateKey: string) => {
+    if (!Array.isArray(arr)) return arr || []; // Return empty array if undefined/null
+    return arr.map(item => {
+      if (item && item[dateKey] && item[dateKey] instanceof Timestamp) {
+        return { ...item, [dateKey]: item[dateKey].toDate() };
+      }
+      return item;
+    });
+  };
+  
+  if (newUserData.joinDate && newUserData.joinDate instanceof Timestamp) {
+    newUserData.joinDate = newUserData.joinDate.toDate();
+  }
+  
+  newUserData.checkInHistory = convertTimestampsInArray(newUserData.checkInHistory, 'timestamp');
+  newUserData.sharedOffersHistory = convertTimestampsInArray(newUserData.sharedOffersHistory, 'timestamp');
+  newUserData.sweepstakeParticipations = convertTimestampsInArray(newUserData.sweepstakeParticipations, 'timestamp');
+  newUserData.commentsMade = convertTimestampsInArray(newUserData.commentsMade, 'timestamp');
+  newUserData.badges = convertTimestampsInArray(newUserData.badges, 'unlockedDate');
+
+  return newUserData as User;
+};
+
 
 export const createUserProfile = async (userId: string, userData: Omit<User, 'id' | 'joinDate'> & { joinDate?: Timestamp }): Promise<void> => {
   const userRef = doc(db, 'users', userId);
@@ -35,32 +62,7 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
   try {
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      const userData = userSnap.data() as any; // Use any to avoid TS errors during conversion
-
-      // Helper function to convert timestamps in an array of objects
-      const convertTimestampsInArray = (arr: any[], dateKey: string) => {
-        if (!Array.isArray(arr)) return arr;
-        return arr.map(item => {
-          if (item && item[dateKey] && item[dateKey] instanceof Timestamp) {
-            return { ...item, [dateKey]: item[dateKey].toDate() };
-          }
-          return item;
-        });
-      };
-      
-      // Convert all known timestamp fields
-      if (userData.joinDate && userData.joinDate instanceof Timestamp) {
-        userData.joinDate = userData.joinDate.toDate();
-      }
-      
-      // Arrays
-      userData.checkInHistory = convertTimestampsInArray(userData.checkInHistory, 'timestamp');
-      userData.sharedOffersHistory = convertTimestampsInArray(userData.sharedOffersHistory, 'timestamp');
-      userData.sweepstakeParticipations = convertTimestampsInArray(userData.sweepstakeParticipations, 'timestamp');
-      userData.commentsMade = convertTimestampsInArray(userData.commentsMade, 'timestamp');
-      userData.badges = convertTimestampsInArray(userData.badges, 'unlockedDate');
-
-      return { ...userData, id: userSnap.id } as User;
+      return convertUserDocumentData({ ...userSnap.data(), id: userSnap.id });
     } else {
       console.log("No such user profile!");
       return null;
@@ -70,6 +72,19 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
     throw error;
   }
 };
+
+export const getLeaderboardUsers = async (count: number): Promise<User[]> => {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, orderBy("points", "desc"), limit(count));
+    try {
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => convertUserDocumentData({ ...doc.data(), id: doc.id }));
+    } catch (error) {
+        console.error("Error fetching leaderboard users: ", error);
+        throw error;
+    }
+};
+
 
 export const updateUserProfile = async (userId: string, data: Partial<User>): Promise<void> => {
   const userRef = doc(db, 'users', userId);
