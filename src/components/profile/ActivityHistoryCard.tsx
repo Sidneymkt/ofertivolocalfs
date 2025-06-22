@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -28,8 +27,15 @@ const ActivityItem: React.FC<{
 
   useEffect(() => {
     if (timestamp) {
-      // Now receives a JS Date object from the sanitized user profile.
-      setFormattedDate(format(new Date(timestamp), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
+      const dateToFormat = timestamp && typeof (timestamp as any).toDate === 'function' 
+        ? (timestamp as Timestamp).toDate() 
+        : new Date(timestamp as Date);
+
+      if (!isNaN(dateToFormat.getTime())) {
+        setFormattedDate(format(dateToFormat, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
+      } else {
+        setFormattedDate('Data inválida');
+      }
     } else {
       setFormattedDate('Data indisponível');
     }
@@ -68,9 +74,9 @@ const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
     ...(user.sweepstakeParticipations || []).map(item => ({ ...item, type: 'sweepstake', isGain: false, icon: Ticket, iconColor: 'text-orange-500' })),
     ...(user.commentsMade || []).filter(c => c.pointsEarned).map(item => ({ ...item, offerTitle: `Comentário em: ${item.offerTitle}`, type: 'comment', isGain: true, icon: MessageSquare, iconColor: 'text-purple-500' })),
   ].sort((a, b) => {
-      const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-      const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-      return dateB - dateA;
+      const dateA = a.timestamp ? (a.timestamp as any).toDate ? (a.timestamp as Timestamp).toDate() : new Date(a.timestamp as Date) : new Date(0);
+      const dateB = b.timestamp ? (b.timestamp as any).toDate ? (b.timestamp as Timestamp).toDate() : new Date(b.timestamp as Date) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
   });
 
 
@@ -107,14 +113,14 @@ const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
             <TabsContent value="general">
               {allActivities.length > 0 ? (
                 <ul className="space-y-3">
-                  {allActivities.map(item => (
+                  {allActivities.map((item, index) => (
                     <ActivityItem
-                      key={`${item.type}-${item.id}`}
+                      key={`${item.type}-${item.id || index}`}
                       title={item.type === 'sweepstake' ? item.sweepstakeTitle : item.offerTitle}
                       subtitle={item.type === 'checkin' ? `Em: ${item.merchantName}` : item.type === 'share' ? `Plataforma: ${item.platform}` : undefined}
                       timestamp={item.timestamp}
                       points={item.type === 'sweepstake' ? item.pointsSpent : item.pointsEarned}
-                      isGain={item.isGain ?? false} // Ensure isGain has a default
+                      isGain={item.isGain ?? false}
                       icon={item.icon}
                       iconColor={item.iconColor}
                     />

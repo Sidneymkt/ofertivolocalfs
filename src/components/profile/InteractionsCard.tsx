@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -31,10 +30,12 @@ const CommentItem: React.FC<{ comment: Comment }> = ({ comment }) => {
 
     useEffect(() => {
         if (comment.timestamp) {
-            // The timestamp is now a JS Date object from the service layer.
-            const date = new Date(comment.timestamp);
-            if (!isNaN(date.getTime())) {
-                setFormattedDate(format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
+            const dateToFormat = comment.timestamp && typeof (comment.timestamp as any).toDate === 'function'
+                ? (comment.timestamp as Timestamp).toDate()
+                : new Date(comment.timestamp as Date);
+            
+            if (!isNaN(dateToFormat.getTime())) {
+                setFormattedDate(format(dateToFormat, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
             } else {
                 setFormattedDate('Data inválida');
             }
