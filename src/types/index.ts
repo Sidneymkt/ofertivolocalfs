@@ -82,7 +82,7 @@ export interface Offer {
 
   terms?: string;
   visibility: "normal" | "destaque" | "sorteio";
-  status: 'active' | 'pending_approval' | 'expired' | 'draft' | 'rejected'; // pending_approval replacing awaiting_approval
+  status: 'active' | 'pending_approval' | 'expired' | 'draft' | 'rejected' | 'awaiting_approval';
 
   timeLimit?: string; 
   isPresentialOnly?: boolean; 
@@ -329,17 +329,22 @@ export const serverTimestamp = fsServerTimestamp;
     
 // --- MOCK DATA ---
 
+const now = new Date();
+const oneWeek = 7 * 24 * 60 * 60 * 1000;
+
 export const mockUser: User = {
   id: 'user-mock-123',
   name: 'Bruno Costa',
   email: 'bruno.costa@example.com',
   avatarUrl: 'https://placehold.co/100x100.png?text=BC',
   avatarHint: 'person avatar',
+  coverPhotoUrl: 'https://placehold.co/600x200.png',
+  coverPhotoHint: 'abstract background',
   points: 1250,
   level: 'Prata',
   currentXp: 750,
   xpToNextLevel: 1500,
-  joinDate: new Timestamp(1672531200, 0), // Jan 1, 2023
+  joinDate: Timestamp.fromDate(new Date('2023-01-01T12:00:00Z')),
   isAdvertiser: false,
   status: 'active',
   isProfileComplete: true,
@@ -348,8 +353,8 @@ export const mockUser: User = {
   favoriteOffers: ['offer-pizza-1', 'offer-barber-2'],
   followedMerchants: ['advertiser-pizzaria-123'],
   badges: [
-    { id: 'b1', name: 'Explorador', icon: 'Star', description: 'Realizou o primeiro check-in!', unlockedDate: new Date(), 'data-ai-hint': 'star badge' },
-    { id: 'b2', name: 'Social', icon: 'Users', description: 'Compartilhou 5 ofertas!', unlockedDate: new Date(), 'data-ai-hint': 'people group' },
+    { id: 'b1', name: 'Explorador', icon: 'Star', description: 'Realizou o primeiro check-in!', unlockedDate: Timestamp.fromDate(new Date()), 'data-ai-hint': 'star badge' },
+    { id: 'b2', name: 'Social', icon: 'Users', description: 'Compartilhou 5 ofertas!', unlockedDate: Timestamp.fromDate(new Date()), 'data-ai-hint': 'people group' },
   ],
   checkInHistory: [
       { id: 'chk1', userId: 'user-mock-123', offerId: 'offer-barber-2', offerTitle: 'Corte + Barba por Preço Especial', merchantId: 'adv-mock-2', merchantName: 'Barbearia Navalha', timestamp: Timestamp.fromDate(new Date()), pointsEarned: 10 },
@@ -376,26 +381,26 @@ export const mockAdvertiserUser: User = {
   businessLogoHint: 'pizza restaurant',
   advertiserStatus: 'active',
   advertiserPlan: 'pro',
-  points: 0, // Advertisers don't usually have points
-  level: '',
+  points: 0,
+  level: 'N/A',
   currentXp: 0,
   xpToNextLevel: 0,
-  joinDate: new Timestamp(1675209600, 0), // Feb 1, 2023
+  joinDate: Timestamp.fromDate(new Date('2023-02-01T12:00:00Z')),
 };
 
 
 export const mockUserList: User[] = [
-    { ...mockUser, id: 'user-mock-1', name: 'Ana Clara Explorer', email: 'anaclara@exemplo.com', avatarUrl: 'https://placehold.co/100x100.png?text=AE', points: 2500, level: 'Ouro', status: 'active', joinDate: new Timestamp(1672531200, 0)},
-    { ...mockUser, id: 'user-mock-2', name: 'Daniela Silva', email: 'daniela.s@test.dev', avatarUrl: 'https://placehold.co/100x100.png?text=DS', points: 800, level: 'Prata', status: 'active', joinDate: new Timestamp(1675209600, 0)},
-    { ...mockUser, id: 'user-mock-3', name: 'Fernando Lima', email: 'fernando.lima@email.com', avatarUrl: 'https://placehold.co/100x100.png?text=FL', points: 150, level: 'Bronze', status: 'suspended', joinDate: new Timestamp(1677628800, 0)},
-    { ...mockUser, id: 'user-mock-4', name: 'Gabriela Souza', email: 'gabriela.s@provider.com', avatarUrl: 'https://placehold.co/100x100.png?text=GS', points: 4500, level: 'Ouro', status: 'active', joinDate: new Timestamp(1680307200, 0) },
+    { ...mockUser, id: 'user-mock-1', name: 'Ana Clara Explorer', email: 'anaclara@exemplo.com', avatarUrl: 'https://placehold.co/100x100.png?text=AE', points: 2500, level: 'Ouro', status: 'active', joinDate: Timestamp.fromDate(new Date('2023-01-01T10:00:00Z')) },
+    { ...mockUser, id: 'user-mock-2', name: 'Daniela Silva', email: 'daniela.s@test.dev', avatarUrl: 'https://placehold.co/100x100.png?text=DS', points: 800, level: 'Prata', status: 'active', joinDate: Timestamp.fromDate(new Date('2023-02-01T11:00:00Z')) },
+    { ...mockUser, id: 'user-mock-3', name: 'Fernando Lima', email: 'fernando.lima@email.com', avatarUrl: 'https://placehold.co/100x100.png?text=FL', points: 150, level: 'Bronze', status: 'suspended', joinDate: Timestamp.fromDate(new Date('2023-03-01T12:00:00Z')) },
+    { ...mockUser, id: 'user-mock-4', name: 'Gabriela Souza', email: 'gabriela.s@provider.com', avatarUrl: 'https://placehold.co/100x100.png?text=GS', points: 4500, level: 'Ouro', status: 'active', joinDate: Timestamp.fromDate(new Date('2023-04-01T13:00:00Z')) },
 ];
 
 export const mockAdvertiserList: User[] = [
-    { ...mockAdvertiserUser, id: 'adv-mock-1', businessName: 'Pizzaria Divina', responsibleName: 'Roberto Silva', advertiserStatus: 'active', advertiserPlan: 'pro', joinDate: new Timestamp(1672531200, 0) },
-    { ...mockAdvertiserUser, id: 'adv-mock-2', businessName: 'Barbearia Navalha', responsibleName: 'Marcos Andrade', advertiserStatus: 'pending_verification', advertiserPlan: 'trial', joinDate: new Timestamp(1675209600, 0) },
-    { ...mockAdvertiserUser, id: 'adv-mock-3', businessName: 'Sushi House', responsibleName: 'Juliana Tanaka', advertiserStatus: 'active', advertiserPlan: 'premium', joinDate: new Timestamp(1677628800, 0) },
-    { ...mockAdvertiserUser, id: 'adv-mock-4', businessName: 'Point do Açaí', responsibleName: 'Lucas Ferreira', advertiserStatus: 'suspended', advertiserPlan: 'basic', joinDate: new Timestamp(1680307200, 0) },
+    { ...mockAdvertiserUser, id: 'adv-mock-1', businessName: 'Pizzaria Divina', responsibleName: 'Roberto Silva', advertiserStatus: 'active', advertiserPlan: 'pro', joinDate: Timestamp.fromDate(new Date('2023-01-01T10:00:00Z')) },
+    { ...mockAdvertiserUser, id: 'adv-mock-2', businessName: 'Barbearia Navalha', responsibleName: 'Marcos Andrade', advertiserStatus: 'pending_verification', advertiserPlan: 'trial', joinDate: Timestamp.fromDate(new Date('2023-02-01T11:00:00Z')) },
+    { ...mockAdvertiserUser, id: 'adv-mock-3', businessName: 'Sushi House', responsibleName: 'Juliana Tanaka', advertiserStatus: 'active', advertiserPlan: 'premium', joinDate: Timestamp.fromDate(new Date('2023-03-01T12:00:00Z')) },
+    { ...mockAdvertiserUser, id: 'adv-mock-4', businessName: 'Point do Açaí', responsibleName: 'Lucas Ferreira', advertiserStatus: 'suspended', advertiserPlan: 'basic', joinDate: Timestamp.fromDate(new Date('2023-04-01T13:00:00Z')) },
 ];
 
 export const mockAdminMetrics: AdminMetricItem[] = [
@@ -406,9 +411,6 @@ export const mockAdminMetrics: AdminMetricItem[] = [
     { title: "Receita (Mês)", value: "R$ 4,520", icon: DollarSign, change: "+8%", bgColorClass: 'bg-indigo-500/10' },
     { title: "Tickets de Suporte", value: "12", icon: HelpCircle, change: "2 Abertos", bgColorClass: 'bg-red-500/10' },
 ];
-
-const now = new Date();
-const oneWeek = 7 * 24 * 60 * 60 * 1000;
 
 export const mockOfferList: Offer[] = [
   {
@@ -434,7 +436,7 @@ export const mockOfferList: Offer[] = [
     reviews: 32,
     createdBy: 'adv-mock-1',
     createdAt: Timestamp.fromDate(new Date(now.getTime() - oneWeek)),
-    updatedAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.now(),
     latitude: -3.099,
     longitude: -59.983,
   },
@@ -453,7 +455,7 @@ export const mockOfferList: Offer[] = [
     discountedPrice: 50.00,
     comboItem1: "Corte de cabelo (tesoura ou máquina)",
     comboItem2: "Barba modelada com toalha quente",
-    validityStartDate: Timestamp.fromDate(now),
+    validityStartDate: Timestamp.now(),
     validityEndDate: Timestamp.fromDate(new Date(now.getTime() + 2 * oneWeek)),
     usersUsedCount: 45,
     visibility: 'normal',
@@ -461,8 +463,8 @@ export const mockOfferList: Offer[] = [
     rating: 4.9,
     reviews: 15,
     createdBy: 'adv-mock-2',
-    createdAt: Timestamp.fromDate(new Date()),
-    updatedAt: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
     latitude: -3.101,
     longitude: -59.985,
   },
@@ -480,16 +482,16 @@ export const mockOfferList: Offer[] = [
     originalPrice: 25.00,
     discountedPrice: 12.50,
     timeLimit: '22:00',
-    validityStartDate: Timestamp.fromDate(now),
-    validityEndDate: Timestamp.fromDate(now),
+    validityStartDate: Timestamp.now(),
+    validityEndDate: Timestamp.now(),
     usersUsedCount: 78,
     visibility: 'destaque',
     status: 'active',
     rating: 4.5,
     reviews: 21,
     createdBy: 'adv-mock-4',
-    createdAt: Timestamp.fromDate(new Date()),
-    updatedAt: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
     latitude: -3.095,
     longitude: -59.990,
   },
@@ -515,8 +517,8 @@ export const mockOfferList: Offer[] = [
     rating: 5.0,
     reviews: 55,
     createdBy: 'adv-mock-3',
-    createdAt: Timestamp.fromDate(new Date()),
-    updatedAt: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
     latitude: -3.110,
     longitude: -59.980,
   },

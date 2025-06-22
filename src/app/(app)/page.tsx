@@ -38,14 +38,19 @@ export default function FeedPage() {
     fetchData();
   }, []);
 
+  const getSortableDate = (dateInput: Date | Timestamp): number => {
+    if (dateInput instanceof Timestamp) {
+      return dateInput.toMillis();
+    }
+    // Handles cases where the date might already be a JS Date object
+    return new Date(dateInput).getTime();
+  };
+
+
   const featuredOffers = useMemo(() => {
     return allOffers
       .filter(offer => offer.visibility === 'destaque')
-      .sort((a,b) => {
-        const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
-        const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
-        return dateB - dateA;
-      })
+      .sort((a,b) => getSortableDate(b.createdAt) - getSortableDate(a.createdAt))
       .slice(0, 5); // Show up to 5 featured offers
   }, [allOffers]);
 
@@ -68,11 +73,7 @@ export default function FeedPage() {
       );
     }
     
-    return offers.sort((a, b) => {
-        const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
-        const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
-        return dateB - dateA;
-    });
+    return offers.sort((a, b) => getSortableDate(b.createdAt) - getSortableDate(a.createdAt));
   }, [searchTerm, selectedCategory, allOffers, featuredOffers]);
 
 

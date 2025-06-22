@@ -44,7 +44,15 @@ export const createOffer = async (offerData: Omit<Offer, 'id' | 'createdAt' | 'u
   if (USE_MOCK_DATA) {
     console.log("Mock createOffer called with:", offerData);
     const newId = `mock-offer-${Date.now()}`;
-    const newOffer = { ...offerData, id: newId, createdAt: new Date(), updatedAt: new Date(), usersUsedCount: 0, reviews: 0, rating: 0 };
+    const newOffer = { 
+      ...offerData, 
+      id: newId, 
+      createdAt: Timestamp.now(), 
+      updatedAt: Timestamp.now(), 
+      usersUsedCount: 0, 
+      reviews: 0, 
+      rating: 0 
+    };
     mockOfferList.unshift(newOffer as Offer);
     return Promise.resolve(newId);
   }
@@ -125,7 +133,7 @@ export const updateOffer = async (offerId: string, data: Partial<Omit<Offer, 'id
   if (USE_MOCK_DATA) {
       const offerIndex = mockOfferList.findIndex(o => o.id === offerId);
       if (offerIndex !== -1) {
-          mockOfferList[offerIndex] = { ...mockOfferList[offerIndex], ...data, updatedAt: new Date() } as Offer;
+          mockOfferList[offerIndex] = { ...mockOfferList[offerIndex], ...data, updatedAt: Timestamp.now() } as Offer;
           console.log("Mock updateOffer called for:", offerId, " with:", data);
       }
       return Promise.resolve();
@@ -156,7 +164,7 @@ export const addCommentToOffer = async (offerId: string, commentData: Omit<Comme
             const newComment = {
                 ...commentData,
                 id: `mock-comment-${Date.now()}`,
-                timestamp: new Date(),
+                timestamp: Timestamp.now(),
             } as Comment;
             // This is simplified. In a real app, comments would be a subcollection.
             // We're not storing them on the mock offer object itself.

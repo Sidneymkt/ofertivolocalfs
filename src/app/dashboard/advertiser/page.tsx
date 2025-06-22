@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { auth } from '@/lib/firebase/firebaseConfig';
 import { getUserProfile } from '@/lib/firebase/services/userService';
 import { getOffersByMerchant } from '@/lib/firebase/services/offerService';
@@ -63,6 +63,33 @@ export default function AdvertiserDashboardPage() {
     return () => unsubscribe();
   }, [router, toast]);
 
+  const metrics = useMemo<AdvertiserMetricItem[]>(() => {
+    if (!advertiser || !offers) return [];
+
+    const checkInsValidated = offers.reduce((sum, offer) => sum + (offer.usersUsedCount || 0), 0);
+    const clicksInOffers = offers.reduce((sum, offer) => sum + (offer.reviews || 0) * 3, 0); // Mocking clicks
+    const totalPointsDistributed = offers.reduce((sum, offer) => {
+      const uses = offer.usersUsedCount || 0;
+      const pointsPerUse = (offer.pointsForCheckin || 0) + (offer.pointsForRating || 0) + (offer.pointsForShare || 0);
+      return sum + (uses * pointsPerUse);
+    }, 0);
+
+    const currentPlan = advertiser.advertiserPlan || 'trial';
+    const planDetails = ADVERTISER_PLAN_DETAILS[currentPlan];
+    
+    // Placeholder logic for ROI, should be replaced with real calculation
+    const estimatedROI = checkInsValidated * (offers[0]?.discountedPrice || 20) * 0.2; 
+
+    return [
+      { title: 'Visualizações do Perfil', value: '1.2K', icon: Eye, trend: '+15%' }, // Placeholder
+      { title: 'Cliques em Ofertas', value: clicksInOffers, icon: MousePointerClick, trend: '+8%' }, // Semi-real
+      { title: 'Check-ins Validados', value: checkInsValidated, icon: CheckCircle, trend: '+5%' }, // Real
+      { title: 'Seguidores', value: advertiser.followedMerchants?.length || '350', icon: Users, trend: '+20' }, // Placeholder
+      { title: 'Pontos Distribuídos (Mês)', value: `${totalPointsDistributed} / 1000`, icon: Coins, description: `Plano: ${planDetails.name}` }, // Semi-real
+      { title: 'ROI Estimado (Mês)', value: `R$ ${estimatedROI.toFixed(2)}`, icon: TrendingUp, trend: '+10%' }, // Placeholder
+    ];
+  }, [advertiser, offers]);
+
   if (error) {
     return <FirestoreConnectionError message={error} />;
   }
@@ -78,19 +105,6 @@ export default function AdvertiserDashboardPage() {
   const advertiserName = advertiser.businessName || "Meu Negócio";
   const currentPlan = advertiser.advertiserPlan || 'trial';
   const currentPlanDetails = ADVERTISER_PLAN_DETAILS[currentPlan];
-
-  // Derive metrics from real data where possible
-  const checkInsValidated = offers.reduce((sum, offer) => sum + (offer.usersUsedCount || 0), 0);
-  const clicksInOffers = offers.reduce((sum, offer) => sum + (offer.reviews || 0) * 3, 0); // Mocking clicks based on reviews
-  
-  const metrics: AdvertiserMetricItem[] = [
-    { title: 'Visualizações do Perfil', value: '1.2K', icon: Eye, trend: '+15%' }, // Placeholder
-    { title: 'Cliques em Ofertas', value: clicksInOffers, icon: MousePointerClick, trend: '+8%' }, // Semi-real
-    { title: 'Check-ins Validados', value: checkInsValidated, icon: CheckCircle, trend: '+5%' }, // Real
-    { title: 'Seguidores', value: '350', icon: Users, trend: '+20' }, // Placeholder
-    { title: 'Pontos Distribuídos (Mês)', value: '650 / 1000', icon: Coins, description: `Plano: ${currentPlanDetails.name}` }, // Placeholder
-    { title: 'ROI Estimado (Mês)', value: 'R$ 1.500', icon: TrendingUp, trend: '+10%' }, // Placeholder
-  ];
 
   const publishedOffers: PublishedOfferSummary[] = offers.map(offer => ({
     id: offer.id!,

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -7,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tag, Clock, ShieldCheck, AlertTriangle, ChevronDown, ChevronUp, Info, Package, CheckCheck, LocateFixed, UserCheck, QrCode, Smartphone, Zap } from 'lucide-react';
 import { offerTypes } from '@/types'; // Import offerTypes to get details
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
 
@@ -28,11 +29,8 @@ const OfferInfoSection: React.FC<OfferInfoSectionProps> = ({ offer }) => {
   const getJsDate = (dateInput: Date | Timestamp | undefined): Date | null => {
       if (!dateInput) return null;
       if (dateInput instanceof Timestamp) return dateInput.toDate();
-      // It might already be a Date object from a previous conversion
-      if (dateInput instanceof Date) return dateInput; 
-      // Fallback for string dates (less ideal)
-      const parsedDate = new Date(dateInput as any);
-      return !isNaN(parsedDate.getTime()) ? parsedDate : null;
+      const date = new Date(dateInput as any);
+      return isValid(date) ? date : null;
   };
 
   const startDate = getJsDate(offer.validityStartDate);

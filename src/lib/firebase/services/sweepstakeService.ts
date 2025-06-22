@@ -204,7 +204,7 @@ export const addWinnersToSweepstake = async (sweepstakeId: string, winners: Swee
        if (sweepstakeIndex !== -1) {
            mockSweepstakeList[sweepstakeIndex].status = 'drawing_complete';
            mockSweepstakeList[sweepstakeIndex].isDrawn = true;
-           mockSweepstakeList[sweepstakeIndex].drawDate = new Date();
+           mockSweepstakeList[sweepstakeIndex].drawDate = Timestamp.now();
        }
        return Promise.resolve();
    }

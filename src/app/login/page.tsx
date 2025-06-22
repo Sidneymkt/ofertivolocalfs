@@ -16,7 +16,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, LogIn, Eye, EyeOff, Loader2 as SpinnerIcon } from 'lucide-react';
 import { auth } from '@/lib/firebase/firebaseConfig';
-import { signInWithEmailAndPassword, type User as FirebaseUser } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { getUserProfile } from '@/lib/firebase/services/userService';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
@@ -45,23 +46,28 @@ export default function LoginPage() {
   const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
     setIsSubmitting(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
+      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      const user = userCredential.user;
+
+      // Fetch user profile from Firestore to check their role
+      const userProfile = await getUserProfile(user.uid);
+      
       toast({
         title: "Login realizado com sucesso!",
-        description: `Bem-vindo(a) de volta! Redirecionando...`,
+        description: `Bem-vindo(a) de volta, ${userProfile?.name || 'usuário'}! Redirecionando...`,
       });
-      // TODO: Store user session globally (e.g., React Context, Zustand, Redux)
-      if (activeTab === 'user') {
-        router.push('/'); // Feed para usuário
+
+      // Redirect based on the profile, not the selected tab
+      if (userProfile?.isAdvertiser) {
+        router.push('/dashboard/advertiser');
       } else {
-        // Here, you might want to check if the user actually IS an advertiser from Firestore
-        router.push('/dashboard/advertiser'); // Painel para anunciante
+        router.push('/'); // Default to user feed
       }
+
     } catch (error: any) {
       console.error("Login error:", error);
       let errorMessage = "Ocorreu um erro ao tentar fazer login. Tente novamente.";
-      // The 'auth/invalid-credential' code is the modern way Firebase signals a wrong email or password.
-      if (error.code === 'auth/invalid-credential') {
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         errorMessage = "E-mail ou senha inválidos. Por favor, verifique seus dados e tente novamente.";
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = "O formato do e-mail é inválido.";

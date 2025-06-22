@@ -24,7 +24,7 @@ import {
   AlertCircle, CheckCircle, Info, QrCode as QrCodeIconLucide, Smartphone, UserCheck, CheckCheck as CheckCheckIcon, Package as PackageIcon, LocateFixed, Building as BuildingIcon,
   Zap as ZapIcon, AlertTriangle, Loader2 as SpinnerIcon, FileText, Star as StarIcon, ArrowLeft
 } from 'lucide-react';
-import { format, parse } from 'date-fns';
+import { format, parse, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -47,6 +47,12 @@ const DynamicClientQRCode = dynamic(() => import('@/components/common/ClientQRCo
   ),
 });
 
+const getJsDate = (dateInput: Date | Timestamp | undefined | null): Date | null => {
+    if (!dateInput) return null;
+    if (dateInput instanceof Timestamp) return dateInput.toDate();
+    const date = new Date(dateInput as any);
+    return isValid(date) ? date : null;
+};
 
 const offerFormSchemaBase = z.object({
   offerType: z.custom<OfferTypeId>(
@@ -237,12 +243,13 @@ export default function CreateOfferPage() {
             // Edit mode
             const offerToEdit = await getOffer(editOfferId);
             if (offerToEdit && offerToEdit.merchantId === userAuth.uid) {
-              reset({
+              const resetData = {
                 ...offerToEdit,
-                validityStartDate: offerToEdit.validityStartDate instanceof Timestamp ? offerToEdit.validityStartDate.toDate() : new Date(offerToEdit.validityStartDate),
-                validityEndDate: offerToEdit.validityEndDate instanceof Timestamp ? offerToEdit.validityEndDate.toDate() : new Date(offerToEdit.validityEndDate),
+                validityStartDate: getJsDate(offerToEdit.validityStartDate),
+                validityEndDate: getJsDate(offerToEdit.validityEndDate),
                 images: [], // Files are handled separately
-              });
+              };
+              reset(resetData);
               setExistingImageUrls(offerToEdit.galleryImages || (offerToEdit.imageUrl ? [offerToEdit.imageUrl] : []));
             } else {
               toast({ title: "Erro", description: "Oferta não encontrada ou não pertence a você.", variant: "destructive" });
@@ -975,7 +982,7 @@ export default function CreateOfferPage() {
                             </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar mode="single" selected={field.value || undefined} onSelect={field.onChange} disabled={(date) => date < (form.getValues("validityStartDate") || new Date(new Date().setHours(0,0,0,0))) } initialFocus />
+                            <Calendar mode="single" selected={field.value || undefined} onSelect={field.onChange} disabled={(date) => date < (getJsDate(form.getValues("validityStartDate")) || new Date(new Date().setHours(0,0,0,0))) } initialFocus />
                         </PopoverContent>
                         </Popover>
                         <FormMessage />
