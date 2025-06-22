@@ -3,6 +3,7 @@
 
 import type { Offer } from '@/types';
 import FeaturedOfferCard from './FeaturedOfferCard';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface FeaturedOffersListProps {
   offers: Offer[];
@@ -13,15 +14,20 @@ const FeaturedOffersList: React.FC<FeaturedOffersListProps> = ({ offers }) => {
     return null; 
   }
 
-  // To match the new design, we'll render just the first featured offer as a large banner.
-  const mainBannerOffer = offers[0];
-
   return (
-    <div className="space-y-4">
-        <FeaturedOfferCard 
-            key={mainBannerOffer.id} 
-            offer={mainBannerOffer}
-        />
+    <div className="relative">
+      <ScrollArea>
+        <div className="flex space-x-4 pb-4">
+          {offers.map((offer) => (
+            <FeaturedOfferCard
+              key={offer.id}
+              offer={offer}
+              className="w-[80vw] max-w-[320px] sm:w-[350px] sm:max-w-none md:w-[400px]" // Responsive widths
+            />
+          ))}
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
     </div>
   );
 };

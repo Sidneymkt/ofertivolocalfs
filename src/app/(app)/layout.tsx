@@ -11,7 +11,7 @@ export default function AppLayout({
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex flex-col flex-grow pb-20"> 
+      <main className="flex flex-col flex-grow pb-20 bg-gradient-to-b from-muted/50 to-background"> 
         {children}
       </main>
       <BottomNavigationBar />

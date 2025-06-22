@@ -46,7 +46,7 @@ export default function FeedPage() {
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
         return dateB - dateA;
       })
-      .slice(0, 1); // Only take the most recent featured offer for the banner
+      .slice(0, 5); // Show up to 5 featured offers
   }, [allOffers]);
 
   const filteredOffers = useMemo(() => {
@@ -117,7 +117,7 @@ export default function FeedPage() {
 
         {featuredOffers.length > 0 && (
           <section>
-            <h2 className="text-2xl font-semibold font-headline mb-4">Oferta em Destaque</h2>
+            <h2 className="text-2xl font-semibold font-headline mb-4">Ofertas em Destaque</h2>
             <FeaturedOffersList offers={featuredOffers} />
           </section>
         )}
