@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useCallback, useState, useMemo, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
@@ -185,7 +186,7 @@ const GoogleMapDisplay = forwardRef<GoogleMapDisplayHandle, GoogleMapDisplayProp
           mapTypeControl: false,
           fullscreenControl: false,
           zoomControl: true,
-          gestureHandling: 'cooperative',
+          gestureHandling: 'greedy',
         }}
       >
         {memoizedMarkers.map((marker) => (

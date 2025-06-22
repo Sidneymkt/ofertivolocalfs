@@ -185,17 +185,18 @@ export default function MapPage() {
     }));
 
   return (
-    <div className="absolute top-16 left-0 right-0 bottom-0">
-      <GoogleMapDisplay
-        ref={mapDisplayRef}
-        apiKey={googleMapsApiKey}
-        mapCenter={mapCenter}
-        zoom={13}
-        markers={markers}
-      />
+    <div className="h-full flex flex-col">
+      <div className="flex-grow">
+        <GoogleMapDisplay
+          ref={mapDisplayRef}
+          apiKey={googleMapsApiKey}
+          mapCenter={mapCenter}
+          zoom={13}
+          markers={markers}
+        />
+      </div>
 
-      {/* Offer list as an overlay at the bottom, positioned above the BottomNavigationBar */}
-      <div className="absolute bottom-16 left-0 right-0 z-10 bg-card/90 backdrop-blur-sm border-t shadow-lg p-4">
+      <div className="shrink-0 bg-card/90 backdrop-blur-sm border-t shadow-lg p-4">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
           <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
