@@ -31,11 +31,7 @@ export default function FeedPage() {
 
       } catch (err: any) {
         console.error("Error fetching data for feed:", err);
-        if (err.message.includes("offline") || err.message.includes("Failed to get document")) {
-            setError("Não foi possível conectar ao banco de dados. Verifique se o Firestore está habilitado e se o 'projectId' do Firebase está configurado corretamente no seu ambiente.");
-        } else {
-            setError("Ocorreu um erro ao carregar as ofertas. Tente novamente mais tarde.");
-        }
+        setError(err.message || "Ocorreu um erro ao carregar as ofertas. Tente novamente mais tarde.");
       }
       setLoading(false);
     };
@@ -94,7 +90,7 @@ export default function FeedPage() {
   }
 
   if (error) {
-    return <FirestoreConnectionError />;
+    return <FirestoreConnectionError message={error} />;
   }
 
   return (

@@ -28,11 +28,7 @@ export default function MapPage() {
         setOffers(fetchedOffers);
       } catch (err: any) {
         console.error("Error fetching offers for map:", err);
-        if (err.message.includes("offline") || err.message.includes("Failed to get document")) {
-            setError("Não foi possível conectar ao banco de dados. Verifique suas configurações do Firebase.");
-        } else {
-            setError("Não foi possível carregar os dados das ofertas. Verifique sua conexão e tente novamente.");
-        }
+        setError(err.message || "Não foi possível carregar os dados das ofertas. Verifique sua conexão e tente novamente.");
         setOffers([]);
       }
       setLoading(false);
@@ -42,7 +38,7 @@ export default function MapPage() {
   }, []);
 
   if (error) {
-     return <FirestoreConnectionError />;
+     return <FirestoreConnectionError message={error} />;
   }
 
   if (loading) {
