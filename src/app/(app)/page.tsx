@@ -111,65 +111,66 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="space-y-6 md:space-y-8 pb-4">
-      {featuredOffers.length > 0 && (
-        <section className="space-y-3">
-           <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Destaques Imperdíveis</h2>
-          <FeaturedOffersList offers={featuredOffers} />
-        </section>
-      )}
+    <div className="container mx-auto">
+      <div className="space-y-6 md:space-y-8 pb-4">
+        {featuredOffers.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Destaques Imperdíveis</h2>
+            <FeaturedOffersList offers={featuredOffers} />
+          </section>
+        )}
 
-      <div className="px-4 md:px-0 mt-6 mb-2">
-        <div className="relative">
-          <SearchIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar ofertas, produtos, negócios..."
-            className="pl-10 w-full h-11 rounded-lg bg-card shadow-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="px-4 md:px-0 mt-6 mb-2">
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar ofertas, produtos, negócios..."
+              className="pl-10 w-full h-11 rounded-lg bg-card shadow-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
+        
+        <CategoryPills
+          categories={categories} 
+          selectedCategory={selectedCategory}
+          onSelectCategory={handleSelectCategory}
+        />
+
+        {featuredMerchants.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Comerciantes em Destaque</h2>
+            <FeaturedMerchantsList merchants={featuredMerchants.map(m => ({
+              id: m.id!,
+              name: m.businessName || m.name,
+              logoUrl: m.businessLogoUrl || `https://placehold.co/100x100.png`,
+              'data-ai-hint': m.businessLogoHint || 'store logo',
+              category: m.businessCategory
+            }))} />
+          </section>
+        )}
+
+        {filteredOffers.length > 0 && (
+          <section className="space-y-3 px-4 md:px-0">
+            <h2 className="text-xl font-semibold font-headline">Ofertas Recentes</h2>
+            <OfferList offers={filteredOffers} />
+          </section>
+        )}
+
+        {allOffers.length === 0 && !loading && !error && ( 
+          <div className="text-center text-muted-foreground py-10 px-4 md:px-0">
+              <Megaphone className="mx-auto h-12 w-12 text-primary/30" />
+              <p className="mt-4 text-lg font-semibold text-foreground">Nenhuma oferta por aqui... ainda!</p>
+              <p className="mt-2 text-sm">Seja o primeiro a divulgar! Se você é um anunciante, <br />
+                <Link href="/dashboard/advertiser/create-offer" className="font-bold text-primary hover:underline">
+                  crie uma nova oferta agora mesmo.
+                </Link>
+              </p>
+          </div>
+        )}
       </div>
-      
-      <CategoryPills
-        categories={categories} 
-        selectedCategory={selectedCategory}
-        onSelectCategory={handleSelectCategory}
-      />
-
-      {featuredMerchants.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Comerciantes em Destaque</h2>
-          <FeaturedMerchantsList merchants={featuredMerchants.map(m => ({
-            id: m.id!,
-            name: m.businessName || m.name,
-            logoUrl: m.businessLogoUrl || `https://placehold.co/100x100.png`,
-            'data-ai-hint': m.businessLogoHint || 'store logo',
-            category: m.businessCategory
-           }))} />
-        </section>
-      )}
-
-      {filteredOffers.length > 0 && (
-        <section className="space-y-3 px-4 md:px-0">
-          <h2 className="text-xl font-semibold font-headline">Ofertas Recentes</h2>
-          <OfferList offers={filteredOffers} />
-        </section>
-      )}
-
-       {allOffers.length === 0 && !loading && !error && ( 
-         <div className="text-center text-muted-foreground py-10 px-4 md:px-0">
-            <Megaphone className="mx-auto h-12 w-12 text-primary/30" />
-            <p className="mt-4 text-lg font-semibold text-foreground">Nenhuma oferta por aqui... ainda!</p>
-            <p className="mt-2 text-sm">Seja o primeiro a divulgar! Se você é um anunciante, <br />
-              <Link href="/dashboard/advertiser/create-offer" className="font-bold text-primary hover:underline">
-                crie uma nova oferta agora mesmo.
-              </Link>
-            </p>
-         </div>
-       )}
     </div>
   );
 }
-

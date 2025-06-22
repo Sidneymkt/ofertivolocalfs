@@ -124,7 +124,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-8 pb-4">
+    <div className="container mx-auto px-4 py-6 space-y-8 pb-8">
       <UserInfo user={currentUser} />
       <PersonalDataCard user={currentUser} onSaveChanges={handleSaveChanges} />
       <GamificationCard user={currentUser} />
