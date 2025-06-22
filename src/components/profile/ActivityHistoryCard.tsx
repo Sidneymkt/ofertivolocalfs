@@ -27,12 +27,13 @@ const ActivityItem: React.FC<{
   const [formattedDate, setFormattedDate] = useState<string>('Carregando data...');
 
   useEffect(() => {
-    // Format the date only on the client-side after hydration to prevent mismatch
     if (timestamp) {
-      const date = timestamp instanceof Timestamp ? timestamp.toDate() : timestamp;
-      setFormattedDate(format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
+      // Now receives a JS Date object from the sanitized user profile.
+      setFormattedDate(format(new Date(timestamp), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
+    } else {
+      setFormattedDate('Data indisponível');
     }
-  }, [timestamp]); // Re-run if timestamp changes
+  }, [timestamp]);
 
   return (
     <li className="p-3.5 bg-muted/50 rounded-lg shadow-sm hover:bg-muted/70 transition-colors duration-150 ease-in-out">
@@ -67,8 +68,8 @@ const ActivityHistoryCard: React.FC<ActivityHistoryCardProps> = ({ user }) => {
     ...(user.sweepstakeParticipations || []).map(item => ({ ...item, type: 'sweepstake', isGain: false, icon: Ticket, iconColor: 'text-orange-500' })),
     ...(user.commentsMade || []).filter(c => c.pointsEarned).map(item => ({ ...item, offerTitle: `Comentário em: ${item.offerTitle}`, type: 'comment', isGain: true, icon: MessageSquare, iconColor: 'text-purple-500' })),
   ].sort((a, b) => {
-      const dateA = a.timestamp instanceof Timestamp ? a.timestamp.toMillis() : new Date(a.timestamp).getTime();
-      const dateB = b.timestamp instanceof Timestamp ? b.timestamp.toMillis() : new Date(b.timestamp).getTime();
+      const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
       return dateB - dateA;
   });
 

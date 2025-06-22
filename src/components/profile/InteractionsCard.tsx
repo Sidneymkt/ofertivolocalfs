@@ -31,8 +31,15 @@ const CommentItem: React.FC<{ comment: Comment }> = ({ comment }) => {
 
     useEffect(() => {
         if (comment.timestamp) {
-            const date = comment.timestamp instanceof Timestamp ? comment.timestamp.toDate() : new Date(comment.timestamp);
-            setFormattedDate(format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
+            // The timestamp is now a JS Date object from the service layer.
+            const date = new Date(comment.timestamp);
+            if (!isNaN(date.getTime())) {
+                setFormattedDate(format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
+            } else {
+                setFormattedDate('Data inválida');
+            }
+        } else {
+            setFormattedDate('Data indisponível');
         }
     }, [comment.timestamp]);
 
@@ -66,6 +73,12 @@ const CommentItem: React.FC<{ comment: Comment }> = ({ comment }) => {
     );
 };
 
+
+interface InteractionsCardProps {
+  favoriteOffers: Offer[];
+  followedMerchants: FollowedMerchantDisplayItem[];
+  commentsMade: Comment[];
+}
 
 const InteractionsCard: React.FC<InteractionsCardProps> = ({ favoriteOffers, followedMerchants, commentsMade }) => {
   return (

@@ -35,13 +35,32 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
   try {
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      const userData = userSnap.data() as User;
-      // Convert Firestore Timestamps to JS Dates for easier use in components
+      const userData = userSnap.data() as any; // Use any to avoid TS errors during conversion
+
+      // Helper function to convert timestamps in an array of objects
+      const convertTimestampsInArray = (arr: any[], dateKey: string) => {
+        if (!Array.isArray(arr)) return arr;
+        return arr.map(item => {
+          if (item && item[dateKey] && item[dateKey] instanceof Timestamp) {
+            return { ...item, [dateKey]: item[dateKey].toDate() };
+          }
+          return item;
+        });
+      };
+      
+      // Convert all known timestamp fields
       if (userData.joinDate && userData.joinDate instanceof Timestamp) {
         userData.joinDate = userData.joinDate.toDate();
       }
-      // Potentially convert other timestamp fields if they exist
-      return { ...userData, id: userSnap.id };
+      
+      // Arrays
+      userData.checkInHistory = convertTimestampsInArray(userData.checkInHistory, 'timestamp');
+      userData.sharedOffersHistory = convertTimestampsInArray(userData.sharedOffersHistory, 'timestamp');
+      userData.sweepstakeParticipations = convertTimestampsInArray(userData.sweepstakeParticipations, 'timestamp');
+      userData.commentsMade = convertTimestampsInArray(userData.commentsMade, 'timestamp');
+      userData.badges = convertTimestampsInArray(userData.badges, 'unlockedDate');
+
+      return { ...userData, id: userSnap.id } as User;
     } else {
       console.log("No such user profile!");
       return null;
