@@ -7,10 +7,11 @@ import { AlertTriangle, Loader2, MapPinned } from 'lucide-react';
 import { type Offer } from '@/types';
 import GoogleMapDisplay from '@/components/map/GoogleMapDisplay';
 import { getAllOffers } from '@/lib/firebase/services/offerService';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import MapOfferList from '@/components/offers/MapOfferList';
 import { FirestoreConnectionError } from '@/components/common/FirestoreConnectionError';
+import Image from 'next/image';
 
 export default function MapPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -51,22 +52,28 @@ export default function MapPage() {
   
   if (!googleMapsApiKey) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <Card className="m-4 shadow-lg border-destructive/50 bg-destructive/5">
-          <CardContent className="p-6 text-center space-y-4">
-            <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
-            <h2 className="text-xl font-semibold text-destructive">Chave da API do Google Maps não configurada!</h2>
-            <p className="text-destructive/90">
-              Para que o mapa funcione, é essencial configurar a sua chave da API do Google Maps.
-            </p>
-            <div className="text-sm bg-destructive/10 p-3 rounded-md">
-              Adicione a seguinte linha ao seu arquivo <code className="font-mono bg-destructive/20 px-1 py-0.5 rounded">.env.local</code> na raiz do projeto:
-              <pre className="mt-2 text-left p-2 bg-background rounded-md text-card-foreground">
-                <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="SUA_CHAVE_AQUI"</code>
-              </pre>
-            </div>
-            <p className="text-xs text-muted-foreground pt-4 border-t">
-              Lembre-se de substituir "SUA_CHAVE_AQUI" pela sua chave real e de reiniciar o servidor de desenvolvimento após a alteração.
+      <div className="container mx-auto px-4 py-6 flex flex-col items-center justify-center text-center flex-grow">
+        <Card className="w-full max-w-2xl shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-center gap-2">
+              <MapPinned className="h-8 w-8 text-muted-foreground" />
+              Mapa Interativo Indisponível
+            </CardTitle>
+            <CardDescription>
+              Para ativar o mapa, a chave da API do Google Maps precisa ser configurada.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Image
+              src="https://placehold.co/800x400.png"
+              alt="Placeholder de mapa"
+              width={800}
+              height={400}
+              className="rounded-md opacity-50"
+              data-ai-hint="world map"
+            />
+             <p className="text-sm text-muted-foreground mt-4">
+                Esta funcionalidade requer uma chave de API do Google Maps. Por favor, adicione <code className="font-mono text-xs bg-muted p-1 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> ao seu ambiente para habilitá-la.
             </p>
           </CardContent>
         </Card>

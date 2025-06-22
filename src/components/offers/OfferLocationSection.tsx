@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation } from 'lucide-react';
 import GoogleMapDisplay from '@/components/map/GoogleMapDisplay'; // Import the interactive map
+import Image from 'next/image';
 
 interface OfferLocationSectionProps {
   offer: Offer;
@@ -54,9 +55,19 @@ const OfferLocationSection: React.FC<OfferLocationSectionProps> = ({ offer }) =>
               markers={markers}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-center p-4">
-              { !googleMapsApiKey && <p className="text-destructive text-sm">Chave da API do Google Maps não configurada.</p> }
-              { googleMapsApiKey && !mapCenter && <p className="text-muted-foreground text-sm">Coordenadas da oferta não disponíveis para exibir o mapa interativo.</p> }
+            <div className="w-full h-full flex items-center justify-center text-center p-4 bg-muted relative">
+              <Image 
+                src="https://placehold.co/800x400.png" 
+                alt="Placeholder de Mapa" 
+                layout="fill"
+                objectFit="cover"
+                className="opacity-20"
+                data-ai-hint="city map"
+              />
+              <div className="relative z-10">
+                { !googleMapsApiKey && <p className="text-muted-foreground text-sm font-semibold">Mapa interativo indisponível.</p> }
+                { googleMapsApiKey && !mapCenter && <p className="text-muted-foreground text-sm">Localização não fornecida.</p> }
+              </div>
             </div>
           )}
         </div>
