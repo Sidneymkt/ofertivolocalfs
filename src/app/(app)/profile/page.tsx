@@ -40,7 +40,7 @@ export default function ProfilePage() {
             // Fetch details for favorited offers
             if (userProfile.favoriteOffers && userProfile.favoriteOffers.length > 0) {
               const favOffers = await Promise.all(
-                userProfile.favoriteOffers.map(id => getOffer(id)).filter(Boolean)
+                (userProfile.favoriteOffers || []).filter(Boolean).map(id => getOffer(id))
               );
               setFavoritedOffersDetails(favOffers.filter(o => o !== null) as Offer[]);
             } else {
@@ -50,7 +50,7 @@ export default function ProfilePage() {
             // Fetch details for followed merchants
             if (userProfile.followedMerchants && userProfile.followedMerchants.length > 0) {
               const followedData = await Promise.all(
-                userProfile.followedMerchants.map(async (id) => {
+                (userProfile.followedMerchants || []).filter(Boolean).map(async (id) => {
                   const merchantProfile = await getUserProfile(id);
                   return merchantProfile ? {
                     id: merchantProfile.id,
@@ -71,11 +71,7 @@ export default function ProfilePage() {
           }
         } catch (err: any) {
           console.error("Error fetching profile data:", err);
-          if (err.message.includes("offline") || err.message.includes("Failed to get document")) {
-            setError("Não foi possível conectar ao banco de dados para carregar seu perfil. Verifique sua configuração do Firebase.");
-          } else {
-            setError("Ocorreu um erro ao carregar seus dados. Tente novamente mais tarde.");
-          }
+          setError(err.message || "Ocorreu um erro ao carregar seus dados. Tente novamente mais tarde.");
         } finally {
           setLoading(false);
         }
