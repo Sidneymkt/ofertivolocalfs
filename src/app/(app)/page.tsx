@@ -3,22 +3,19 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { categories } from '@/types'; 
-import type { Offer, User, Category } from '@/types'; 
+import type { Offer } from '@/types'; 
 import FeaturedOffersList from '@/components/offers/FeaturedOffersList';
 import CategoryPills from '@/components/offers/CategoryPills';
-import FeaturedMerchantsList from '@/components/merchants/FeaturedMerchantsList';
 import { Input } from '@/components/ui/input';
 import { Search as SearchIcon, Loader2, Megaphone } from 'lucide-react';
 import OfferList from '@/components/offers/OfferList';
 import { getAllOffers } from '@/lib/firebase/services/offerService';
-import { getAllMerchants } from '@/lib/firebase/services/userService';
 import { Timestamp } from 'firebase/firestore'; 
 import { FirestoreConnectionError } from '@/components/common/FirestoreConnectionError';
 import Link from 'next/link';
 
 export default function FeedPage() {
   const [allOffers, setAllOffers] = useState<Offer[]>([]);
-  const [featuredMerchants, setFeaturedMerchants] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,15 +28,6 @@ export default function FeedPage() {
       try {
         const offers = await getAllOffers();
         setAllOffers(offers);
-        
-        const merchants = await getAllMerchants();
-        setFeaturedMerchants(merchants.slice(0, 10).map(m => ({
-          id: m.id,
-          name: m.businessName || m.name,
-          logoUrl: m.businessLogoUrl || 'https://placehold.co/100x100.png',
-          'data-ai-hint': m.businessLogoHint || 'store logo',
-          category: m.businessCategory
-        })));
 
       } catch (err: any) {
         console.error("Error fetching data for feed:", err);
@@ -56,13 +44,13 @@ export default function FeedPage() {
 
   const featuredOffers = useMemo(() => {
     return allOffers
-      .filter(offer => offer.visibility === 'destaque' || (offer.galleryImages && offer.galleryImages.length > 0))
+      .filter(offer => offer.visibility === 'destaque')
       .sort((a,b) => {
         const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
         return dateB - dateA;
       })
-      .slice(0, 8);
+      .slice(0, 1); // Only take the most recent featured offer for the banner
   }, [allOffers]);
 
   const filteredOffers = useMemo(() => {
@@ -84,7 +72,6 @@ export default function FeedPage() {
       );
     }
     
-    // Sort remaining offers by date
     return offers.sort((a, b) => {
         const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
@@ -111,22 +98,24 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="container mx-auto">
-      <div className="space-y-6 md:space-y-8 pb-4">
-        {featuredOffers.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Destaques Imperdíveis</h2>
-            <FeaturedOffersList offers={featuredOffers} />
-          </section>
-        )}
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="space-y-8 py-6">
+         <header className="space-y-4 text-center">
+            <h1 className="text-3xl md:text-5xl font-bold font-headline text-foreground tracking-tight">
+                Deals Marketplace
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Encontre as melhores promoções em produtos e serviços perto de você.
+            </p>
+        </header>
 
-        <div className="px-4 md:px-0 mt-6 mb-2">
+        <div className="w-full max-w-2xl mx-auto">
           <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <SearchIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Buscar ofertas, produtos, negócios..."
-              className="pl-10 w-full h-11 rounded-lg bg-card shadow-sm"
+              placeholder="Buscar por produtos, lojas ou serviços..."
+              className="pl-12 w-full h-12 rounded-full bg-card shadow-md border-transparent focus-visible:ring-primary focus-visible:ring-2"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -139,31 +128,25 @@ export default function FeedPage() {
           onSelectCategory={handleSelectCategory}
         />
 
-        {featuredMerchants.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Comerciantes em Destaque</h2>
-            <FeaturedMerchantsList merchants={featuredMerchants.map(m => ({
-              id: m.id!,
-              name: m.businessName || m.name,
-              logoUrl: m.businessLogoUrl || `https://placehold.co/100x100.png`,
-              'data-ai-hint': m.businessLogoHint || 'store logo',
-              category: m.businessCategory
-            }))} />
+        {featuredOffers.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-semibold font-headline mb-4">Oferta em Destaque</h2>
+            <FeaturedOffersList offers={featuredOffers} />
           </section>
         )}
 
         {filteredOffers.length > 0 && (
-          <section className="space-y-3 px-4 md:px-0">
-            <h2 className="text-xl font-semibold font-headline">Ofertas Recentes</h2>
+          <section>
+             <h2 className="text-2xl font-semibold font-headline mb-4">Mais Ofertas</h2>
             <OfferList offers={filteredOffers} />
           </section>
         )}
 
         {allOffers.length === 0 && !loading && !error && ( 
-          <div className="text-center text-muted-foreground py-10 px-4 md:px-0">
-              <Megaphone className="mx-auto h-12 w-12 text-primary/30" />
-              <p className="mt-4 text-lg font-semibold text-foreground">Nenhuma oferta por aqui... ainda!</p>
-              <p className="mt-2 text-sm">Seja o primeiro a divulgar! Se você é um anunciante, <br />
+          <div className="text-center text-muted-foreground py-16 px-4">
+              <Megaphone className="mx-auto h-16 w-16 text-primary/30" />
+              <p className="mt-6 text-xl font-semibold text-foreground">Nenhuma oferta por aqui... ainda!</p>
+              <p className="mt-2 text-base">Seja o primeiro a divulgar! Se você é um anunciante, <br />
                 <Link href="/dashboard/advertiser/create-offer" className="font-bold text-primary hover:underline">
                   crie uma nova oferta agora mesmo.
                 </Link>

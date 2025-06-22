@@ -28,11 +28,10 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({ categories, onSelectCateg
   const displayCategories = [allCategoriesOption, ...categories];
 
   return (
-    <ScrollArea className="w-full whitespace-nowrap rounded-md px-4 md:px-0">
-      <div className="flex space-x-2 pb-2.5">
+    <ScrollArea className="w-full whitespace-nowrap -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="flex space-x-2 pb-2.5 justify-center">
         {displayCategories.map((category) => {
           const IconComponent = iconMap[category.icon] || ListFilter;
-          // "Todas" is active if selectedCategory is empty/undefined OR explicitly "Todas" (though we pass empty string for "Todas")
           const isActive = category.name === 'Todas' 
             ? !selectedCategory || selectedCategory === '' 
             : selectedCategory === category.name;
@@ -40,12 +39,12 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({ categories, onSelectCateg
           return (
             <Button
               key={category.name}
-              variant={isActive ? 'default' : 'outline'}
+              variant={isActive ? 'secondary' : 'outline'}
               size="sm"
-              className={`h-9 px-3.5 text-xs sm:text-sm ${isActive ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card hover:bg-muted/80'}`}
+              className={`h-9 px-4 rounded-full text-xs sm:text-sm shadow-sm transition-all ${isActive ? 'text-secondary-foreground' : 'bg-card hover:bg-muted'}`}
               onClick={() => onSelectCategory(category.name === 'Todas' ? '' : category.name)}
             >
-              <IconComponent className={`mr-1.5 h-4 w-4 ${isActive ? '' : 'text-muted-foreground'}`} />
+              <IconComponent className={`mr-1.5 h-4 w-4`} />
               {category.name}
             </Button>
           );
