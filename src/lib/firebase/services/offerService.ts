@@ -74,7 +74,8 @@ export const getOffer = async (offerId: string): Promise<Offer | null> => {
 
 export const getAllOffers = async (filters?: { category?: string; merchantId?: string }): Promise<Offer[]> => {
   try {
-    let q = query(offersCollection, where("status", "==", "active"), orderBy("createdAt", "desc"));
+    // Let's fetch both 'active' and 'pending_approval' offers to make development easier.
+    let q = query(offersCollection, where("status", "in", ["active", "pending_approval"]), orderBy("createdAt", "desc"));
 
     if (filters?.category) {
       q = query(q, where("category", "==", filters.category));

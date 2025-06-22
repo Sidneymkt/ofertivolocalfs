@@ -8,13 +8,14 @@ import FeaturedOffersList from '@/components/offers/FeaturedOffersList';
 import CategoryPills from '@/components/offers/CategoryPills';
 import FeaturedMerchantsList from '@/components/merchants/FeaturedMerchantsList';
 import { Input } from '@/components/ui/input';
-import { Search as SearchIcon, Loader2 } from 'lucide-react';
+import { Search as SearchIcon, Loader2, Megaphone } from 'lucide-react';
 import RecommendedOffersList from '@/components/offers/RecommendedOffersList';
 import RecentOffersList from '@/components/offers/RecentOffersList';
 import { getAllOffers } from '@/lib/firebase/services/offerService';
 import { getAllMerchants } from '@/lib/firebase/services/userService';
 import { Timestamp } from 'firebase/firestore'; 
 import { FirestoreConnectionError } from '@/components/common/FirestoreConnectionError';
+import Link from 'next/link';
 
 export default function FeedPage() {
   const [allOffers, setAllOffers] = useState<Offer[]>([]);
@@ -181,9 +182,15 @@ export default function FeedPage() {
         </section>
       )}
        {allOffers.length === 0 && !loading && !error && ( 
-         <p className="text-center text-muted-foreground py-10 px-4 md:px-0 text-lg">
-            Nenhuma oferta encontrada. <br/> Volte mais tarde ou publique a sua!
-        </p>
+         <div className="text-center text-muted-foreground py-10 px-4 md:px-0">
+            <Megaphone className="mx-auto h-12 w-12 text-primary/30" />
+            <p className="mt-4 text-lg font-semibold text-foreground">Nenhuma oferta por aqui... ainda!</p>
+            <p className="mt-2 text-sm">Seja o primeiro a divulgar! Se você é um anunciante, <br />
+              <Link href="/dashboard/advertiser/create-offer" className="font-bold text-primary hover:underline">
+                crie uma nova oferta agora mesmo.
+              </Link>
+            </p>
+         </div>
        )}
     </div>
   );
