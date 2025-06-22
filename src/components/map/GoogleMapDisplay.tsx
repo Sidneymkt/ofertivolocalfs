@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useCallback, useState, useMemo, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
@@ -35,52 +34,6 @@ const mapContainerStyle = {
   width: '100%',
   height: '100%',
 };
-
-const getMarkerIcon = (
-  distance: number,
-  isSelected: boolean,
-  isMapsApiLoaded: boolean
-): google.maps.Icon | undefined => {
-  if (!isMapsApiLoaded || !window.google || !window.google.maps) {
-    return undefined;
-  }
-
-  const closeColor = '#28a745';
-  const mediumColor = '#ffc107';
-  const farColor = '#dc3545';
-  const selectedColor = '#007bff';
-
-  let fillColor = farColor;
-  let scale = 1.2;
-
-  if (distance < 1) {
-    fillColor = closeColor;
-  } else if (distance < 5) {
-    fillColor = mediumColor;
-  }
-
-  if (isSelected) {
-    fillColor = selectedColor;
-    scale = 1.8;
-  }
-
-  try {
-      return {
-        path: 'M16 0C7.16344 0 0 7.16344 0 16C0 24.8366 16 42 16 42C16 42 32 24.8366 32 16C32 7.16344 24.8366 0 16 0Z', // SVG path for a teardrop marker
-        fillColor: fillColor,
-        fillOpacity: 1,
-        strokeColor: 'white',
-        strokeWeight: 1,
-        scale: scale,
-        anchor: new window.google.maps.Point(16, 42),
-        labelOrigin: new window.google.maps.Point(16, 16),
-      };
-  } catch (e) {
-      console.error("Error creating google.maps.Point for marker icon. This can happen during hot-reloads.", e);
-      return undefined;
-  }
-};
-
 
 const GoogleMapDisplay = forwardRef<GoogleMapDisplayHandle, GoogleMapDisplayProps>(
   ({ apiKey, mapCenter, zoom = 12, markers: initialMarkers }, ref) => {
@@ -141,16 +94,38 @@ const GoogleMapDisplay = forwardRef<GoogleMapDisplayHandle, GoogleMapDisplayProp
     };
     
     const memoizedMarkers = useMemo(() => {
-      if (!isLoaded || !currentVisualCenter) {
+      if (!isLoaded || !currentVisualCenter || !window.google?.maps?.Point) {
         return [];
       }
       return initialMarkers.map(marker => {
         const distance = calculateDistance(currentVisualCenter.lat, currentVisualCenter.lng, marker.lat, marker.lng);
-        const icon = getMarkerIcon(distance, selectedMarker?.id === marker.id, isLoaded);
+        const isSelected = selectedMarker?.id === marker.id;
+
+        const closeColor = '#28a745';
+        const mediumColor = '#ffc107';
+        const farColor = '#dc3545';
+        const selectedColor = '#007bff';
+
+        let fillColor = farColor;
+        if (distance < 1) fillColor = closeColor;
+        else if (distance < 5) fillColor = mediumColor;
+        if (isSelected) fillColor = selectedColor;
+        
+        const icon: google.maps.Icon = {
+          path: 'M16 0C7.16344 0 0 7.16344 0 16C0 24.8366 16 42 16 42C16 42 32 24.8366 32 16C32 7.16344 24.8366 0 16 0Z', // SVG path
+          fillColor: fillColor,
+          fillOpacity: 1,
+          strokeColor: 'white',
+          strokeWeight: 1.5,
+          scale: isSelected ? 1.2 : 0.8,
+          anchor: new window.google.maps.Point(16, 42),
+          labelOrigin: new window.google.maps.Point(16, 16),
+        };
+
         return {
           ...marker,
           icon,
-          zIndex: selectedMarker?.id === marker.id ? 1000 : Math.round(100 - distance), 
+          zIndex: isSelected ? 1000 : Math.round(100 - distance), 
         };
       });
     }, [initialMarkers, currentVisualCenter, selectedMarker, isLoaded]);
@@ -224,7 +199,7 @@ const GoogleMapDisplay = forwardRef<GoogleMapDisplayHandle, GoogleMapDisplayProp
           />
         ))}
 
-        {selectedMarker && isLoaded && window.google && window.google.maps && window.google.maps.Size && (
+        {selectedMarker && isLoaded && (
           <InfoWindowF
             position={{ lat: selectedMarker.lat, lng: selectedMarker.lng }}
             onCloseClick={handleInfoWindowClose}

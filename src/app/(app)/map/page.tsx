@@ -1,14 +1,12 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Loader2, MapPinned, SlidersHorizontal } from 'lucide-react';
+import { Loader2, MapPinned, SlidersHorizontal } from 'lucide-react';
 import { type Offer } from '@/types';
 import GoogleMapDisplay from '@/components/map/GoogleMapDisplay';
 import { getAllOffers } from '@/lib/firebase/services/offerService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import MapOfferList from '@/components/offers/MapOfferList';
 import { FirestoreConnectionError } from '@/components/common/FirestoreConnectionError';
 import Image from 'next/image';
@@ -129,21 +127,21 @@ export default function MapPage() {
   }, [allOffers, filters]);
 
 
-  if (error) {
-     return <FirestoreConnectionError message={error} />;
-  }
-
   if (loading) {
      return (
-      <div className="flex justify-center items-center flex-grow">
+      <div className="flex justify-center items-center h-full">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
   
+  if (error) {
+     return <FirestoreConnectionError message={error} />;
+  }
+
   if (!googleMapsApiKey) {
     return (
-      <div className="container mx-auto px-4 py-6 flex flex-col items-center justify-center text-center flex-grow">
+      <div className="container mx-auto px-4 py-6 flex flex-col items-center justify-center text-center h-full">
         <Card className="w-full max-w-2xl shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center justify-center gap-2">
@@ -187,44 +185,44 @@ export default function MapPage() {
     }));
 
   return (
-    <div className="flex flex-col flex-grow">
-      <div className="flex-grow relative">
-        <GoogleMapDisplay
-          ref={mapDisplayRef}
-          apiKey={googleMapsApiKey}
-          mapCenter={mapCenter}
-          zoom={13}
-          markers={markers}
-        />
-      </div>
+    <div className="relative h-full w-full">
+      <GoogleMapDisplay
+        ref={mapDisplayRef}
+        apiKey={googleMapsApiKey}
+        mapCenter={mapCenter}
+        zoom={13}
+        markers={markers}
+      />
       
-      <div className="shrink-0 bg-card/80 backdrop-blur-sm border-t shadow-lg rounded-t-2xl p-4">
-         <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
-           <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
-              <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                      <SlidersHorizontal size={16} />
-                      Filtros
-                  </Button>
-              </SheetTrigger>
-              <SheetContent className="p-0 flex flex-col">
-                  <SheetHeader className="p-4 border-b">
-                      <SheetTitle>Filtros Avançados</SheetTitle>
-                  </SheetHeader>
-                  <AdvancedFiltersSheet onApplyFilters={applyFilters} onClearFilters={clearFilters} />
-              </SheetContent>
-          </Sheet>
-        </div>
-        {filteredOffers.length > 0 ? (
-          <MapOfferList offers={filteredOffers} />
-        ) : (
-           <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-3">
-              <MapPinned className="h-10 w-10 text-primary/50" />
-              <p>Nenhuma oferta encontrada com os filtros atuais.</p>
-              <p className="text-xs">Tente ajustar ou limpar os filtros para ver mais resultados.</p>
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-4 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none">
+         <div className="bg-card/90 backdrop-blur-sm border shadow-lg rounded-2xl p-4 pointer-events-auto">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
+            <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+                <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center gap-2">
+                        <SlidersHorizontal size={16} />
+                        Filtros
+                    </Button>
+                </SheetTrigger>
+                <SheetContent className="p-0 flex flex-col">
+                    <SheetHeader className="p-4 border-b">
+                        <SheetTitle>Filtros Avançados</SheetTitle>
+                    </SheetHeader>
+                    <AdvancedFiltersSheet onApplyFilters={applyFilters} onClearFilters={clearFilters} />
+                </SheetContent>
+            </Sheet>
           </div>
-        )}
+          {filteredOffers.length > 0 ? (
+            <MapOfferList offers={filteredOffers} />
+          ) : (
+             <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-3">
+                <MapPinned className="h-10 w-10 text-primary/50" />
+                <p>Nenhuma oferta encontrada com os filtros atuais.</p>
+                <p className="text-xs">Tente ajustar ou limpar os filtros para ver mais resultados.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
