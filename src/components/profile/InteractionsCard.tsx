@@ -1,6 +1,7 @@
 
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import type { Offer, User, Comment } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,12 +13,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Link from 'next/link';
 import { Button } from '../ui/button';
+import { Timestamp } from 'firebase/firestore';
 
-interface InteractionsCardProps {
-  favoriteOffers: Offer[];
-  followedMerchants: FollowedMerchantDisplayItem[];
-  commentsMade: Comment[];
-}
 
 const StarRating: React.FC<{ rating: number; size?: number }> = ({ rating, size = 12 }) => {
   return (
@@ -28,6 +25,47 @@ const StarRating: React.FC<{ rating: number; size?: number }> = ({ rating, size 
     </div>
   );
 };
+
+const CommentItem: React.FC<{ comment: Comment }> = ({ comment }) => {
+    const [formattedDate, setFormattedDate] = useState('...');
+
+    useEffect(() => {
+        if (comment.timestamp) {
+            const date = comment.timestamp instanceof Timestamp ? comment.timestamp.toDate() : new Date(comment.timestamp);
+            setFormattedDate(format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }));
+        }
+    }, [comment.timestamp]);
+
+    return (
+        <li key={comment.id} className="p-3 bg-muted/50 rounded-lg shadow-sm text-sm hover:bg-muted/70 transition-colors">
+            <p className="text-xs text-muted-foreground mb-0.5">
+                Você comentou em: 
+                {comment.offerId && comment.offerTitle ? (
+                    <Link href={`/offer/${comment.offerId}`} className="text-primary hover:underline font-semibold ml-1">
+                        {comment.offerTitle}
+                    </Link>
+                ) : (
+                    <span className="font-semibold ml-1">Oferta Desconhecida</span>
+                )}
+            </p>
+            <StarRating rating={comment.rating} />
+            <p className="italic text-card-foreground mt-1.5">"{comment.text}"</p>
+            <div className="flex justify-between items-center mt-1.5">
+                <span className="text-xs text-muted-foreground">
+                    {formattedDate}
+                </span>
+                {comment.offerId && (
+                    <Button variant="outline" size="xs" asChild className="h-7 px-2 py-1 text-xs">
+                    <Link href={`/offer/${comment.offerId}#comment-section`}>
+                        Ver na oferta <ExternalLink size={12} className="ml-1"/>
+                    </Link>
+                </Button>
+                )}
+            </div>
+        </li>
+    );
+};
+
 
 const InteractionsCard: React.FC<InteractionsCardProps> = ({ favoriteOffers, followedMerchants, commentsMade }) => {
   return (
@@ -66,32 +104,7 @@ const InteractionsCard: React.FC<InteractionsCardProps> = ({ favoriteOffers, fol
               {commentsMade && commentsMade.length > 0 ? (
                 <ul className="space-y-3">
                   {commentsMade.map(comment => (
-                    <li key={comment.id} className="p-3 bg-muted/50 rounded-lg shadow-sm text-sm hover:bg-muted/70 transition-colors">
-                      <p className="text-xs text-muted-foreground mb-0.5">
-                        Você comentou em: 
-                        {comment.offerId && comment.offerTitle ? (
-                            <Link href={`/offer/${comment.offerId}`} className="text-primary hover:underline font-semibold ml-1">
-                                {comment.offerTitle}
-                            </Link>
-                        ) : (
-                            <span className="font-semibold ml-1">Oferta Desconhecida</span>
-                        )}
-                      </p>
-                      <StarRating rating={comment.rating} />
-                      <p className="italic text-card-foreground mt-1.5">"{comment.text}"</p>
-                      <div className="flex justify-between items-center mt-1.5">
-                        <span className="text-xs text-muted-foreground">
-                          {format(comment.timestamp, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                        </span>
-                         {comment.offerId && (
-                             <Button variant="outline" size="xs" asChild className="h-7 px-2 py-1 text-xs">
-                                <Link href={`/offer/${comment.offerId}#comment-section`}>
-                                    Ver na oferta <ExternalLink size={12} className="ml-1"/>
-                                </Link>
-                            </Button>
-                         )}
-                      </div>
-                    </li>
+                    <CommentItem key={comment.id} comment={comment} />
                   ))}
                 </ul>
               ) : (
@@ -106,5 +119,3 @@ const InteractionsCard: React.FC<InteractionsCardProps> = ({ favoriteOffers, fol
 };
 
 export default InteractionsCard;
-
-    
