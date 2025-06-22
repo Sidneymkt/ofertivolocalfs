@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -10,6 +9,7 @@ import { Tag, Clock, ShieldCheck, AlertTriangle, ChevronDown, ChevronUp, Info, P
 import { offerTypes } from '@/types'; // Import offerTypes to get details
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
 
 interface OfferInfoSectionProps {
   offer: Offer;
@@ -25,8 +25,21 @@ const OfferInfoSection: React.FC<OfferInfoSectionProps> = ({ offer }) => {
   const displayDescription = offer.fullDescription || offer.description;
   const shortDescription = displayDescription.split(' ').slice(0, 30).join(' ') + (descriptionWords > 30 ? '...' : '');
   
-  const validityStartDisplay = offer.validityStartDate ? format(new Date(offer.validityStartDate), "dd/MM/yyyy", { locale: ptBR }) : 'N/A';
-  const validityEndDisplay = offer.validityEndDate ? format(new Date(offer.validityEndDate), "dd/MM/yyyy", { locale: ptBR }) : 'N/A';
+  const getJsDate = (dateInput: Date | Timestamp | undefined): Date | null => {
+      if (!dateInput) return null;
+      if (dateInput instanceof Timestamp) return dateInput.toDate();
+      // It might already be a Date object from a previous conversion
+      if (dateInput instanceof Date) return dateInput; 
+      // Fallback for string dates (less ideal)
+      const parsedDate = new Date(dateInput as any);
+      return !isNaN(parsedDate.getTime()) ? parsedDate : null;
+  };
+
+  const startDate = getJsDate(offer.validityStartDate);
+  const endDate = getJsDate(offer.validityEndDate);
+
+  const validityStartDisplay = startDate ? format(startDate, "dd/MM/yyyy", { locale: ptBR }) : 'N/A';
+  const validityEndDisplay = endDate ? format(endDate, "dd/MM/yyyy", { locale: ptBR }) : 'N/A';
   const validityDisplay = `Válido de ${validityStartDisplay} a ${validityEndDisplay}`;
   
   const offerTypeDetail = getOfferTypeDetails(offer.offerType);
