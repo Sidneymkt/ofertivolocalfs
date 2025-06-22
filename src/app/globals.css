@@ -107,7 +107,7 @@ body {
     opacity: 1;
   }
   50% {
-    transform: scale(1.15); /* Slightly increased pulse */
+    transform: scale(1.15);
     opacity: 0.8;
   }
   100% {
@@ -117,6 +117,6 @@ body {
 }
 
 .marker-pulse-animation {
-  animation: pulse-marker 1.8s infinite ease-in-out; /* Slightly faster animation */
-  transform-origin: center 30px; /* Anchor point for scaling, assuming a 40px tall icon anchored at bottom center */
+  animation: pulse-marker 1.8s infinite ease-in-out;
+  transform-origin: center 30px; /* Anchor point for scaling */
 }

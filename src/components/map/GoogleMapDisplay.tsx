@@ -52,22 +52,18 @@ const getMarkerIcon = (
 
   let fillColor = farColor;
   let animationClass = '';
-  let zIndex = 1;
   let scale = 1;
 
   if (distance < 1) { 
     fillColor = closeColor;
     animationClass = 'marker-pulse-animation';
-    zIndex = 3;
     scale = 1.1;
   } else if (distance < 5) { 
     fillColor = mediumColor;
-    zIndex = 2;
   }
 
   if (isSelected) {
     fillColor = selectedColor;
-    zIndex = 10; 
     scale = 1.2;
   }
 
@@ -108,10 +104,6 @@ const GoogleMapDisplay = forwardRef<GoogleMapDisplayHandle, GoogleMapDisplayProp
         return null;
       },
     }));
-
-    useEffect(() => {
-      console.log("[DEBUG] GoogleMapDisplay Component: apiKey prop received:", apiKey ? "SET (masked for security)" : "MISSING or undefined");
-    }, [apiKey]);
 
     const { isLoaded, loadError } = useJsApiLoader({
       googleMapsApiKey: apiKey, 
@@ -243,7 +235,7 @@ const GoogleMapDisplay = forwardRef<GoogleMapDisplayHandle, GoogleMapDisplayProp
             position={{ lat: selectedMarker.lat, lng: selectedMarker.lng }}
             onCloseClick={handleInfoWindowClose}
             options={{ 
-              pixelOffset: new window.google.maps.Size(0, -42), 
+              pixelOffset: new window.google.maps.Size(0, -50), 
               disableAutoPan: false,
             }}
           >
