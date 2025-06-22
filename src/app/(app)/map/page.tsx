@@ -185,9 +185,9 @@ export default function MapPage() {
     }));
 
   return (
-    <div className="relative h-full w-full">
-      {/* Map container takes up the full space */}
-      <div className="absolute inset-0">
+    <div className="flex flex-col h-full w-full">
+      {/* Map container grows to fill all available vertical space */}
+      <div className="flex-grow relative">
         <GoogleMapDisplay
           ref={mapDisplayRef}
           apiKey={googleMapsApiKey}
@@ -197,8 +197,8 @@ export default function MapPage() {
         />
       </div>
 
-      {/* Offer list container floats at the bottom */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 bg-card/90 backdrop-blur-sm border-t shadow-lg p-4">
+      {/* Offer list container has a fixed height based on its content */}
+      <div className="flex-shrink-0 bg-card/90 backdrop-blur-sm border-t shadow-lg p-4">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
           <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
