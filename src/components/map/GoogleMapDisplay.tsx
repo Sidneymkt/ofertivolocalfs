@@ -41,49 +41,43 @@ const getMarkerIcon = (
   isSelected: boolean,
   isMapsApiLoaded: boolean
 ): google.maps.Icon | undefined => {
-  if (!isMapsApiLoaded || !window.google || !window.google.maps || !window.google.maps.Size || !window.google.maps.Point) {
-    return undefined; 
+  if (!isMapsApiLoaded || !window.google || !window.google.maps) {
+    return undefined;
   }
 
-  const closeColor = '#28a745'; 
-  const mediumColor = '#ffc107'; 
-  const farColor = '#dc3545'; 
-  const selectedColor = '#007bff'; 
+  const closeColor = '#28a745';
+  const mediumColor = '#ffc107';
+  const farColor = '#dc3545';
+  const selectedColor = '#007bff';
 
   let fillColor = farColor;
-  let animationClass = '';
-  let scale = 1;
+  let scale = 1.2;
 
-  if (distance < 1) { 
+  if (distance < 1) {
     fillColor = closeColor;
-    animationClass = 'marker-pulse-animation';
-    scale = 1.1;
-  } else if (distance < 5) { 
+  } else if (distance < 5) {
     fillColor = mediumColor;
   }
 
   if (isSelected) {
     fillColor = selectedColor;
-    scale = 1.2;
+    scale = 1.8;
   }
 
-  const svgIcon = `
-    <svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg" class="${animationClass}">
-      <path d="M16 0C7.16344 0 0 7.16344 0 16C0 24.8366 16 42 16 42C16 42 32 24.8366 32 16C32 7.16344 24.8366 0 16 0Z" fill="${fillColor}" stroke="#FFFFFF" stroke-width="1.5"/>
-      <circle cx="16" cy="16" r="6" fill="white"/>
-      ${isSelected ? '<circle cx="16" cy="16" r="3" fill="#000000"/>' : ''}
-    </svg>
-  `;
-
   try {
-    return {
-      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgIcon)}`,
-      scaledSize: new window.google.maps.Size(32 * scale, 42 * scale),
-      anchor: new window.google.maps.Point(16 * scale, 42 * scale),
-    };
+      return {
+        path: 'M16 0C7.16344 0 0 7.16344 0 16C0 24.8366 16 42 16 42C16 42 32 24.8366 32 16C32 7.16344 24.8366 0 16 0Z', // SVG path for a teardrop marker
+        fillColor: fillColor,
+        fillOpacity: 1,
+        strokeColor: 'white',
+        strokeWeight: 1,
+        scale: scale,
+        anchor: new window.google.maps.Point(16, 42),
+        labelOrigin: new window.google.maps.Point(16, 16),
+      };
   } catch (e) {
-    console.error("Error creating google.maps.Size/Point for marker icon:", e);
-    return undefined; 
+      console.error("Error creating google.maps.Point for marker icon. This can happen during hot-reloads.", e);
+      return undefined;
   }
 };
 
