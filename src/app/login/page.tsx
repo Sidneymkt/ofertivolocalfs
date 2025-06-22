@@ -172,9 +172,15 @@ export default function LoginPage() {
           </Button>
           <p className="text-sm text-muted-foreground">
             Ainda não tem conta?{' '}
-            <Link href={activeTab === 'user' ? '/signup/user' : '/signup/advertiser'} className="font-semibold text-primary hover:underline">
-              Cadastre-se
-            </Link>
+            {activeTab === 'user' ? (
+              <Link href="/signup/user" className="font-semibold text-primary hover:underline">
+                Cadastre-se
+              </Link>
+            ) : (
+              <Link href="/signup/advertiser" className="font-semibold text-primary hover:underline">
+                Cadastre-se
+              </Link>
+            )}
           </p>
         </CardFooter>
       </Card>

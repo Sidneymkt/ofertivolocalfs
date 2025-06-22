@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import type { Offer } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,27 +12,41 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Timestamp } from 'firebase/firestore'; // Added import
+import { Timestamp } from 'firebase/firestore'; 
 
 interface OfferCardProps {
   offer: Offer;
 }
 
 const OfferCard: React.FC<OfferCardProps> = ({ offer }) => {
-  const [isFavorited, setIsFavorited] = React.useState(false); // Mock state
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [formattedValidity, setFormattedValidity] = useState('Validade não definida');
+
+  useEffect(() => {
+    const getJsDate = (dateInput: Date | Timestamp | undefined): Date | null => {
+      if (!dateInput) return null;
+      if (dateInput instanceof Timestamp) return dateInput.toDate();
+      if (dateInput instanceof Date) return dateInput;
+      const parsedDate = new Date(dateInput as any);
+      return !isNaN(parsedDate.getTime()) ? parsedDate : null;
+    };
+
+    const endDateToFormat = getJsDate(offer.validityEndDate);
+    if (endDateToFormat) {
+      setFormattedValidity(format(endDateToFormat, "'Válido até' dd 'de' MMMM", { locale: ptBR }));
+    }
+  }, [offer.validityEndDate]);
 
   const handleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation when clicking the button
+    e.preventDefault(); 
     e.stopPropagation();
     setIsFavorited(!isFavorited);
-    // Add toast or actual favorite logic here
     console.log(isFavorited ? 'Unfavorited' : 'Favorited', offer.id);
   };
 
   const handleShare = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation
+    e.preventDefault(); 
     e.stopPropagation();
-    // Add share logic here
     console.log('Share', offer.id);
     if (navigator.share) {
       navigator.share({
@@ -44,27 +58,6 @@ const OfferCard: React.FC<OfferCardProps> = ({ offer }) => {
       alert('Compartilhamento não suportado ou URL copiada (simulado).');
     }
   };
-  
-  const getJsDate = (dateInput: Date | Timestamp | undefined): Date | null => {
-    if (!dateInput) return null;
-    if (dateInput instanceof Timestamp) {
-      return dateInput.toDate();
-    }
-    if (dateInput instanceof Date) {
-      return dateInput;
-    }
-    // Attempt to parse if it's a string or number, though type should be Date | Timestamp
-    const parsedDate = new Date(dateInput as any); // Cast to any if type system complains without further checks
-    if (!isNaN(parsedDate.getTime())) {
-        return parsedDate;
-    }
-    return null;
-  };
-
-  const endDateToFormat = getJsDate(offer.validityEndDate);
-  const formattedValidity = endDateToFormat
-    ? format(endDateToFormat, "'Válido até' dd 'de' MMMM", { locale: ptBR })
-    : 'Validade não definida';
 
   return (
     <Link

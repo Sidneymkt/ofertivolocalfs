@@ -57,6 +57,9 @@ export default function SweepstakeDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
 
+  const [formattedStartDate, setFormattedStartDate] = useState("Data Indisponível");
+  const [formattedEndDate, setFormattedEndDate] = useState("Data Indisponível");
+
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -83,6 +86,18 @@ export default function SweepstakeDetailPage() {
     };
     loadData();
   }, [sweepstakeId, router, toast]);
+  
+  useEffect(() => {
+    if (sweepstake) {
+      const formatDate = (dateInput: Date | Timestamp | undefined) => {
+        if (!dateInput) return "Data Indisponível";
+        const date = dateInput instanceof Timestamp ? dateInput.toDate() : new Date(dateInput);
+        return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+      };
+      setFormattedStartDate(formatDate(sweepstake.startDate));
+      setFormattedEndDate(formatDate(sweepstake.endDate));
+    }
+  }, [sweepstake]);
 
   const handleParticipate = async (e: React.MouseEvent, currentSweepstake: Sweepstake) => {
     e.stopPropagation(); 
@@ -94,7 +109,6 @@ export default function SweepstakeDetailPage() {
       toast({ title: "Pontos Insuficientes", description: `Você precisa de ${currentSweepstake.pointsToEnter} pontos.`, variant: "destructive" });
       return;
     }
-    const now = new Date();
     const endDate = currentSweepstake.endDate instanceof Timestamp ? currentSweepstake.endDate.toDate() : new Date(currentSweepstake.endDate);
     const startDate = currentSweepstake.startDate instanceof Timestamp ? currentSweepstake.startDate.toDate() : new Date(currentSweepstake.startDate);
 
@@ -158,12 +172,6 @@ export default function SweepstakeDetailPage() {
       </div>
     );
   }
-  
-  const formattedDate = (dateInput: Date | Timestamp | undefined) => {
-    if (!dateInput) return "Data Indisponível";
-    const date = dateInput instanceof Timestamp ? dateInput.toDate() : new Date(dateInput);
-    return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-  };
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6 pb-8">
@@ -215,8 +223,8 @@ export default function SweepstakeDetailPage() {
           </div>
           
           <div className="space-y-1 text-sm">
-             <p className="flex items-center gap-1.5"><CalendarDays size={15} className="text-muted-foreground"/> <strong>Início:</strong> {formattedDate(sweepstake.startDate)}</p>
-             <p className="flex items-center gap-1.5"><CalendarDays size={15} className="text-muted-foreground"/> <strong>Término:</strong> {formattedDate(sweepstake.endDate)}</p>
+             <p className="flex items-center gap-1.5"><CalendarDays size={15} className="text-muted-foreground"/> <strong>Início:</strong> {formattedStartDate}</p>
+             <p className="flex items-center gap-1.5"><CalendarDays size={15} className="text-muted-foreground"/> <strong>Término:</strong> {formattedEndDate}</p>
           </div>
 
           {sweepstake.rules && (
