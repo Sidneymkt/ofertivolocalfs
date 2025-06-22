@@ -185,7 +185,11 @@ export default function MapPage() {
     }));
 
   return (
+    // This layout structure is the definitive fix.
+    // 1. h-full: Makes the container take the full height provided by the parent layout.
+    // 2. flex flex-col: Distributes the vertical space among its children.
     <div className="h-full flex flex-col">
+      {/* 3. flex-grow: This div expands to take up all available vertical space, guaranteeing a height for the map. */}
       <div className="flex-grow">
         <GoogleMapDisplay
           ref={mapDisplayRef}
@@ -196,6 +200,7 @@ export default function MapPage() {
         />
       </div>
 
+      {/* 4. shrink-0: This div takes only the space it needs, it does not grow or shrink. */}
       <div className="shrink-0 bg-card/90 backdrop-blur-sm border-t shadow-lg p-4">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
