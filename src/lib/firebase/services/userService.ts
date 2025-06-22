@@ -1,4 +1,6 @@
 
+'use server';
+
 import { db } from '@/lib/firebase/firebaseConfig';
 import type { User } from '@/types';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, getDocs, query, where, Timestamp, orderBy, limit } from 'firebase/firestore';
@@ -6,8 +8,6 @@ import { mockUser, mockUserList, mockAdvertiserUser, mockAdvertiserList } from '
 
 // --- MOCK IMPLEMENTATIONS ---
 const USE_MOCK_DATA = true; // Switch to false to use real Firestore
-
-const usersCollection = collection(db, 'users');
 
 const convertUserDocumentData = (data: any): User => {
   const newUserData = { ...data };
@@ -52,6 +52,7 @@ export const createUserProfile = async (userId: string, userData: Omit<User, 'id
     return Promise.resolve();
   }
   
+  if (!db) throw new Error("Firestore not initialized");
   const userRef = doc(db, 'users', userId);
   const now = Timestamp.now();
   try {
@@ -84,6 +85,7 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
     return Promise.resolve(convertUserDocumentData(mockUser));
   }
   
+  if (!db) throw new Error("Firestore not initialized");
   if (!userId) {
     console.warn("getUserProfile called with no userId");
     return null;
@@ -110,6 +112,7 @@ export const getLeaderboardUsers = async (count: number): Promise<User[]> => {
         return Promise.resolve(uniqueUsers.slice(0, count).map(convertUserDocumentData));
     }
 
+    if (!db) throw new Error("Firestore not initialized");
     const usersRef = collection(db, "users");
     const q = query(usersRef, orderBy("points", "desc"), limit(count));
     try {
@@ -137,6 +140,7 @@ export const updateUserProfile = async (userId: string, data: Partial<User>): Pr
       return Promise.resolve();
   }
 
+  if (!db) throw new Error("Firestore not initialized");
   const userRef = doc(db, 'users', userId);
   try {
     await updateDoc(userRef, data);
@@ -151,6 +155,7 @@ export const addFavoriteOffer = async (userId: string, offerId: string): Promise
     console.log(`Mock: Adding offer ${offerId} to user ${userId}'s favorites.`);
     return Promise.resolve();
   }
+  if (!db) throw new Error("Firestore not initialized");
   const userRef = doc(db, 'users', userId);
   try {
     await updateDoc(userRef, {
@@ -167,6 +172,7 @@ export const removeFavoriteOffer = async (userId: string, offerId: string): Prom
     console.log(`Mock: Removing offer ${offerId} from user ${userId}'s favorites.`);
     return Promise.resolve();
   }
+  if (!db) throw new Error("Firestore not initialized");
   const userRef = doc(db, 'users', userId);
   try {
     await updateDoc(userRef, {
@@ -183,6 +189,7 @@ export const followMerchant = async (userId: string, merchantId: string): Promis
     console.log(`Mock: User ${userId} now following merchant ${merchantId}.`);
     return Promise.resolve();
   }
+  if (!db) throw new Error("Firestore not initialized");
   const userRef = doc(db, 'users', userId);
   try {
     await updateDoc(userRef, {
@@ -199,6 +206,7 @@ export const unfollowMerchant = async (userId: string, merchantId: string): Prom
     console.log(`Mock: User ${userId} unfollowed merchant ${merchantId}.`);
     return Promise.resolve();
   }
+  if (!db) throw new Error("Firestore not initialized");
   const userRef = doc(db, 'users', userId);
   try {
     await updateDoc(userRef, {
@@ -215,6 +223,8 @@ export const getAllMerchants = async (): Promise<User[]> => {
   if (USE_MOCK_DATA) {
     return Promise.resolve(mockAdvertiserList.map(convertUserDocumentData));
   }
+  if (!db) throw new Error("Firestore not initialized");
+  const usersCollection = collection(db, 'users');
   try {
     const q = query(usersCollection, where("isAdvertiser", "==", true));
     const querySnapshot = await getDocs(q);

@@ -1,4 +1,6 @@
 
+'use server';
+
 import { db } from '@/lib/firebase/firebaseConfig';
 import type { Sweepstake, SweepstakeParticipant, SweepstakeWinner } from '@/types';
 import { 
@@ -16,8 +18,6 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { mockSweepstakeList } from '@/types';
-
-const sweepstakesCollection = collection(db, 'sweepstakes');
 
 // --- MOCK IMPLEMENTATIONS ---
 const USE_MOCK_DATA = true; // Switch to false to use real Firestore
@@ -53,6 +53,8 @@ export const createSweepstake = async (sweepstakeData: Omit<Sweepstake, 'id' | '
       return Promise.resolve(newId);
   }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
+  const sweepstakesCollection = collection(db, 'sweepstakes');
   try {
     const docRef = await addDoc(sweepstakesCollection, {
       ...sweepstakeData,
@@ -73,6 +75,7 @@ export const getSweepstake = async (sweepstakeId: string): Promise<Sweepstake | 
       return Promise.resolve(sweepstake ? convertSweepstakeTimestamps(sweepstake) : null);
   }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
   if (!sweepstakeId) return null;
   const sweepstakeRef = doc(db, 'sweepstakes', sweepstakeId);
   try {
@@ -98,6 +101,8 @@ export const getAllSweepstakes = async (filters?: { status?: Sweepstake['status'
     return Promise.resolve(sweepstakes.map(convertSweepstakeTimestamps));
   }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
+  const sweepstakesCollection = collection(db, 'sweepstakes');
   try {
     let q = query(sweepstakesCollection, orderBy("startDate", "desc"));
     if (filters?.status) {
@@ -125,6 +130,7 @@ export const updateSweepstake = async (sweepstakeId: string, data: Partial<Omit<
       return Promise.resolve();
   }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
   const sweepstakeRef = doc(db, 'sweepstakes', sweepstakeId);
   try {
     await updateDoc(sweepstakeRef, data);
@@ -148,6 +154,7 @@ export const addParticipantToSweepstake = async (
        return Promise.resolve(`mock-participant-${Date.now()}`);
    }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
   if (!sweepstakeId) throw new Error("Sweepstake ID is required.");
   const participantsSubCollectionRef = collection(db, 'sweepstakes', sweepstakeId, 'participants');
   try {
@@ -174,6 +181,7 @@ export const getSweepstakeParticipants = async (sweepstakeId: string): Promise<S
       return Promise.resolve([]);
   }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
   if (!sweepstakeId) return [];
   const participantsSubCollectionRef = collection(db, 'sweepstakes', sweepstakeId, 'participants');
   try {
@@ -209,6 +217,7 @@ export const addWinnersToSweepstake = async (sweepstakeId: string, winners: Swee
        return Promise.resolve();
    }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
   if (!sweepstakeId || !winners || winners.length === 0) throw new Error("Sweepstake ID and winners list are required.");
   const batch = writeBatch(db);
   const winnersSubCollectionRef = collection(db, 'sweepstakes', sweepstakeId, 'winners');
@@ -238,6 +247,7 @@ export const getSweepstakeWinners = async (sweepstakeId: string): Promise<Sweeps
       return Promise.resolve([]);
   }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
   if (!sweepstakeId) return [];
   const winnersSubCollectionRef = collection(db, 'sweepstakes', sweepstakeId, 'winners');
   try {

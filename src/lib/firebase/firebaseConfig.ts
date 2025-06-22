@@ -30,12 +30,13 @@ let storage: FirebaseStorage | null = null;
 let analytics: Analytics | undefined;
 
 
-if (!firebaseConfig.projectId) {
+if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
     const errorMessage = `
     ================================================================================
     FATAL FIREBASE CONFIG ERROR: A variável de ambiente NEXT_PUBLIC_FIREBASE_PROJECT_ID está faltando.
 
     O aplicativo não pode ser inicializado sem um ID de projeto do Firebase.
+    Isso causará um "Internal Server Error".
 
     AÇÃO NECESSÁRIA:
     1. Verifique se o arquivo '.env.local' existe no diretório raiz do seu projeto.

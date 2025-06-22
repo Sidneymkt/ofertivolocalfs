@@ -1,4 +1,6 @@
 
+'use server';
+
 import { db } from '@/lib/firebase/firebaseConfig';
 import type { Offer, Comment } from '@/types';
 import { 
@@ -16,8 +18,6 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { mockOfferList, mockUser } from '@/types';
-
-const offersCollection = collection(db, 'offers');
 
 // Helper to convert Firestore Timestamps to JS Dates in an Offer object
 const convertOfferTimestamps = (offerData: any): Offer => {
@@ -57,6 +57,8 @@ export const createOffer = async (offerData: Omit<Offer, 'id' | 'createdAt' | 'u
     return Promise.resolve(newId);
   }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
+  const offersCollection = collection(db, 'offers');
   try {
     const now = serverTimestamp();
     const docRef = await addDoc(offersCollection, {
@@ -81,6 +83,7 @@ export const getOffer = async (offerId: string): Promise<Offer | null> => {
     return Promise.resolve(offer ? convertOfferTimestamps(offer) : null);
   }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
   if (!offerId) return null;
   const offerRef = doc(db, 'offers', offerId);
   try {
@@ -109,6 +112,8 @@ export const getAllOffers = async (filters?: { category?: string; merchantId?: s
     return Promise.resolve(offers.map(convertOfferTimestamps));
   }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
+  const offersCollection = collection(db, 'offers');
   try {
     let q = query(offersCollection, where("status", "in", ["active", "pending_approval"]), orderBy("createdAt", "desc"));
     if (filters?.category) {
@@ -139,6 +144,7 @@ export const updateOffer = async (offerId: string, data: Partial<Omit<Offer, 'id
       return Promise.resolve();
   }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
   const offerRef = doc(db, 'offers', offerId);
   try {
     await updateDoc(offerRef, {
@@ -173,6 +179,7 @@ export const addCommentToOffer = async (offerId: string, commentData: Omit<Comme
         return Promise.resolve(`mock-comment-${Date.now()}`);
    }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
   if (!offerId) throw new Error("Offer ID is required to add a comment.");
   
   const commentsSubCollectionRef = collection(db, 'offers', offerId, 'comments');
@@ -196,6 +203,7 @@ export const getOfferComments = async (offerId: string): Promise<Comment[]> => {
         return Promise.resolve([]);
     }
   // Real implementation
+  if (!db) throw new Error("Firestore not initialized");
   if (!offerId) return [];
   const commentsSubCollectionRef = collection(db, 'offers', offerId, 'comments');
   try {
@@ -228,6 +236,7 @@ export const incrementOfferUsage = async (offerId: string): Promise<void> => {
         return Promise.resolve();
     }
     // Real implementation
+    if (!db) throw new Error("Firestore not initialized");
     const offerRef = doc(db, 'offers', offerId);
     try {
         const offerSnap = await getDoc(offerRef);
