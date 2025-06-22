@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -46,7 +47,11 @@ export default function AdvertiserDashboardPage() {
           }
         } catch (err: any) {
           console.error("Error fetching advertiser dashboard data:", err);
-          setError(err.message || "Não foi possível buscar seus dados do painel. Verifique sua conexão com o banco de dados.");
+          if (err.message.includes("offline") || err.message.includes("Failed to get document")) {
+            setError("Não foi possível conectar ao banco de dados para carregar seu painel.");
+          } else {
+            setError(err.message || "Não foi possível buscar seus dados do painel.");
+          }
           toast({ title: "Erro ao Carregar Painel", description: "Não foi possível buscar seus dados.", variant: "destructive" });
         } finally {
           setLoading(false);

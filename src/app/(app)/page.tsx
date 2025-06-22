@@ -9,8 +9,7 @@ import CategoryPills from '@/components/offers/CategoryPills';
 import FeaturedMerchantsList from '@/components/merchants/FeaturedMerchantsList';
 import { Input } from '@/components/ui/input';
 import { Search as SearchIcon, Loader2, Megaphone } from 'lucide-react';
-import RecommendedOffersList from '@/components/offers/RecommendedOffersList';
-import RecentOffersList from '@/components/offers/RecentOffersList';
+import OfferList from '@/components/offers/OfferList';
 import { getAllOffers } from '@/lib/firebase/services/offerService';
 import { getAllMerchants } from '@/lib/firebase/services/userService';
 import { Timestamp } from 'firebase/firestore'; 
@@ -31,9 +30,7 @@ export default function FeedPage() {
       setError(null);
       try {
         const offers = await getAllOffers();
-        // Shuffle offers once on load for stable "recommended" list
-        const shuffledOffers = [...offers].sort(() => 0.5 - Math.random());
-        setAllOffers(shuffledOffers);
+        setAllOffers(offers);
         
         const merchants = await getAllMerchants();
         setFeaturedMerchants(merchants.slice(0, 10).map(m => ({
@@ -69,7 +66,9 @@ export default function FeedPage() {
   }, [allOffers]);
 
   const filteredOffers = useMemo(() => {
-    let offers = [...allOffers];
+    const featuredOfferIds = new Set(featuredOffers.map(fo => fo.id));
+    
+    let offers = allOffers.filter(offer => !featuredOfferIds.has(offer.id!));
 
     if (selectedCategory) {
       offers = offers.filter(offer => offer.category.toLowerCase() === selectedCategory.toLowerCase());
@@ -84,29 +83,14 @@ export default function FeedPage() {
         offer.tags?.some(tag => tag.toLowerCase().includes(lowerSearchTerm))
       );
     }
-    const featuredOfferIds = featuredOffers.map(fo => fo.id);
-    offers = offers.filter(offer => !featuredOfferIds.includes(offer.id!));
-
-    return offers;
-  }, [searchTerm, selectedCategory, allOffers, featuredOffers]);
-
-  const recentOffers = useMemo(() => {
-    return [...filteredOffers]
-      .sort((a, b) => {
+    
+    // Sort remaining offers by date
+    return offers.sort((a, b) => {
         const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate().getTime() : new Date(a.createdAt).getTime();
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate().getTime() : new Date(b.createdAt).getTime();
         return dateB - dateA;
-      })
-      .slice(0, 10); 
-  }, [filteredOffers]);
-
-  const recommendedOffers = useMemo(() => {
-    const recentAndFeaturedIds = new Set([...recentOffers.map(ro => ro.id), ...featuredOffers.map(fo => fo.id)]);
-    // Use the pre-shuffled allOffers list for stable recommendations
-    return allOffers
-      .filter(offer => !recentAndFeaturedIds.has(offer.id!))
-      .slice(0, 8);
-  }, [allOffers, recentOffers, featuredOffers]);
+    });
+  }, [searchTerm, selectedCategory, allOffers, featuredOffers]);
 
 
   const handleSelectCategory = (categoryName: string) => {
@@ -115,7 +99,7 @@ export default function FeedPage() {
 
   if (loading) { 
     return (
-      <div className="flex justify-center items-center">
+      <div className="flex justify-center items-center flex-grow">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <p className="ml-3 text-muted-foreground">Carregando ofertas...</p>
       </div>
@@ -154,13 +138,6 @@ export default function FeedPage() {
         onSelectCategory={handleSelectCategory}
       />
 
-      {recommendedOffers.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Recomendadas para Você</h2>
-          <RecommendedOffersList offers={recommendedOffers} />
-        </section>
-      )}
-
       {featuredMerchants.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Comerciantes em Destaque</h2>
@@ -174,13 +151,13 @@ export default function FeedPage() {
         </section>
       )}
 
-
-      {recentOffers.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-xl font-semibold font-headline px-4 md:px-0">Ofertas Recentes</h2>
-          <RecentOffersList offers={recentOffers} />
+      {filteredOffers.length > 0 && (
+        <section className="space-y-3 px-4 md:px-0">
+          <h2 className="text-xl font-semibold font-headline">Ofertas Recentes</h2>
+          <OfferList offers={filteredOffers} />
         </section>
       )}
+
        {allOffers.length === 0 && !loading && !error && ( 
          <div className="text-center text-muted-foreground py-10 px-4 md:px-0">
             <Megaphone className="mx-auto h-12 w-12 text-primary/30" />
@@ -195,3 +172,4 @@ export default function FeedPage() {
     </div>
   );
 }
+
