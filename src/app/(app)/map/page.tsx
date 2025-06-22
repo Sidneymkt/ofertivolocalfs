@@ -187,9 +187,9 @@ export default function MapPage() {
     }));
 
   return (
-    <div className="flex flex-col flex-grow">
+    <div className="h-full flex flex-col">
       {/* Map Section */}
-      <div className="flex-grow relative">
+      <div className="relative flex-1">
         <GoogleMapDisplay
           ref={mapDisplayRef}
           apiKey={googleMapsApiKey}
