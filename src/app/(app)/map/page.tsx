@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -186,46 +187,44 @@ export default function MapPage() {
     }));
 
   return (
-    <div className="h-full w-full relative">
-      {/* Map fills the entire container */}
-      <GoogleMapDisplay
-        ref={mapDisplayRef}
-        apiKey={googleMapsApiKey}
-        mapCenter={mapCenter}
-        zoom={13}
-        markers={markers}
-      />
+    <div className="flex flex-col h-full w-full">
+      <div className="flex-grow relative">
+        <GoogleMapDisplay
+          ref={mapDisplayRef}
+          apiKey={googleMapsApiKey}
+          mapCenter={mapCenter}
+          zoom={13}
+          markers={markers}
+        />
+      </div>
       
-      {/* Listings Section is positioned absolutely at the bottom */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 w-full">
-        <div className="bg-card/80 backdrop-blur-sm border-t shadow-lg rounded-t-2xl p-4">
-           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
-             <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
-                <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                        <SlidersHorizontal size={16} />
-                        Filtros
-                    </Button>
-                </SheetTrigger>
-                <SheetContent className="p-0 flex flex-col">
-                    <SheetHeader className="p-4 border-b">
-                        <SheetTitle>Filtros Avançados</SheetTitle>
-                    </SheetHeader>
-                    <AdvancedFiltersSheet onApplyFilters={applyFilters} onClearFilters={clearFilters} />
-                </SheetContent>
-            </Sheet>
-          </div>
-          {filteredOffers.length > 0 ? (
-            <MapOfferList offers={filteredOffers} />
-          ) : (
-             <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-3">
-                <MapPinned className="h-10 w-10 text-primary/50" />
-                <p>Nenhuma oferta encontrada com os filtros atuais.</p>
-                <p className="text-xs">Tente ajustar ou limpar os filtros para ver mais resultados.</p>
-            </div>
-          )}
+      <div className="shrink-0 bg-card/80 backdrop-blur-sm border-t shadow-lg rounded-t-2xl p-4">
+         <div className="flex justify-between items-center mb-3">
+          <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
+           <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+              <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                      <SlidersHorizontal size={16} />
+                      Filtros
+                  </Button>
+              </SheetTrigger>
+              <SheetContent className="p-0 flex flex-col">
+                  <SheetHeader className="p-4 border-b">
+                      <SheetTitle>Filtros Avançados</SheetTitle>
+                  </SheetHeader>
+                  <AdvancedFiltersSheet onApplyFilters={applyFilters} onClearFilters={clearFilters} />
+              </SheetContent>
+          </Sheet>
         </div>
+        {filteredOffers.length > 0 ? (
+          <MapOfferList offers={filteredOffers} />
+        ) : (
+           <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-3">
+              <MapPinned className="h-10 w-10 text-primary/50" />
+              <p>Nenhuma oferta encontrada com os filtros atuais.</p>
+              <p className="text-xs">Tente ajustar ou limpar os filtros para ver mais resultados.</p>
+          </div>
+        )}
       </div>
     </div>
   );
