@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -170,7 +171,6 @@ export default function MapPage() {
     );
   }
 
-
   const mapCenter = { lat: -3.0993, lng: -59.9839 }; // Default to Manaus center
   const markers = filteredOffers
     .filter(offer => offer.latitude && offer.longitude)
@@ -185,44 +185,46 @@ export default function MapPage() {
     }));
 
   return (
-    <div className="relative h-full w-full">
-      <GoogleMapDisplay
-        ref={mapDisplayRef}
-        apiKey={googleMapsApiKey}
-        mapCenter={mapCenter}
-        zoom={13}
-        markers={markers}
-      />
-      
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-4 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none">
-         <div className="bg-card/90 backdrop-blur-sm border shadow-lg rounded-2xl p-4 pointer-events-auto">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
-            <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
-                <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                        <SlidersHorizontal size={16} />
-                        Filtros
-                    </Button>
-                </SheetTrigger>
-                <SheetContent className="p-0 flex flex-col">
-                    <SheetHeader className="p-4 border-b">
-                        <SheetTitle>Filtros Avançados</SheetTitle>
-                    </SheetHeader>
-                    <AdvancedFiltersSheet onApplyFilters={applyFilters} onClearFilters={clearFilters} />
-                </SheetContent>
-            </Sheet>
-          </div>
-          {filteredOffers.length > 0 ? (
-            <MapOfferList offers={filteredOffers} />
-          ) : (
-             <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-3">
-                <MapPinned className="h-10 w-10 text-primary/50" />
-                <p>Nenhuma oferta encontrada com os filtros atuais.</p>
-                <p className="text-xs">Tente ajustar ou limpar os filtros para ver mais resultados.</p>
-            </div>
-          )}
+    <div className="flex flex-col h-full w-full">
+      {/* Map container that grows to fill available space */}
+      <div className="flex-grow">
+        <GoogleMapDisplay
+          ref={mapDisplayRef}
+          apiKey={googleMapsApiKey}
+          mapCenter={mapCenter}
+          zoom={13}
+          markers={markers}
+        />
+      </div>
+
+      {/* Offer list container at the bottom */}
+      <div className="shrink-0 bg-card/90 backdrop-blur-sm border-t shadow-lg p-4">
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
+          <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+              <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                      <SlidersHorizontal size={16} />
+                      Filtros
+                  </Button>
+              </SheetTrigger>
+              <SheetContent className="p-0 flex flex-col">
+                  <SheetHeader className="p-4 border-b">
+                      <SheetTitle>Filtros Avançados</SheetTitle>
+                  </SheetHeader>
+                  <AdvancedFiltersSheet onApplyFilters={applyFilters} onClearFilters={clearFilters} />
+              </SheetContent>
+          </Sheet>
         </div>
+        {filteredOffers.length > 0 ? (
+          <MapOfferList offers={filteredOffers} />
+        ) : (
+           <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-3">
+              <MapPinned className="h-10 w-10 text-primary/50" />
+              <p>Nenhuma oferta encontrada com os filtros atuais.</p>
+              <p className="text-xs">Tente ajustar ou limpar os filtros para ver mais resultados.</p>
+          </div>
+        )}
       </div>
     </div>
   );
