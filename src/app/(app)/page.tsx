@@ -96,15 +96,6 @@ export default function FeedPage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       <div className="space-y-8 py-6">
-         <header className="space-y-4 text-center">
-            <h1 className="text-3xl md:text-5xl font-bold font-headline text-foreground tracking-tight">
-                Deals Marketplace
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Encontre as melhores promoções em produtos e serviços perto de você.
-            </p>
-        </header>
-
         <div className="w-full max-w-2xl mx-auto">
           <div className="relative">
             <SearchIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
