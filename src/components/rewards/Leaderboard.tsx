@@ -7,6 +7,7 @@ import { Trophy, TrendingUp, Star, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { User } from '@/types';
 import { getLeaderboardUsers } from '@/lib/firebase/services/userService';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface LeaderboardProps {
   currentUser: User | null; // Pass the current user
@@ -68,46 +69,48 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
       </CardHeader>
       <CardContent className="space-y-4">
         {leaderboardData.length > 0 ? (
-          <ul className="space-y-3">
-            {leaderboardData.slice(0, 5).map((user, index) => { // Show top 5 from fetched data
-              const rank = index + 1; // Rank based on sorted fetched data
-              const isCurrentUserEntry = user.id === currentUser?.id;
-              return (
-                <li 
-                  key={user.id} 
-                  className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ease-in-out
-                              ${isCurrentUserEntry ? 'bg-primary/10 ring-2 ring-primary shadow-md scale-105' : 'bg-card hover:bg-muted/50'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Badge 
-                      variant={rank === 1 ? "destructive" : rank <= 3 ? "secondary" : "outline"} 
-                      className="text-sm w-8 h-8 flex items-center justify-center rounded-full font-bold shrink-0"
-                    >
-                      {rank}
-                    </Badge>
-                    <Avatar className="h-10 w-10 border-2 border-primary/30">
-                      <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint || 'person avatar'}/>
-                      <AvatarFallback className="bg-muted text-muted-foreground">{user.name?.substring(0, 1)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <span className={`font-medium ${isCurrentUserEntry ? 'text-primary-foreground' : 'text-card-foreground'}`}>{user.name} {isCurrentUserEntry && "(Você)"}</span>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Star size={12} className={isCurrentUserEntry ? "text-accent fill-accent" : "text-amber-400 fill-amber-400"}/> Nível: {user.level}
+          <ScrollArea className="h-72">
+            <ul className="space-y-3 pr-4">
+              {leaderboardData.map((user, index) => {
+                const rank = index + 1;
+                const isCurrentUserEntry = user.id === currentUser?.id;
+                return (
+                  <li 
+                    key={user.id} 
+                    className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ease-in-out
+                                ${isCurrentUserEntry ? 'bg-primary/10 ring-2 ring-primary shadow-md' : 'bg-card hover:bg-muted/50'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Badge 
+                        variant={rank === 1 ? "destructive" : rank <= 3 ? "secondary" : "outline"} 
+                        className="text-sm w-8 h-8 flex items-center justify-center rounded-full font-bold shrink-0"
+                      >
+                        {rank}
+                      </Badge>
+                      <Avatar className="h-10 w-10 border-2 border-primary/30">
+                        <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint || 'person avatar'}/>
+                        <AvatarFallback className="bg-muted text-muted-foreground">{user.name?.substring(0, 1)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <span className={`font-medium ${isCurrentUserEntry ? 'text-primary' : 'text-card-foreground'}`}>{user.name} {isCurrentUserEntry && "(Você)"}</span>
+                        <div className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Star size={12} className={isCurrentUserEntry ? "text-accent fill-accent" : "text-amber-400 fill-amber-400"}/> Nível: {user.level}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className={`font-semibold flex items-center gap-1 ${isCurrentUserEntry ? 'text-primary-foreground' : 'text-primary'}`}>
-                    {user.points.toLocaleString('pt-BR')} pts
-                    <TrendingUp size={16} className={isCurrentUserEntry ? "text-green-300" : "text-green-500"}/>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                    <div className={`font-semibold flex items-center gap-1 text-primary`}>
+                      {user.points.toLocaleString('pt-BR')} pts
+                      <TrendingUp size={16} className="text-green-500"/>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </ScrollArea>
         ) : (
           <p className="text-center text-muted-foreground py-6">Ranking indisponível no momento.</p>
         )}
-        {currentUser && currentUserRank > 5 && leaderboardData.find(u => u.id === currentUser.id) && ( // Ensure current user is in displayed list if rank > 5
+        {currentUser && currentUserRank > 10 && (
            <div className="text-center text-sm text-muted-foreground pt-3 border-t">
              Sua Posição: <span className="font-bold text-primary">{currentUserRank}º</span>
            </div>
