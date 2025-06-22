@@ -185,20 +185,17 @@ export default function MapPage() {
     }));
 
   return (
-    <div className="relative h-full w-full">
-      {/* Map container takes the full space of the parent */}
-      <div className="absolute inset-0">
-        <GoogleMapDisplay
-          ref={mapDisplayRef}
-          apiKey={googleMapsApiKey}
-          mapCenter={mapCenter}
-          zoom={13}
-          markers={markers}
-        />
-      </div>
+    <div className="absolute top-16 left-0 right-0 bottom-0">
+      <GoogleMapDisplay
+        ref={mapDisplayRef}
+        apiKey={googleMapsApiKey}
+        mapCenter={mapCenter}
+        zoom={13}
+        markers={markers}
+      />
 
-      {/* Offer list as an overlay at the bottom */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 bg-card/90 backdrop-blur-sm border-t shadow-lg p-4">
+      {/* Offer list as an overlay at the bottom, positioned above the BottomNavigationBar */}
+      <div className="absolute bottom-16 left-0 right-0 z-10 bg-card/90 backdrop-blur-sm border-t shadow-lg p-4">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
           <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
