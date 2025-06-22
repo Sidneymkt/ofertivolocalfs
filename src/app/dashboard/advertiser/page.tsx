@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -20,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
+import { FirestoreConnectionError } from '@/components/common/FirestoreConnectionError';
 
 export default function AdvertiserDashboardPage() {
   const router = useRouter();
@@ -27,11 +27,13 @@ export default function AdvertiserDashboardPage() {
   const [advertiser, setAdvertiser] = useState<User | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (userAuth) => {
       if (userAuth) {
         setLoading(true);
+        setError(null);
         try {
           const userProfile = await getUserProfile(userAuth.uid);
           if (userProfile && userProfile.isAdvertiser) {
@@ -42,8 +44,9 @@ export default function AdvertiserDashboardPage() {
             toast({ title: "Acesso Negado", description: "Você precisa ser um anunciante para acessar esta página.", variant: "destructive" });
             router.push('/');
           }
-        } catch (error) {
-          console.error("Error fetching advertiser dashboard data:", error);
+        } catch (err: any) {
+          console.error("Error fetching advertiser dashboard data:", err);
+          setError(err.message || "Não foi possível buscar seus dados do painel. Verifique sua conexão com o banco de dados.");
           toast({ title: "Erro ao Carregar Painel", description: "Não foi possível buscar seus dados.", variant: "destructive" });
         } finally {
           setLoading(false);
@@ -55,6 +58,9 @@ export default function AdvertiserDashboardPage() {
     return () => unsubscribe();
   }, [router, toast]);
 
+  if (error) {
+    return <FirestoreConnectionError message={error} />;
+  }
 
   if (loading || !advertiser) {
     return (

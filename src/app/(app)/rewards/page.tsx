@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -14,15 +13,18 @@ import Link from 'next/link';
 import { auth } from '@/lib/firebase/firebaseConfig';
 import { getUserProfile } from '@/lib/firebase/services/userService';
 import { getAllSweepstakes } from '@/lib/firebase/services/sweepstakeService';
+import { FirestoreConnectionError } from '@/components/common/FirestoreConnectionError';
 
 export default function RewardsPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [sweepstakes, setSweepstakes] = useState<Sweepstake[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError(null);
       try {
         const userAuth = auth.currentUser;
         if (userAuth) {
@@ -32,20 +34,18 @@ export default function RewardsPage() {
         const allSweepstakes = await getAllSweepstakes();
         const activeAndUpcoming = allSweepstakes.filter(s => s.status === 'active' || s.status === 'upcoming');
         setSweepstakes(activeAndUpcoming);
-      } catch (error) {
-        console.error("Error fetching rewards page data:", error);
+      } catch (err: any) {
+        console.error("Error fetching rewards page data:", err);
+        setError(err.message || "Não foi possível carregar os dados de recompensas. Verifique sua conexão com o banco de dados.");
       }
       setLoading(false);
     };
 
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        fetchData();
-      } else {
-        setCurrentUser(null); // Clear user if not logged in
-        fetchData(); // Still fetch sweepstakes
-      }
+      // Re-fetch data on login/logout
+      fetchData();
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -57,6 +57,11 @@ export default function RewardsPage() {
       </div>
     );
   }
+
+  if (error) {
+    return <FirestoreConnectionError message={error} />;
+  }
+
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-8">

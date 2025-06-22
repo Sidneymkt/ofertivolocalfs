@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -19,6 +18,7 @@ import { getUserProfile, addFavoriteOffer, removeFavoriteOffer, followMerchant, 
 import { auth } from '@/lib/firebase/firebaseConfig';
 import { useToast } from "@/hooks/use-toast";
 import { serverTimestamp, POINTS_RATE_OFFER_OR_MERCHANT } from '@/types';
+import { FirestoreConnectionError } from '@/components/common/FirestoreConnectionError';
 
 export default function OfferDetailPage() {
   const params = useParams();
@@ -49,9 +49,9 @@ export default function OfferDetailPage() {
         } else {
           setError('Oferta não encontrada.');
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error("Error loading offer data:", e);
-        setError('Erro ao carregar a oferta.');
+        setError(e.message || 'Erro ao carregar a oferta. Verifique sua conexão com o banco de dados.');
       } finally {
         setLoading(false);
       }
@@ -161,14 +161,7 @@ export default function OfferDetailPage() {
   }
 
   if (error) {
-    return (
-      <div className="container mx-auto px-4 py-6 text-center">
-        <p className="text-destructive text-lg">{error}</p>
-        <Button asChild variant="link" className="mt-4">
-          <Link href="/">Voltar para Ofertas</Link>
-        </Button>
-      </div>
-    );
+    return <FirestoreConnectionError message={error} />;
   }
 
   if (!offer) {
