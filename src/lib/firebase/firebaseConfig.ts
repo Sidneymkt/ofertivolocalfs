@@ -29,12 +29,18 @@ const checkEnvVar = (value: string | undefined, varName: string): string => {
 const firebaseConfig = {
   apiKey: checkEnvVar(process.env.NEXT_PUBLIC_FIREBASE_API_KEY, 'NEXT_PUBLIC_FIREBASE_API_KEY'),
   authDomain: checkEnvVar(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'),
-  projectId: checkEnvVar(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, 'NEXT_PUBLIC_FIREBASE_PROJECT_ID'),
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ofertivo-local',
   storageBucket: checkEnvVar(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET, 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'),
   messagingSenderId: checkEnvVar(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID, 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
   appId: checkEnvVar(process.env.NEXT_PUBLIC_FIREBASE_APP_ID, 'NEXT_PUBLIC_FIREBASE_APP_ID'),
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID // Optional
 };
+
+// Log the project ID being used for easier debugging
+if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+    console.warn(`Firebase projectId is not set in environment variables, falling back to default 'ofertivo-local'.`);
+}
+
 
 let app: FirebaseApp;
 let auth: Auth;

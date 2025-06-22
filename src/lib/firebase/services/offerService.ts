@@ -15,6 +15,7 @@ import {
   Timestamp,
   serverTimestamp 
 } from 'firebase/firestore';
+import { mockOfferList, mockUser } from '@/types';
 
 const offersCollection = collection(db, 'offers');
 
@@ -36,14 +37,25 @@ const convertOfferTimestamps = (offerData: any): Offer => {
   return newOfferData as Offer;
 };
 
+// --- MOCK IMPLEMENTATIONS ---
+const USE_MOCK_DATA = true; // Switch to false to use real Firestore
+
 export const createOffer = async (offerData: Omit<Offer, 'id' | 'createdAt' | 'updatedAt' | 'comments'>): Promise<string> => {
+  if (USE_MOCK_DATA) {
+    console.log("Mock createOffer called with:", offerData);
+    const newId = `mock-offer-${Date.now()}`;
+    const newOffer = { ...offerData, id: newId, createdAt: new Date(), updatedAt: new Date(), usersUsedCount: 0, reviews: 0, rating: 0 };
+    mockOfferList.unshift(newOffer as Offer);
+    return Promise.resolve(newId);
+  }
+  // Real implementation
   try {
     const now = serverTimestamp();
     const docRef = await addDoc(offersCollection, {
       ...offerData,
       createdAt: now,
       updatedAt: now,
-      status: offerData.status || 'pending_approval', // Default status
+      status: offerData.status || 'pending_approval',
       usersUsedCount: offerData.usersUsedCount || 0,
       reviews: 0,
       rating: 0,
@@ -56,6 +68,11 @@ export const createOffer = async (offerData: Omit<Offer, 'id' | 'createdAt' | 'u
 };
 
 export const getOffer = async (offerId: string): Promise<Offer | null> => {
+  if (USE_MOCK_DATA) {
+    const offer = mockOfferList.find(o => o.id === offerId) || null;
+    return Promise.resolve(offer);
+  }
+  // Real implementation
   if (!offerId) return null;
   const offerRef = doc(db, 'offers', offerId);
   try {
@@ -73,18 +90,25 @@ export const getOffer = async (offerId: string): Promise<Offer | null> => {
 };
 
 export const getAllOffers = async (filters?: { category?: string; merchantId?: string }): Promise<Offer[]> => {
+  if (USE_MOCK_DATA) {
+    let offers = [...mockOfferList];
+    if (filters?.category) {
+        offers = offers.filter(o => o.category === filters.category);
+    }
+    if (filters?.merchantId) {
+        offers = offers.filter(o => o.merchantId === filters.merchantId);
+    }
+    return Promise.resolve(offers);
+  }
+  // Real implementation
   try {
-    // Let's fetch both 'active' and 'pending_approval' offers to make development easier.
     let q = query(offersCollection, where("status", "in", ["active", "pending_approval"]), orderBy("createdAt", "desc"));
-
     if (filters?.category) {
       q = query(q, where("category", "==", filters.category));
     }
     if (filters?.merchantId) {
       q = query(q, where("merchantId", "==", filters.merchantId));
     }
-    // Add more filters as needed (e.g., price range, tags - might require more complex indexing or client-side filtering for arrays)
-
     const querySnapshot = await getDocs(q);
     const offers: Offer[] = [];
     querySnapshot.forEach((docSnap) => {
@@ -98,6 +122,15 @@ export const getAllOffers = async (filters?: { category?: string; merchantId?: s
 };
 
 export const updateOffer = async (offerId: string, data: Partial<Omit<Offer, 'id' | 'createdAt'>>): Promise<void> => {
+  if (USE_MOCK_DATA) {
+      const offerIndex = mockOfferList.findIndex(o => o.id === offerId);
+      if (offerIndex !== -1) {
+          mockOfferList[offerIndex] = { ...mockOfferList[offerIndex], ...data, updatedAt: new Date() } as Offer;
+          console.log("Mock updateOffer called for:", offerId, " with:", data);
+      }
+      return Promise.resolve();
+  }
+  // Real implementation
   const offerRef = doc(db, 'offers', offerId);
   try {
     await updateDoc(offerRef, {
@@ -117,6 +150,21 @@ export const getOffersByMerchant = async (merchantId: string): Promise<Offer[]> 
 
 // Comments are now a subcollection
 export const addCommentToOffer = async (offerId: string, commentData: Omit<Comment, 'id' | 'timestamp'>): Promise<string> => {
+   if (USE_MOCK_DATA) {
+        const offerIndex = mockOfferList.findIndex(o => o.id === offerId);
+        if (offerIndex !== -1) {
+            const newComment = {
+                ...commentData,
+                id: `mock-comment-${Date.now()}`,
+                timestamp: new Date(),
+            } as Comment;
+            // This is simplified. In a real app, comments would be a subcollection.
+            // We're not storing them on the mock offer object itself.
+            console.log("Adding mock comment to offer:", offerId, newComment);
+        }
+        return Promise.resolve(`mock-comment-${Date.now()}`);
+   }
+  // Real implementation
   if (!offerId) throw new Error("Offer ID is required to add a comment.");
   
   const commentsSubCollectionRef = collection(db, 'offers', offerId, 'comments');
@@ -125,8 +173,6 @@ export const addCommentToOffer = async (offerId: string, commentData: Omit<Comme
       ...commentData,
       timestamp: serverTimestamp()
     });
-    // Here you might want to update the offer's main document with aggregated comment data (count, average rating) using a transaction or cloud function.
-    // For simplicity, this part is omitted for now.
     return docRef.id;
   } catch (error) {
     console.error("Error adding comment: ", error);
@@ -135,6 +181,13 @@ export const addCommentToOffer = async (offerId: string, commentData: Omit<Comme
 };
 
 export const getOfferComments = async (offerId: string): Promise<Comment[]> => {
+    if (USE_MOCK_DATA) {
+        if (offerId === 'offer-pizza-1') {
+            return Promise.resolve(mockUser.commentsMade || []);
+        }
+        return Promise.resolve([]);
+    }
+  // Real implementation
   if (!offerId) return [];
   const commentsSubCollectionRef = collection(db, 'offers', offerId, 'comments');
   try {
@@ -156,9 +209,17 @@ export const getOfferComments = async (offerId: string): Promise<Comment[]> => {
   }
 };
 
-// TODO: Functions to increment usersUsedCount, update average rating on an offer.
-// These often involve transactions for atomicity.
+
 export const incrementOfferUsage = async (offerId: string): Promise<void> => {
+    if (USE_MOCK_DATA) {
+        const offerIndex = mockOfferList.findIndex(o => o.id === offerId);
+        if (offerIndex !== -1) {
+            mockOfferList[offerIndex].usersUsedCount = (mockOfferList[offerIndex].usersUsedCount || 0) + 1;
+            console.log(`Incremented usage for ${offerId}. New count: ${mockOfferList[offerIndex].usersUsedCount}`);
+        }
+        return Promise.resolve();
+    }
+    // Real implementation
     const offerRef = doc(db, 'offers', offerId);
     try {
         const offerSnap = await getDoc(offerRef);
@@ -171,6 +232,5 @@ export const incrementOfferUsage = async (offerId: string): Promise<void> => {
         }
     } catch (error) {
         console.error("Error incrementing offer usage: ", error);
-        // Optionally re-throw or handle as needed
     }
 };

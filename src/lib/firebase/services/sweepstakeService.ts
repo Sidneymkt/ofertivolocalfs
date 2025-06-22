@@ -15,8 +15,12 @@ import {
   serverTimestamp,
   writeBatch
 } from 'firebase/firestore';
+import { mockSweepstakeList } from '@/types';
 
 const sweepstakesCollection = collection(db, 'sweepstakes');
+
+// --- MOCK IMPLEMENTATIONS ---
+const USE_MOCK_DATA = true; // Switch to false to use real Firestore
 
 // Helper to convert Firestore Timestamps to JS Dates in a Sweepstake object
 const convertSweepstakeTimestamps = (sweepstakeData: any): Sweepstake => {
@@ -30,20 +34,31 @@ const convertSweepstakeTimestamps = (sweepstakeData: any): Sweepstake => {
   if (newSweepstakeData.drawDate && newSweepstakeData.drawDate instanceof Timestamp) {
     newSweepstakeData.drawDate = newSweepstakeData.drawDate.toDate();
   }
-  // Convert timestamps in participants and winners if they are embedded
-  // However, it's better to fetch them from subcollections and convert there.
   return newSweepstakeData as Sweepstake;
 };
 
 
 export const createSweepstake = async (sweepstakeData: Omit<Sweepstake, 'id' | 'status' | 'isDrawn' | 'drawDate' | 'participantCount'>): Promise<string> => {
+  if (USE_MOCK_DATA) {
+      console.log("Mock createSweepstake called with:", sweepstakeData);
+      const newId = `mock-sweep-${Date.now()}`;
+      const newSweepstake = { 
+          ...sweepstakeData, 
+          id: newId, 
+          status: 'upcoming', 
+          isDrawn: false, 
+          participantCount: 0 
+      } as Sweepstake;
+      mockSweepstakeList.unshift(newSweepstake);
+      return Promise.resolve(newId);
+  }
+  // Real implementation
   try {
     const docRef = await addDoc(sweepstakesCollection, {
       ...sweepstakeData,
-      status: 'upcoming', // Default status
+      status: 'upcoming',
       isDrawn: false,
       participantCount: 0,
-      // Timestamps for startDate and endDate should be provided as JS Date objects and will be converted by Firestore
     });
     return docRef.id;
   } catch (error) {
@@ -53,6 +68,11 @@ export const createSweepstake = async (sweepstakeData: Omit<Sweepstake, 'id' | '
 };
 
 export const getSweepstake = async (sweepstakeId: string): Promise<Sweepstake | null> => {
+  if (USE_MOCK_DATA) {
+      const sweepstake = mockSweepstakeList.find(s => s.id === sweepstakeId) || null;
+      return Promise.resolve(sweepstake);
+  }
+  // Real implementation
   if (!sweepstakeId) return null;
   const sweepstakeRef = doc(db, 'sweepstakes', sweepstakeId);
   try {
@@ -70,13 +90,19 @@ export const getSweepstake = async (sweepstakeId: string): Promise<Sweepstake | 
 };
 
 export const getAllSweepstakes = async (filters?: { status?: Sweepstake['status'] }): Promise<Sweepstake[]> => {
+  if (USE_MOCK_DATA) {
+    let sweepstakes = [...mockSweepstakeList];
+    if (filters?.status) {
+        sweepstakes = sweepstakes.filter(s => s.status === filters.status);
+    }
+    return Promise.resolve(sweepstakes);
+  }
+  // Real implementation
   try {
     let q = query(sweepstakesCollection, orderBy("startDate", "desc"));
-
     if (filters?.status) {
       q = query(q, where("status", "==", filters.status));
     }
-    
     const querySnapshot = await getDocs(q);
     const sweepstakes: Sweepstake[] = [];
     querySnapshot.forEach((docSnap) => {
@@ -90,6 +116,15 @@ export const getAllSweepstakes = async (filters?: { status?: Sweepstake['status'
 };
 
 export const updateSweepstake = async (sweepstakeId: string, data: Partial<Omit<Sweepstake, 'id'>>): Promise<void> => {
+   if (USE_MOCK_DATA) {
+      const sweepstakeIndex = mockSweepstakeList.findIndex(s => s.id === sweepstakeId);
+      if (sweepstakeIndex !== -1) {
+          mockSweepstakeList[sweepstakeIndex] = { ...mockSweepstakeList[sweepstakeIndex], ...data } as Sweepstake;
+          console.log("Mock updateSweepstake called for:", sweepstakeId, " with:", data);
+      }
+      return Promise.resolve();
+  }
+  // Real implementation
   const sweepstakeRef = doc(db, 'sweepstakes', sweepstakeId);
   try {
     await updateDoc(sweepstakeRef, data);
@@ -104,6 +139,15 @@ export const addParticipantToSweepstake = async (
   sweepstakeId: string, 
   participantData: Omit<SweepstakeParticipant, 'id' | 'entryDate'>
 ): Promise<string> => {
+   if (USE_MOCK_DATA) {
+       console.log("Adding mock participant to sweepstake:", sweepstakeId, participantData);
+       const sweepstakeIndex = mockSweepstakeList.findIndex(s => s.id === sweepstakeId);
+       if(sweepstakeIndex !== -1) {
+           mockSweepstakeList[sweepstakeIndex].participantCount = (mockSweepstakeList[sweepstakeIndex].participantCount || 0) + 1;
+       }
+       return Promise.resolve(`mock-participant-${Date.now()}`);
+   }
+  // Real implementation
   if (!sweepstakeId) throw new Error("Sweepstake ID is required.");
   const participantsSubCollectionRef = collection(db, 'sweepstakes', sweepstakeId, 'participants');
   try {
@@ -111,7 +155,6 @@ export const addParticipantToSweepstake = async (
       ...participantData,
       entryDate: serverTimestamp()
     });
-    // Increment participantCount on the main sweepstake document
     const sweepstakeRef = doc(db, 'sweepstakes', sweepstakeId);
     const sweepstakeSnap = await getDoc(sweepstakeRef);
     if (sweepstakeSnap.exists()) {
@@ -126,6 +169,11 @@ export const addParticipantToSweepstake = async (
 };
 
 export const getSweepstakeParticipants = async (sweepstakeId: string): Promise<SweepstakeParticipant[]> => {
+  if (USE_MOCK_DATA) {
+      // Return a mock list of participants for a specific sweepstake if needed for testing
+      return Promise.resolve([]);
+  }
+  // Real implementation
   if (!sweepstakeId) return [];
   const participantsSubCollectionRef = collection(db, 'sweepstakes', sweepstakeId, 'participants');
   try {
@@ -150,27 +198,30 @@ export const getSweepstakeParticipants = async (sweepstakeId: string): Promise<S
 
 // Winners subcollection management
 export const addWinnersToSweepstake = async (sweepstakeId: string, winners: SweepstakeWinner[]): Promise<void> => {
+   if (USE_MOCK_DATA) {
+       console.log("Adding mock winners to sweepstake:", sweepstakeId, winners);
+       const sweepstakeIndex = mockSweepstakeList.findIndex(s => s.id === sweepstakeId);
+       if (sweepstakeIndex !== -1) {
+           mockSweepstakeList[sweepstakeIndex].status = 'drawing_complete';
+           mockSweepstakeList[sweepstakeIndex].isDrawn = true;
+           mockSweepstakeList[sweepstakeIndex].drawDate = new Date();
+       }
+       return Promise.resolve();
+   }
+  // Real implementation
   if (!sweepstakeId || !winners || winners.length === 0) throw new Error("Sweepstake ID and winners list are required.");
-  
   const batch = writeBatch(db);
   const winnersSubCollectionRef = collection(db, 'sweepstakes', sweepstakeId, 'winners');
-  
   winners.forEach(winner => {
-    const winnerDocRef = doc(winnersSubCollectionRef, winner.userId); // Use userId as doc ID for winners to prevent duplicates
+    const winnerDocRef = doc(winnersSubCollectionRef, winner.userId);
     batch.set(winnerDocRef, winner);
   });
-  
-  // Update the main sweepstake document
   const sweepstakeRef = doc(db, 'sweepstakes', sweepstakeId);
   batch.update(sweepstakeRef, {
     isDrawn: true,
     status: 'drawing_complete',
     drawDate: serverTimestamp()
-    // winners: winners // Storing winners directly on the sweepstake doc might be okay for small numbers,
-                       // but subcollection is better for querying/scaling if winners list grows large.
-                       // For now, the winners are primarily in the subcollection.
   });
-
   try {
     await batch.commit();
   } catch (error) {
@@ -180,13 +231,20 @@ export const addWinnersToSweepstake = async (sweepstakeId: string, winners: Swee
 };
 
 export const getSweepstakeWinners = async (sweepstakeId: string): Promise<SweepstakeWinner[]> => {
+  if (USE_MOCK_DATA) {
+      if (sweepstakeId === 'sweep-3') {
+          return Promise.resolve([{ userId: 'user-mock-1', userName: 'Maria Clara (Exemplo)', avatarUrl: 'https://placehold.co/40x40.png?text=MC', avatarHint: 'person avatar'}]);
+      }
+      return Promise.resolve([]);
+  }
+  // Real implementation
   if (!sweepstakeId) return [];
   const winnersSubCollectionRef = collection(db, 'sweepstakes', sweepstakeId, 'winners');
   try {
     const querySnapshot = await getDocs(winnersSubCollectionRef);
     const winners: SweepstakeWinner[] = [];
     querySnapshot.forEach((docSnap) => {
-      winners.push(docSnap.data() as SweepstakeWinner); // Assuming winner doc ID is userId
+      winners.push(docSnap.data() as SweepstakeWinner);
     });
     return winners;
   } catch (error) {
