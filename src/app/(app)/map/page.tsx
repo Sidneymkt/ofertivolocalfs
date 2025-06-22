@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -187,21 +186,19 @@ export default function MapPage() {
     }));
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Map Section */}
-      <div className="relative flex-1">
-        <GoogleMapDisplay
-          ref={mapDisplayRef}
-          apiKey={googleMapsApiKey}
-          mapCenter={mapCenter}
-          zoom={13}
-          markers={markers}
-        />
-      </div>
+    <div className="h-full w-full relative">
+      {/* Map fills the entire container */}
+      <GoogleMapDisplay
+        ref={mapDisplayRef}
+        apiKey={googleMapsApiKey}
+        mapCenter={mapCenter}
+        zoom={13}
+        markers={markers}
+      />
       
-      {/* Listings Section */}
-      <div className="flex-shrink-0 bg-card border-t shadow-lg rounded-t-2xl -mt-4 z-10">
-        <div className="p-4">
+      {/* Listings Section is positioned absolutely at the bottom */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 w-full">
+        <div className="bg-card/80 backdrop-blur-sm border-t shadow-lg rounded-t-2xl p-4">
            <div className="flex justify-between items-center mb-3">
             <h2 className="text-lg font-bold font-headline">Ofertas Próximas</h2>
              <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
