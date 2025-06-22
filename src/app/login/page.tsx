@@ -52,13 +52,22 @@ export default function LoginPage() {
       // Fetch user profile from Firestore to check their role
       const userProfile = await getUserProfile(user.uid);
       
+      if (!userProfile) {
+        throw new Error("Perfil de usuário não encontrado após o login.");
+      }
+
       toast({
         title: "Login realizado com sucesso!",
         description: `Bem-vindo(a) de volta, ${userProfile?.name || 'usuário'}! Redirecionando...`,
       });
 
-      // Redirect based on the profile, not the selected tab
-      if (userProfile?.isAdvertiser) {
+      // If the profile service returned the generic fallback mock user,
+      // it means the specific user wasn't found. In this mock-data scenario,
+      // we can trust the tab the user selected for redirection.
+      // The default mockUser has the id 'user-mock-123'.
+      if (userProfile.id === 'user-mock-123' && activeTab === 'advertiser') {
+        router.push('/dashboard/advertiser');
+      } else if (userProfile.isAdvertiser) {
         router.push('/dashboard/advertiser');
       } else {
         router.push('/'); // Default to user feed
